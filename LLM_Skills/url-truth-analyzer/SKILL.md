@@ -174,10 +174,15 @@ rm -rf <hash-folder-name>
 
 ## Step 6: Update watch-urls.md
 
-After processing each URL (including cleanup), move it from `## Pending` to `## Processed` with the analysis date:
+After processing each URL (including cleanup), remove it from `## Pending` and add it to the `## Processed` section with the analysis date.
 
-```markdown
-## Processed
+**Rules for updating the Processed section:**
+- If `## Processed` already exists in the file, append the new entry directly below the `## Processed` heading (before any existing processed entries), preserving everything else in the file unchanged.
+- If `## Processed` does not exist, create it as a new section at the end of the file.
+- Never create a duplicate `## Processed` heading.
+
+The entry format is:
+```
 - <URL> (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 ```
 
