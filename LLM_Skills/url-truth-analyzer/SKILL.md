@@ -1,6 +1,6 @@
 ---
 name: url-truth-analyzer
-description: Transcribes video/audio URLs and performs a truth-claim analysis. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting videos from across the web. Supports transcript-only mode (YouTube captions, no audio download) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, or asks to process the watch-urls.md file.
+description: Transcribes video/audio URLs and performs a truth-claim analysis. Supports YouTube, Facebook/Instagram reels, and LinkedIn videos. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting videos from across the web. Supports transcript-only mode (YouTube captions, no audio download) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, or asks to process the watch-urls.md file.
 ---
 
 # URL Truth Analyzer
@@ -58,6 +58,10 @@ For each file produced in Phase 1, **one at a time, in order** — no delays nee
 4. Step 5: Cleanup audio/caption file
 5. Step 6: Update `watch-urls.md`
 
+### Post-processing — after all URLs complete
+
+1. Sync to GitHub: commit and push new analysis files from `~/AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/` to the remote repository
+
 ---
 
 **Progress reporting**: At the start of processing each URL, output a status message to the user:
@@ -105,6 +109,9 @@ Extract the video ID from the **pending URL** using these rules:
 | `youtube.com/shorts/ID` | path segment after `/shorts/` |
 | `m.youtube.com/shorts/ID` | path segment after `/shorts/` |
 | `dms.licdn.com/playlist/vid/dash/ID/...` | 4th path segment (e.g. `D4D05AQEnN8uEJr57uA`) |
+| `facebook.com/reel/ID` | path segment after `/reel/` (e.g. `862786000111258`) |
+| `facebook.com/watch/?v=ID` | value of `v=` query parameter |
+| `fb.watch/ID` | path segment after `fb.watch/` |
 | Other platforms | skip Check A, go to Check B |
 
 Then parse every processed entry in `## Processed` in `watch-urls.md` and extract the video ID from each processed URL using the same rules.
@@ -320,6 +327,33 @@ Then mark as failed: `(failed YYYY-MM-DD — all automated LinkedIn stages faile
 ---
 
 **Note**: `[transcript-only]` is not supported for LinkedIn — there are no caption tracks in LinkedIn DASH manifests. The directive is silently ignored; audio + Whisper is always used.
+
+---
+
+### Mode E — Facebook/Instagram URLs (standard yt-dlp download)
+
+**Progress indicator**: `⏳ Step 1/7: Downloading audio from Facebook...`
+
+Facebook reels, videos, and Instagram content are supported via yt-dlp's built-in extractors. Use the standard Mode B audio download command with cookies for authentication:
+
+```bash
+yt-dlp --cookies-from-browser firefox \
+  -x --audio-format mp3 \
+  -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
+```
+
+**Supported URL patterns:**
+- `facebook.com/reel/ID` (Facebook Reels)
+- `facebook.com/watch/?v=ID` (Facebook Watch videos)
+- `facebook.com/<username>/videos/ID` (Profile videos)
+- `fb.watch/ID` (Facebook short links)
+- `instagram.com/reel/ID` (Instagram Reels)
+
+**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to Phase 2.
+
+**If it fails**: Apply the retry logic from the next section. Facebook videos may require being logged into Firefox for private or region-restricted content.
+
+**Note**: `[transcript-only]` is not supported for Facebook/Instagram — there are no caption tracks available. The directive is silently ignored; audio + Whisper is always used.
 
 ---
 
@@ -597,6 +631,26 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-video-title>.md`:
 
 **After saving**: Report `✓ Step 5/7: Analysis saved to ~/Documents/truth-analyses/YYYY-MM-DD-<slug>.md`
 
+### Sync to AI-Lab-Bench repository
+
+After saving the local copy, also copy the analysis file into the AI-Lab-Bench repo for later git sync:
+
+```bash
+# Ensure the target directory exists
+mkdir -p ~/AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/
+
+# Copy the analysis file
+cp ~/Documents/truth-analyses/YYYY-MM-DD-<slug>.md \
+   ~/AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/
+```
+
+If the copy fails (e.g., repo directory missing), report a warning but do **not** fail the URL:
+```
+⚠️  Could not copy analysis to AI-Lab-Bench repo — git sync will be incomplete for this file.
+```
+
+**After sync copy**: Update the report to `✓ Step 5/7: Analysis saved locally and staged for GitHub sync.`
+
 ---
 
 ## Step 6: Cleanup downloaded files (Phase 2 — local)
@@ -663,3 +717,85 @@ If a directive was used, append it in parentheses for traceability:
 Failed entries remain actionable: re-add the URL to `## Pending` on a future run to retry it, or for LinkedIn post URLs, replace the entry with the DASH manifest URL (from the Network tab) and re-run.
 
 **Final status**: Report `✅ Completed: <URL>`
+
+---
+
+## Post-processing: Sync analyses to GitHub
+
+**Progress indicator**: `⏳ Post-processing: Syncing new analyses to GitHub...`
+
+This step runs **once** after ALL URLs have been processed (after the last Step 7 completes). It pushes any new analysis files to the AI-Lab-Bench repository.
+
+### Pre-flight checks
+
+Before attempting git operations, verify the repo is usable:
+
+```bash
+# Check 1: Does the repo directory exist?
+if [ ! -d ~/AI-Lab-Bench/.git ]; then
+  echo "⚠️  AI-Lab-Bench repo not found at ~/AI-Lab-Bench — skipping GitHub sync."
+  exit 0
+fi
+
+# Check 2: Are there any new analysis files to push?
+cd ~/AI-Lab-Bench
+NEW_FILES=$(git status --porcelain LLM_Skills/url-truth-analyzer/truth-analyses/ 2>/dev/null)
+if [ -z "$NEW_FILES" ]; then
+  echo "ℹ️  No new analysis files to sync to GitHub."
+  exit 0
+fi
+```
+
+If either check fails, skip this step entirely with a warning — do not error out.
+
+### Git workflow
+
+```bash
+cd ~/AI-Lab-Bench
+
+# 1. Pull latest to avoid conflicts (rebase to keep history linear)
+git pull --rebase origin main
+
+# 2. Stage only the truth-analyses directory (never stage unrelated changes)
+git add LLM_Skills/url-truth-analyzer/truth-analyses/*.md
+
+# 3. Commit with a descriptive message
+git commit -m "Add truth analyses: $(date +%Y-%m-%d)
+
+Files added:
+$(git diff --cached --name-only | sed 's/^/  /')"
+
+# 4. Push to remote
+git push origin main
+```
+
+### Error handling
+
+| Failure point | Action |
+|---|---|
+| `git pull --rebase` fails (merge conflict) | Abort rebase (`git rebase --abort`), report warning, skip push. Files remain locally in both `~/Documents/truth-analyses/` and in the repo working tree for manual resolution. |
+| `git add` finds no files | Skip commit and push. Report `ℹ️  No new files to commit.` |
+| `git commit` fails | Report warning. Do not push. |
+| `git push` fails (network, auth) | Report warning with the specific error. The commit is preserved locally — user can manually `cd ~/AI-Lab-Bench && git push origin main` later. |
+| Repo directory missing | Already caught in pre-flight. Report and skip. |
+
+**After all error cases**: The primary save location (`~/Documents/truth-analyses/`) is never affected. GitHub sync is best-effort — failure here never causes data loss or blocks the analysis workflow.
+
+### Reporting
+
+**On success**:
+```
+✅ GitHub sync complete: pushed N new analysis file(s) to AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/
+   Commit: <short-hash> — <first line of commit message>
+```
+
+**On partial failure** (some files committed but push failed):
+```
+⚠️  GitHub sync incomplete: N file(s) committed locally but push failed.
+   Run manually: cd ~/AI-Lab-Bench && git push origin main
+```
+
+**On skip** (no new files or repo missing):
+```
+ℹ️  GitHub sync skipped — <reason>.
+```
