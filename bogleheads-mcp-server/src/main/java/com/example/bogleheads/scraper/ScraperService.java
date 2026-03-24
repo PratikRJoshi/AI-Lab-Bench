@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,36 @@ public class ScraperService {
     private static final int TIMEOUT_MS = (int) Duration.ofSeconds(30).toMillis();
     private static final Pattern THREAD_ID_PATTERN = Pattern.compile("viewtopic\\.php\\?t=([0-9]+)");
 
+    // Realistic browser User-Agent to avoid bot detection
+    private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
+    // Cookie jar for session persistence across requests
+    private final Map<String, String> cookies = new java.util.HashMap<>();
+
+    /**
+     * Build a Jsoup connection with browser-like headers and cookie persistence.
+     *
+     * @param url     The URL to connect to
+     * @param referer The Referer header value (null if none)
+     * @return A configured Jsoup Connection
+     */
+    private org.jsoup.Connection buildConnection(String url, String referer) {
+        org.jsoup.Connection conn = Jsoup.connect(url)
+                .userAgent(USER_AGENT)
+                .timeout(TIMEOUT_MS)
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "en-US,en;q=0.5")
+                .header("Accept-Encoding", "gzip, deflate")
+                .header("Connection", "keep-alive")
+                .cookies(cookies);
+
+        if (referer != null) {
+            conn.header("Referer", referer);
+        }
+
+        return conn;
+    }
+
     /**
      * Crawl the forum index and return discovered thread URLs.
      *
@@ -39,26 +70,31 @@ public class ScraperService {
      * @return List of absolute thread URLs.
      * @throws IOException if network or parsing fails.
      */
-    public List<String> crawlIndex(int topicPagesPerForum) throws IOException {
+    public List<String> crawlIndex(int topicPagesPerForum) throws IOException, InterruptedException {
         List<String> threads = new ArrayList<>();
 
         // Step 1: fetch the main index and collect forum links
-        Document indexDoc = Jsoup.connect(INDEX_URL)
-                                 .userAgent("Mozilla/5.0 (compatible; bogleheads-mcp/1.0; +https://github.com/your-repo)")
-                                 .timeout(TIMEOUT_MS)
-                                 .get();
+        org.jsoup.Connection.Response indexResponse = buildConnection(INDEX_URL, null).execute();
+        cookies.putAll(indexResponse.cookies());
+        Document indexDoc = indexResponse.parse();
         List<String> forumUrls = extractForumUrls(indexDoc);
 
         // Step 2: iterate through each forum and collect topic links
         for (String forumUrl : forumUrls) {
             for (int page = 0; page < topicPagesPerForum; page++) {
                 String pagedUrl = forumUrl + "&start=" + (page * 100);
-                Document forumDoc = Jsoup.connect(pagedUrl)
-                                          .userAgent("Mozilla/5.0 (compatible; bogleheads-mcp/1.0; +https://github.com/your-repo)")
-                                          .timeout(TIMEOUT_MS)
-                                          .get();
+                org.jsoup.Connection.Response forumResponse = buildConnection(pagedUrl, INDEX_URL).execute();
+                cookies.putAll(forumResponse.cookies());
+                Document forumDoc = forumResponse.parse();
                 threads.addAll(extractThreadUrls(forumDoc));
+
+                // Rate limiting between forum page fetches
+                if (page < topicPagesPerForum - 1) {
+                    Thread.sleep(2000);
+                }
             }
+            // Pause between forums
+            Thread.sleep(2000);
         }
         return threads;
     }
@@ -104,10 +140,9 @@ public class ScraperService {
             Path outFile = dayDir.resolve(threadId + ".html");
             if (Files.exists(outFile)) continue; // already downloaded
 
-            Document doc = Jsoup.connect(url)
-                                .userAgent("Mozilla/5.0 (compatible; bogleheads-mcp/1.0; +https://github.com/your-repo)")
-                                .timeout(TIMEOUT_MS)
-                                .get();
+            org.jsoup.Connection.Response response = buildConnection(url, BASE_URL + "index.php").execute();
+            cookies.putAll(response.cookies());
+            Document doc = response.parse();
             Files.writeString(outFile, doc.outerHtml(), StandardCharsets.UTF_8);
             Thread.sleep(pauseMs);
         }

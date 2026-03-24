@@ -68,6 +68,56 @@ git push origin main
 
 ---
 
+## Phase 2.5: Fix Scraper 403 Forbidden
+
+**Goal:** ScraperService successfully fetches pages from bogleheads.org without getting blocked.
+
+**Root cause:** The scraper is trivially identifiable as a bot due to 3 issues:
+1. User-Agent explicitly says "bogleheads-mcp/1.0" (bot signature)
+2. No standard browser headers (Accept, Accept-Language, etc.)
+3. No cookie persistence — each request is independent, session cookies are lost
+
+**File:** `src/main/java/com/example/bogleheads/scraper/ScraperService.java`
+
+**Changes:**
+
+1. **Replace bot User-Agent with a realistic browser UA**
+   - Use a current Chrome-on-macOS string: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36`
+
+2. **Add standard browser headers to all requests**
+   - `Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
+   - `Accept-Language: en-US,en;q=0.5`
+   - `Accept-Encoding: gzip, deflate`
+   - `Connection: keep-alive`
+
+3. **Implement cookie persistence across requests**
+   - Maintain a shared `Map<String, String>` for cookies
+   - On each response, merge `response.cookies()` into the shared map
+   - Pass the shared map into every subsequent request via `.cookies(cookieMap)`
+   - This ensures phpBB session cookies and any WAF cookies are preserved
+
+4. **Add Referer header when navigating between pages**
+   - When fetching a forum page, set Referer to the index URL
+   - When fetching a thread page, set Referer to the forum page URL
+
+5. **Add rate limiting to `crawlIndex()` inner loop**
+   - Currently only `downloadThreads()` pauses between requests
+   - Add `Thread.sleep(pauseMs)` between forum page fetches in the crawl loop
+
+6. **Extract a helper method** for building Jsoup connections with all headers/cookies
+   - Avoids repeating header setup in 3+ places
+   - Something like `private Connection buildConnection(String url, String referer)`
+
+**Verify:**
+- Run with `app.scraper.enabled=true` and `app.scraper.pages-per-forum=1`
+- Scraper fetches the forum index and at least some thread URLs without 403
+- HTML files appear in `data/raw/YYYY/MM/DD/`
+- If CloudFlare JS challenge is active (still 403), log a clear warning and fall back gracefully
+
+**Limitation:** If bogleheads.org uses CloudFlare JavaScript challenges, Jsoup alone cannot solve them. In that case, a headless browser (Selenium/Playwright) would be needed — that's out of scope for this phase.
+
+---
+
 ## Phase 3: Add MCP Protocol Support
 
 **Goal:** Real MCP server with SSE transport. Claude Desktop can connect and use `search_forum` / `get_thread` tools.
