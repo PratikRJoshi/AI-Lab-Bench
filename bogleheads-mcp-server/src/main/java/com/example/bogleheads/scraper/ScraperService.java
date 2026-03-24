@@ -40,10 +40,20 @@ public class ScraperService {
     // Cookie jar for session persistence across requests
     private final Map<String, String> cookies = new java.util.HashMap<>();
 
-    public ScraperService(@Value("${app.scraper.cf-clearance-cookie:}") String cfClearanceCookie) {
+    public ScraperService(
+            @Value("${app.scraper.cf-clearance-cookie:}") String cfClearanceCookie,
+            @Value("${app.scraper.phpbb-sid-cookie:}") String phpbbSidCookie,
+            @Value("${app.scraper.phpbb-u-cookie:}") String phpbbUCookie) {
         // If CloudFlare clearance cookie is provided, pre-populate the cookie jar
         if (cfClearanceCookie != null && !cfClearanceCookie.trim().isEmpty()) {
             cookies.put("cf_clearance", cfClearanceCookie.trim());
+        }
+        // Add phpBB session cookies if provided
+        if (phpbbSidCookie != null && !phpbbSidCookie.trim().isEmpty()) {
+            cookies.put("phpbb3_hrsjn_sid", phpbbSidCookie.trim());
+        }
+        if (phpbbUCookie != null && !phpbbUCookie.trim().isEmpty()) {
+            cookies.put("phpbb3_hrsjn_u", phpbbUCookie.trim());
         }
     }
 

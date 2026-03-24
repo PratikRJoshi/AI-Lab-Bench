@@ -114,23 +114,34 @@ git push origin main
 - HTML files appear in `data/raw/YYYY/MM/DD/`
 - If CloudFlare JS challenge is active (still 403), log a clear warning and fall back gracefully
 
-**Result:** Still gets 403 due to CloudFlare JavaScript challenge. Added manual cookie workaround.
+**Result:** Still gets 403 due to CloudFlare TLS fingerprinting. Manual cookie approach is insufficient.
 
-**Manual Cookie Workaround (Implemented):**
-- Added `app.scraper.cf-clearance-cookie` configuration property
-- User extracts `cf_clearance` cookie from browser after solving challenge manually
-- ScraperService constructor pre-populates cookie jar with the provided cookie
-- See `SCRAPER-SETUP.md` for step-by-step instructions
+**Manual Cookie Workaround (Attempted but Failed):**
+- Added `app.scraper.cf-clearance-cookie` + phpBB session cookies configuration
+- User extracts all cookies from browser after solving challenge manually
+- ScraperService constructor pre-populates cookie jar with the provided cookies
+- **Validation Result:** ❌ Still gets 403 even with valid cookies
 
-**Limitation:** Cookie expires (30 min - 24 hours), requires periodic manual refresh.
+**Root Cause:** CloudFlare uses **TLS fingerprinting** (JA3) in addition to cookies. Jsoup/Java has a different TLS signature than real browsers. CloudFlare detects the Java TLS stack and blocks it regardless of valid cookies.
+
+**Evidence:**
+- Browser with cookies → 200 OK (works)
+- Jsoup with same cookies → 403 Forbidden
+- curl with same cookies → 403 Forbidden
+
+**See `VALIDATION-RESULTS.md` for detailed analysis.**
+
+**Limitation:** Manual cookie extraction does not work for sites with TLS fingerprinting (like bogleheads.org).
 
 ---
 
-## Phase 2.6: FlareSolverr Integration (Future Enhancement)
+## Phase 2.6: FlareSolverr Integration (REQUIRED for Production)
 
-**Goal:** Automate CloudFlare challenge solving without manual cookie extraction.
+**Goal:** Automate CloudFlare challenge solving using real browser to bypass TLS fingerprinting.
 
-**Background:** CloudFlare's JavaScript challenge cannot be solved by Jsoup alone. Current workaround requires manual cookie extraction every 30 min - 24 hours. FlareSolverr is a Docker service that uses Selenium to automatically solve CloudFlare challenges and return cookies.
+**Background:** CloudFlare uses TLS fingerprinting (JA3) to detect bots. Jsoup/Java has a different TLS signature than real browsers, so it gets 403 even with valid cookies. FlareSolverr is a Docker service that uses Selenium + real Chrome browser to solve CloudFlare challenges. Chrome has the correct TLS fingerprint and sends all browser-specific headers, making it indistinguishable from a real user.
+
+**Validation Result:** Manual cookie extraction tested and FAILED due to TLS fingerprinting. FlareSolverr is the only viable solution for bogleheads.org.
 
 **Implementation:**
 
@@ -168,7 +179,9 @@ docker run -d --name flaresolverr -p 8191:8191 ghcr.io/flaresolverr/flaresolverr
 - **Pros:** Fully automated, handles cookie expiration, no manual intervention
 - **Cons:** Requires Docker, adds 5-10s latency per challenge solve, external dependency
 
-**Priority:** Low (manual cookie workaround is sufficient for MVP/demo)
+**Priority:** REQUIRED before production deployment (manual cookie does not work)
+
+**For MVP/Development:** Use mock HTML files in `data/raw/` — the MCP server works perfectly with any HTML files regardless of source.
 
 ---
 
