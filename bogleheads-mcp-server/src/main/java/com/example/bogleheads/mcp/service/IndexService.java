@@ -10,6 +10,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
@@ -72,6 +73,27 @@ public class IndexService {
             IndexSearcher searcher = new IndexSearcher(reader);
             QueryParser parser = new QueryParser("text", analyzer);
             Query query = parser.parse(queryString);
+            TopDocs topDocs = searcher.search(query, limit);
+            for (ScoreDoc sd : topDocs.scoreDocs) {
+                Document d = searcher.storedFields().document(sd.doc);
+                out.add(new ContextChunk(
+                        d.get("id"),
+                        d.get("text"),
+                        d.get("url")
+                ));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Search for all posts from a specific thread by thread ID prefix.
+     */
+    public List<ContextChunk> searchByThreadPrefix(String threadIdPrefix, int limit) throws Exception {
+        List<ContextChunk> out = new ArrayList<>();
+        try (DirectoryReader reader = DirectoryReader.open(directory)) {
+            IndexSearcher searcher = new IndexSearcher(reader);
+            PrefixQuery query = new PrefixQuery(new Term("id", threadIdPrefix + "#"));
             TopDocs topDocs = searcher.search(query, limit);
             for (ScoreDoc sd : topDocs.scoreDocs) {
                 Document d = searcher.storedFields().document(sd.doc);
