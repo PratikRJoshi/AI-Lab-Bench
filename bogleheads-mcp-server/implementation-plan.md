@@ -114,7 +114,61 @@ git push origin main
 - HTML files appear in `data/raw/YYYY/MM/DD/`
 - If CloudFlare JS challenge is active (still 403), log a clear warning and fall back gracefully
 
-**Limitation:** If bogleheads.org uses CloudFlare JavaScript challenges, Jsoup alone cannot solve them. In that case, a headless browser (Selenium/Playwright) would be needed — that's out of scope for this phase.
+**Result:** Still gets 403 due to CloudFlare JavaScript challenge. Added manual cookie workaround.
+
+**Manual Cookie Workaround (Implemented):**
+- Added `app.scraper.cf-clearance-cookie` configuration property
+- User extracts `cf_clearance` cookie from browser after solving challenge manually
+- ScraperService constructor pre-populates cookie jar with the provided cookie
+- See `SCRAPER-SETUP.md` for step-by-step instructions
+
+**Limitation:** Cookie expires (30 min - 24 hours), requires periodic manual refresh.
+
+---
+
+## Phase 2.6: FlareSolverr Integration (Future Enhancement)
+
+**Goal:** Automate CloudFlare challenge solving without manual cookie extraction.
+
+**Background:** CloudFlare's JavaScript challenge cannot be solved by Jsoup alone. Current workaround requires manual cookie extraction every 30 min - 24 hours. FlareSolverr is a Docker service that uses Selenium to automatically solve CloudFlare challenges and return cookies.
+
+**Implementation:**
+
+1. **Add FlareSolverr configuration to `application.properties`**
+   ```properties
+   app.scraper.use-flaresolverr=false
+   app.scraper.flaresolverr-url=http://localhost:8191/v1
+   ```
+
+2. **Create `FlareSolverrClient.java`**
+   - New service: `src/main/java/com/example/bogleheads/scraper/FlareSolverrClient.java`
+   - Method `solveChallenge(String url)` → returns `Map<String, String>` (cookies + HTML)
+   - POSTs to FlareSolverr API: `{"cmd":"request.get","url":"..."}`
+   - Parses JSON response, extracts cookies and HTML
+
+3. **Update `ScraperService` to use FlareSolverr conditionally**
+   - If `app.scraper.use-flaresolverr=true`, use `FlareSolverrClient` for the first request
+   - Extract `cf_clearance` cookie from FlareSolverr response
+   - Use that cookie for all subsequent Jsoup requests (existing flow)
+
+4. **Add HTTP client dependency** (if not already present)
+   - For calling FlareSolverr API: Apache HttpClient or Spring RestTemplate
+
+**Docker Setup:**
+```bash
+docker run -d --name flaresolverr -p 8191:8191 ghcr.io/flaresolverr/flaresolverr:latest
+```
+
+**Verify:**
+- Run with `app.scraper.use-flaresolverr=true`, no manual cookie needed
+- Scraper automatically gets fresh `cf_clearance` cookie on each run
+- HTML files appear in `data/raw/`
+
+**Trade-offs:**
+- **Pros:** Fully automated, handles cookie expiration, no manual intervention
+- **Cons:** Requires Docker, adds 5-10s latency per challenge solve, external dependency
+
+**Priority:** Low (manual cookie workaround is sufficient for MVP/demo)
 
 ---
 

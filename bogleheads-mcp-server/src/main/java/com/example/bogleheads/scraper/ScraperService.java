@@ -2,6 +2,7 @@ package com.example.bogleheads.scraper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -38,6 +39,13 @@ public class ScraperService {
 
     // Cookie jar for session persistence across requests
     private final Map<String, String> cookies = new java.util.HashMap<>();
+
+    public ScraperService(@Value("${app.scraper.cf-clearance-cookie:}") String cfClearanceCookie) {
+        // If CloudFlare clearance cookie is provided, pre-populate the cookie jar
+        if (cfClearanceCookie != null && !cfClearanceCookie.trim().isEmpty()) {
+            cookies.put("cf_clearance", cfClearanceCookie.trim());
+        }
+    }
 
     /**
      * Build a Jsoup connection with browser-like headers and cookie persistence.
