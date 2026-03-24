@@ -15,24 +15,29 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Minimal Lucene wrapper.  Currently, keeps everything in RAM; later we can swap for FSDirectory.
+ * Minimal Lucene wrapper for indexing and searching forum posts.
  */
 @Service
 public class IndexService {
     private Directory directory;
     private final Analyzer analyzer;
     private IndexWriter writer;
+    private final Path indexPath;
 
-    public IndexService() throws Exception {
-        directory = FSDirectory.open(Path.of("data/index"));
+    public IndexService(@Value("${app.data.index-dir}") String indexDir) throws Exception {
+        this.indexPath = Path.of(indexDir);
+        Files.createDirectories(indexPath);
+        directory = FSDirectory.open(indexPath);
         analyzer = new StandardAnalyzer();
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         writer = new IndexWriter(directory, config);
@@ -69,7 +74,7 @@ public class IndexService {
     public void rebuild() throws IOException {
         writer.close();
         directory.close();
-        directory = FSDirectory.open(Path.of("data/index"));
+        directory = FSDirectory.open(indexPath);
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         writer = new IndexWriter(directory, config);
     }
