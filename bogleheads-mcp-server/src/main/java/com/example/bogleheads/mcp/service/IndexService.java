@@ -52,6 +52,20 @@ public class IndexService {
         writer.commit();
     }
 
+    /**
+     * Bulk index multiple chunks in a single commit (more efficient than indexChunk in a loop).
+     */
+    public void indexChunks(List<ContextChunk> chunks) throws Exception {
+        for (ContextChunk chunk : chunks) {
+            Document doc = new Document();
+            doc.add(new StringField("id", chunk.id(), Field.Store.YES));
+            doc.add(new TextField("text", chunk.text(), Field.Store.YES));
+            doc.add(new StringField("url", chunk.sourceUrl(), Field.Store.YES));
+            writer.addDocument(doc);
+        }
+        writer.commit();
+    }
+
     public List<ContextChunk> search(String queryString, int limit) throws Exception {
         List<ContextChunk> out = new ArrayList<>();
         try (DirectoryReader reader = DirectoryReader.open(directory)) {
