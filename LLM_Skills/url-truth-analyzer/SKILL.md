@@ -1,6 +1,6 @@
 ---
 name: url-truth-analyzer
-description: Transcribes video/audio URLs and performs a truth-claim analysis. Supports YouTube, Facebook/Instagram reels, and LinkedIn videos. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting videos from across the web. Supports transcript-only mode (YouTube captions, no audio download) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, or asks to process the watch-urls.md file.
+description: Analyzes video/audio/image content from URLs and performs truth-claim validation. Supports YouTube, Facebook/Instagram (reels and image posts), Twitter/X, and LinkedIn videos. For video/audio: transcribes with Whisper or captions. For images: downloads and extracts text via OCR, analyzes visual content. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting content. Supports transcript-only mode (YouTube captions) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, analyzing social media images, or asks to process the watch-urls.md file.
 ---
 
 # URL Truth Analyzer
@@ -23,6 +23,15 @@ https://youtu.be/VIDEO_ID [00:05:00-00:15:00]
 
 # Transcript-only + timestamp range — captions filtered to the specified segment
 https://youtu.be/VIDEO_ID [transcript-only 00:05:00-00:15:00]
+
+# Local folder — all images in folder treated as a single post
+/Users/pratik.joshi/Downloads/my-carousel-screenshots
+
+# Local folder with optional title (used for slug and analysis heading)
+/Users/pratik.joshi/Downloads/my-carousel-screenshots [title: Sugar Myths Carousel]
+
+# Browser automation mode for Instagram (when yt-dlp fails)
+https://www.instagram.com/p/DWKE4kJDbfz/ [browser-mode]
 ```
 
 **Directive rules:**
@@ -31,6 +40,8 @@ https://youtu.be/VIDEO_ID [transcript-only 00:05:00-00:15:00]
 - Timestamps use `HH:MM:SS` or `MM:SS` format, separated by a hyphen. Both the start and end must be specified.
 - Directives are case-insensitive: `[Transcript-Only]` and `[transcript-only]` are equivalent.
 - If no directive is present, the existing default behaviour (full audio download + Whisper) applies.
+- **Local folder paths**: If the entry starts with `/` (absolute path) instead of `http`, it is treated as a local folder containing images. All supported image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`) are treated as a single post. The `[transcript-only]` and timestamp directives are ignored for folder entries. Only flat directory scanning (no recursion into subdirectories).
+- **Browser automation**: The `[browser-mode]` directive forces the use of Playwright browser automation instead of `yt-dlp`. Use this for Instagram URLs that fail with the standard download methods. Requires playwright Python package and chromium browser installed.
 
 ---
 
@@ -47,6 +58,8 @@ For each pending URL, **one at a time, in order**:
 3. After each URL's download completes: apply the inter-request delay before starting the next URL (see Step 1)
 
 Phase 1 produces either a caption file (`.vtt`) or an audio file (`.mp3`) per URL, plus a record of which URLs were duplicates, skipped, or failed.
+
+**Local folder entries** skip Phase 1 entirely (no server calls). They proceed directly to Phase 2 starting at Step 2 (Path C). Step 0 runs a local-only dedup variant (Check A skipped, Check B uses folder basename slug against local files only).
 
 ### Phase 2 — Local only (unthrottled)
 
@@ -86,7 +99,8 @@ Before anything else, check whether the pending line contains a `[...]` directiv
 2. Parse the directive string (case-insensitive):
    - If it contains `transcript-only` → set mode flag `TRANSCRIPT_ONLY=true`
    - If it matches a timestamp pattern like `00:05:00-00:15:00` or `5:00-15:00` → extract `START` and `END` values and set `TIMESTAMP_RANGE=true`
-   - Both can be present in the same directive block, e.g. `[transcript-only 00:05:00-00:15:00]`
+   - If it contains `browser-mode` → set mode flag `BROWSER_MODE=true`
+   - Multiple directives can be present in the same block, e.g. `[transcript-only 00:05:00-00:15:00]`
 3. Use the **clean URL** (without the directive block) for all subsequent processing.
 
 Report the parsed mode at the start of the URL:
@@ -94,6 +108,42 @@ Report the parsed mode at the start of the URL:
 🔄 Processing URL N of N: <clean URL>
    Mode: [transcript-only] [00:05:00–00:15:00]   ← only shown when directives are present
 ```
+
+### Sub-step 0a-local: Detect local folder entry
+
+After parsing directives, check if the clean entry (after stripping any `[...]` directive) starts with `/` and does NOT start with `http`. If so, this is a local folder entry:
+
+1. Set `CONTENT_TYPE=local-folder` and `TRANSCRIPT_SOURCE=ocr`.
+2. Validate the path:
+   - If the path does not exist OR is not a directory → mark as failed: `(failed YYYY-MM-DD — path does not exist or is not a directory)` and skip to Step 7.
+3. **Check folder depth** (NEW):
+   - Recursively scan the folder tree to find the maximum nesting depth
+   - Use this bash command to check depth:
+     ```bash
+     MAX_DEPTH=$(find /path/to/folder -type d -printf '%d\n' 2>/dev/null | sort -rn | head -1)
+     BASE_DEPTH=$(echo "/path/to/folder" | tr -cd '/' | wc -c)
+     RELATIVE_DEPTH=$((MAX_DEPTH - BASE_DEPTH))
+     ```
+   - If `RELATIVE_DEPTH > 5` → mark as failed: `(failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)` and skip to Step 7.
+   - Report depth in progress indicator: `⏳ Step 0/7: Local folder detected (depth: N levels), checking for duplicates...`
+4. **Scan for supported image files recursively**:
+   - Look for files with extensions: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp` (case-insensitive)
+   - Scan recursively up to depth 5 using:
+     ```bash
+     find /path/to/folder -maxdepth 5 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.bmp" -o -iname "*.webp" \)
+     ```
+   - If no supported image files found → mark as failed: `(failed YYYY-MM-DD — no supported image files found in folder tree)` and skip to Step 7.
+   - Report image count and distribution: `✓ Found N images across M subfolders`
+5. Extract slug:
+   - If `[title: ...]` directive is present, slugify the title text
+   - Otherwise, slugify the folder basename (e.g., `/path/to/my-carousel-images` → slug `my-carousel-images`)
+6. For dedup, run Check B only (local slug match against `~/Documents/truth-analyses/` filenames). Skip Check A entirely. No `yt-dlp --get-title` network call is made.
+
+Progress indicator for local folder: `⏳ Step 0/7: Local folder detected (depth: N levels, M images), checking for duplicates...`
+
+If this is NOT a local folder entry, continue with the normal URL duplicate check below.
+
+### Duplicate content check for URLs
 
 Before transcribing, check whether this URL points to content that has already been analyzed under a different URL. Run two checks in order — stop at the first match.
 
@@ -155,9 +205,16 @@ Report `✓ Step 0/7: No duplicate found — proceeding with full analysis.` and
 
 ---
 
-## Step 1: Download captions or audio (Phase 1 — rate-limited)
+## Step 1: Download content (Phase 1 — rate-limited)
 
 All server calls in this step are subject to the inter-request delay and exponential backoff rules described at the end of this section.
+
+**Content type detection**: First, determine what type of content the URL contains:
+- **If `BROWSER_MODE=true`**: Skip yt-dlp entirely, proceed directly to Mode G (browser automation)
+- Otherwise, try downloading with yt-dlp:
+  - If yt-dlp reports "No video formats found" but successfully extracts metadata → **image/carousel post** → proceed to Mode F
+  - If yt-dlp successfully downloads → **video/audio content** → proceed to Modes A-E based on directives
+  - If yt-dlp fails with other errors → apply retry logic
 
 ---
 
@@ -357,6 +414,154 @@ yt-dlp --cookies-from-browser firefox \
 
 ---
 
+### Mode F — Image/Carousel Posts (Instagram, Facebook, Twitter/X)
+
+**Progress indicator**: `⏳ Step 1/7: Downloading images...`
+
+Social media platforms support image-only posts (single images or carousels). When yt-dlp reports "No video formats found" but successfully extracts post metadata, the content is an image post.
+
+**Detection**: yt-dlp output contains:
+- `ERROR: [Instagram] <ID>: No video formats found!` or
+- `ERROR: [Facebook] <ID>: No video formats found!` or
+- `ERROR: [Twitter] <ID>: No video formats found!`
+- BUT the extractor successfully retrieved title/description/metadata (playlist info shows items)
+
+**Download images**:
+
+```bash
+yt-dlp --cookies-from-browser firefox \
+  --skip-download \
+  --write-thumbnail \
+  --convert-thumbnails jpg \
+  -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
+```
+
+For carousel posts (multiple images), yt-dlp downloads each image as `<slug>.1.jpg`, `<slug>.2.jpg`, etc.
+
+If thumbnail extraction fails, try direct image download:
+
+```bash
+yt-dlp --cookies-from-browser firefox \
+  -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>' 2>&1
+```
+
+Then extract image URLs from the JSON metadata:
+
+```bash
+yt-dlp --cookies-from-browser firefox -J '<URL>' | \
+  python3 -c "import sys, json; d=json.load(sys.stdin); \
+  print('\n'.join([img.get('url') for ent in (d.get('entries') or [d]) for img in (ent.get('thumbnails') or []) if img.get('url')]))"
+```
+
+Download each image URL with curl:
+
+```bash
+curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-<N>.jpg" "<IMAGE_URL>"
+```
+
+**If image download succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
+
+**If it fails**: Mark as failed with reason "Could not download images from post".
+
+**Supported URL patterns:**
+- `instagram.com/p/ID` (Instagram posts — may be carousel)
+- `instagram.com/reel/ID` (Instagram Reels — may have no video if post type changed)
+- `facebook.com/<user>/posts/ID` (Facebook posts)
+- `facebook.com/photo/?fbid=ID` (Facebook photos)
+- `twitter.com/<user>/status/ID` or `x.com/<user>/status/ID` (Twitter/X posts with images)
+
+---
+
+### Mode G — Browser automation for Instagram (when [browser-mode] directive is used)
+
+**Progress indicator**: `⏳ Step 1/7: Downloading images via browser automation...`
+
+When the `[browser-mode]` directive is specified for an Instagram URL, use Playwright browser automation to extract image URLs. This bypasses Instagram's anti-scraping measures that block `yt-dlp`.
+
+**When to use**: Instagram URLs that fail with Mode F due to platform blocks. Add `[browser-mode]` directive to the URL in `watch-urls.md`.
+
+**Requirements**:
+- Python3 with playwright package installed (`pip3 install --user --break-system-packages playwright`)
+- Chromium browser installed (`playwright install chromium`)
+
+**Process**:
+1. Run the Instagram scraper script:
+
+```bash
+python3 ~/.cursor/skills/url-truth-analyzer/instagram_scraper.py '<URL>' 2>/dev/null
+```
+
+2. Parse the JSON output to extract image URLs
+3. Download each image using curl:
+
+```bash
+# For each image URL from the scraper output
+N=1
+for img_url in "${IMAGE_URLS[@]}"; do
+  curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-${N}.jpg" "$img_url"
+  N=$((N + 1))
+done
+```
+
+**If browser mode succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
+
+**If it fails**: Report error and mark as failed with the scraper's error message.
+
+**Note**: Browser automation is slower (10-15 seconds vs 2-5 seconds) but more reliable for Instagram. The scraper extracts the top 10 largest images from the page, filtering out profile pics and thumbnails.
+
+---
+
+### Mode I — Local Folder of Images (no download needed)
+
+**Progress indicator**: `⏳ Step 1/7: Copying local images to working directory...`
+
+When `CONTENT_TYPE=local-folder` (detected in Step 0a-local), no download is needed. Instead, copy the supported image files **recursively** from the source folder tree into `/tmp/url-analyzer/` using the standard slug naming convention so Path C can find them:
+
+```bash
+# Create working directory
+mkdir -p /tmp/url-analyzer
+
+# Find all images recursively (up to depth 5, already validated in Step 0)
+readarray -t IMG_FILES < <(find /path/to/folder -maxdepth 5 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.bmp" -o -iname "*.webp" \) | sort)
+
+IMG_COUNT=${#IMG_FILES[@]}
+
+# Warn if large folder
+if [ "$IMG_COUNT" -ge 20 ]; then
+  echo "⚠️  Folder tree contains $IMG_COUNT images — analysis may take a while."
+fi
+
+# Copy images with sequential naming, preserving subfolder structure in metadata
+N=1
+for img in "${IMG_FILES[@]}"; do
+  # Extract relative path for metadata tracking
+  REL_PATH="${img#/path/to/folder/}"
+
+  cp "$img" "/tmp/url-analyzer/<slug>-${N}.jpg"
+
+  # Store relative path mapping for analysis context
+  echo "$N: $REL_PATH" >> "/tmp/url-analyzer/<slug>-paths.txt"
+
+  N=$((N + 1))
+done
+```
+
+This copy step ensures:
+- The working directory `/tmp/url-analyzer/` contains files named `<slug>-1.jpg`, `<slug>-2.jpg`, etc. — matching the convention Mode F uses
+- Original user files are **never** modified or deleted
+- Path C finds images using the same glob pattern
+- A `<slug>-paths.txt` file preserves the original subfolder structure for context during analysis (e.g., "Image 3 from subfolder 'before-photos': ...")
+
+**No inter-request delay** is needed after this step (no server was contacted).
+**No retry logic** applies.
+**Does not count toward batch cooldown.**
+
+Set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
+
+Report: `✓ Step 1/7: N local images staged for analysis (from M subfolders, no download needed).`
+
+---
+
 ### Retry with exponential backoff
 
 If `yt-dlp` fails and the output contains any of: `Sign in to confirm`, `HTTP Error 429`, `Too Many Requests`, or `rate limit` — this is a server-side rate limit. Apply exponential backoff:
@@ -394,6 +599,8 @@ sleep $((45 + RANDOM % 31))   # randomized: 45–75 seconds
 - Do **not** apply before the very first URL.
 - The randomized jitter prevents a detectable fixed-interval fingerprint.
 
+**Exception**: Local folder entries (Mode I) do not count toward the inter-request delay or batch cooldown counters, since no server calls are made. Browser automation mode (Mode G) does make network requests and should count toward rate limits.
+
 ### Batch cooldown
 
 After every **5th** successful or attempted download, insert an additional pause before continuing:
@@ -408,9 +615,13 @@ This gives the server-side rate-limit window time to reset before the next batch
 
 ---
 
-## Step 2: Get transcript (Phase 2 — local)
+## Step 2: Extract text content (Phase 2 — local)
 
 No network calls. No delays. Runs entirely on local files produced in Phase 1.
+
+The extraction method depends on the content type from Step 1:
+- **Video/audio content** (`TRANSCRIPT_SOURCE=captions` or `whisper`) → Path A or B below
+- **Image content** (`TRANSCRIPT_SOURCE=ocr`) → Path C below
 
 ---
 
@@ -524,11 +735,77 @@ Capture the output `.txt` file as the transcript.
 
 ---
 
-## Step 3: Classify the transcript (Phase 2 — local)
+### Path C — OCR + visual analysis (`TRANSCRIPT_SOURCE=ocr`)
+
+**Progress indicator**: `⏳ Step 2/7: Extracting text from images with OCR...`
+
+For image posts, extract text using Tesseract OCR and analyze visual content using Claude's vision capabilities.
+
+#### Step C-1: OCR text extraction
+
+Find all downloaded images and run OCR on each:
+
+```bash
+for img in /tmp/url-analyzer/<slug>*.{jpg,jpeg,png,gif,bmp,webp}; do
+  [ -f "$img" ] || continue
+  tesseract "$img" stdout --dpi 300 2>/dev/null
+done > /tmp/url-analyzer/<slug>.txt
+```
+
+If tesseract is not installed, install it first:
+
+```bash
+# macOS
+brew install tesseract
+
+# Verify installation
+tesseract --version
+```
+
+#### Step C-2: Visual content analysis (with subfolder context)
+
+Read each image file using Claude's vision API to extract:
+1. **Text content**: Any visible text, captions, or overlays (validates OCR results)
+2. **Visual claims**: Charts, graphs, infographics, before/after photos, product labels
+3. **Context**: People, settings, branding, emotional appeals
+4. **Implied claims**: What health/science claims are suggested by the imagery, even if not stated explicitly?
+
+**For local folder entries**: If a `<slug>-paths.txt` file exists (created in Mode I), use it to provide subfolder context for each image. This helps identify organizational structure (e.g., "before" vs "after" folders, numbered sequences, date-based organization).
+
+For each image, use the Read tool to view it, then analyze:
+- What factual claims are made visually (graphs, charts, statistics)?
+- Are there any misleading visual techniques (cropped context, cherry-picked comparisons, manipulated images)?
+- Does the text overlay match what's shown in the image?
+- **If from local folder**: Does the subfolder name provide meaningful context (e.g., "before-surgery/", "week-1/", "control-group/")?
+
+Combine OCR text + visual analysis into a single content summary saved to `/tmp/url-analyzer/<slug>.txt`.
+
+**Format**:
+```
+=== Image 1 ===
+Source: [subfolder path if from local folder, otherwise "carousel image 1"]
+OCR Text: [extracted text]
+Visual Content: [description of what's shown]
+Claims: [factual claims made by this image]
+
+=== Image 2 ===
+Source: [subfolder path if from local folder, otherwise "carousel image 2"]
+[repeat for each image in carousel]
+
+=== Combined Analysis ===
+[summary of all claims across all images]
+[Note organizational patterns if from nested folders]
+```
+
+**After analysis**: Report `✓ Step 2/7: Text extraction complete via OCR + visual analysis (N images analyzed across M subfolders, K words extracted)`
+
+---
+
+## Step 3: Classify the content (Phase 2 — local)
 
 **Progress indicator**: `⏳ Step 3/7: Classifying content type...`
 
-Read the transcript and determine the content type:
+Read the extracted text (transcript for video/audio, OCR output for images) and determine the content type:
 
 **Medical** — content is medical if it mentions any of:
 - Diagnoses, symptoms, diseases, or conditions
@@ -585,20 +862,20 @@ Format each citation as: `Author(s), Title, Journal, Year — [link]`
 
 **Progress indicator**: `⏳ Step 4/7: Validating science claims...`
 
-1. **Extract claims**: List each distinct factual claim made in the transcript as a numbered bullet.
+1. **Extract claims**: List each distinct factual claim made in the content (transcript or images) as a numbered bullet.
 
 2. **For each claim**:
    - State whether the claim is **supported**, **contested**, or **refuted** by current scientific consensus
    - Briefly explain the mechanism or evidence that would prove or disprove it (e.g., reproducible experiment, peer consensus, physical law)
    - Note any important caveats, nuances, or missing context
+   - **For image-based claims**: Note if the visual presentation is misleading (e.g., cropped graphs, unlabeled axes, cherry-picked comparisons, before/after photos without controls)
 
-3. **Find validation videos**: For each major claim, search the broader web (not limited to YouTube) for credible videos that demonstrate, validate, or refute it. Sources to consider:
-   - YouTube channels: established science communicators (e.g., Veritasium, SciShow, PBS Space Time, Kurzgesagt, 3Blue1Brown)
-   - Vimeo, university/institution portals, TED/TEDx
-   - PBS, BBC, National Geographic, Smithsonian Channel clips
-   - Conference talks from established institutions
+3. **Find validation sources**: For each major claim, search the broader web for credible content that demonstrates, validates, or refutes it. Sources to consider:
+   - **Videos**: YouTube channels from established science communicators (e.g., Veritasium, SciShow, PBS Space Time, Kurzgesagt, 3Blue1Brown), Vimeo, university/institution portals, TED/TEDx, PBS, BBC, National Geographic, Smithsonian Channel clips, conference talks from established institutions
+   - **Articles**: Peer-reviewed papers, fact-checking sites (Snopes, FactCheck.org, Health Feedback), reputable science journalism (Scientific American, Nature News, Science News)
+   - **Images**: Original sources of charts/graphs, reverse image search for context, fact-checker analyses of viral images
 
-   **Credibility filter**: Only link videos from verified, named creators or institutions. Skip videos that are anonymous, lack citations, or make extraordinary claims without evidence. Flag any claim where no credible video exists.
+   **Credibility filter**: Only link content from verified, named creators or institutions. Skip sources that are anonymous, lack citations, or make extraordinary claims without evidence. Flag any claim where no credible validation exists.
 
 ---
 
@@ -606,24 +883,30 @@ Format each citation as: `Author(s), Title, Journal, Year — [link]`
 
 **Progress indicator**: `⏳ Step 5/7: Saving analysis...`
 
-Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-video-title>.md`:
+Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 
 ```markdown
-# Truth Analysis: <Video Title>
-**Source URL**: <URL>
+# Truth Analysis: <Post Title or Video Title>
+**Source URL**: <URL>                          ← for URL entries
+**Source**: Local folder: /path/to/folder (N images)   ← for local folder entries
 **Analyzed**: YYYY-MM-DD
 **Content type**: Medical | General Science
+**Format**: Video | Audio | Image Post | Carousel (N images)
 
 ## Summary
-<2–3 sentence overview of what the video claims>
+<2–3 sentence overview of what the content claims>
 
 ## Analysis
 
 ### [Medical: SORT Analysis | Science: Claim Validation]
 <Full analysis here>
 
+[For image content, include:]
+### Visual Analysis
+<Analysis of visual presentation: misleading techniques, context, emotional appeals>
+
 ## Evidence / Validation Links
-<Citations or validation videos>
+<Citations or validation sources — videos, articles, fact-checks, original image sources>
 
 ## Verdict
 <One-paragraph plain-language summary of how trustworthy this content is>
@@ -665,8 +948,10 @@ The `extract_audio` command downloads video/audio files and creates working dire
 
 **What to delete:**
 - Any folders created by `extract_audio` (typically long hash-named directories)
-- Any `.mp4`, `.mp3`, `.wav`, `.vtt`, `.srt`, or `_transcription.txt` files in `/tmp/url-analyzer/`
+- Any `.mp4`, `.mp3`, `.wav`, `.vtt`, `.srt`, `.jpg`, `.png`, or `_transcription.txt` files in `/tmp/url-analyzer/`
 - Any temporary files created during processing
+
+**Local folder entries**: Delete only copies in `/tmp/url-analyzer/` and intermediary files. **Never delete the original source folder or its contents.** The original folder path is user-managed data.
 
 **How to clean up:**
 ```bash
@@ -702,6 +987,12 @@ If a directive was used, append it in parentheses for traceability:
 - <URL> [transcript-only 00:05:00-00:15:00] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 ```
 
+**Local folder entry** (full analysis was run):
+```
+- /path/to/folder (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- /path/to/folder [title: My Title] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+```
+
 **Duplicate entry** (content already analyzed under a different URL):
 ```
 - <URL> (duplicate of <original-URL> → see truth-analyses/<existing-file>.md)
@@ -712,6 +1003,13 @@ If a directive was used, append it in parentheses for traceability:
 - <URL> (failed YYYY-MM-DD — rate limited after 3 retries, retry manually)
 - <URL> (failed YYYY-MM-DD — all automated LinkedIn stages failed; replace with DASH manifest URL from Network tab)
 - <URL> (failed YYYY-MM-DD — <specific error reason>)
+```
+
+**Failed local folder entry**:
+```
+- /path/to/folder (failed YYYY-MM-DD — path does not exist or is not a directory)
+- /path/to/folder (failed YYYY-MM-DD — no supported image files found in folder tree)
+- /path/to/folder (failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)
 ```
 
 Failed entries remain actionable: re-add the URL to `## Pending` on a future run to retry it, or for LinkedIn post URLs, replace the entry with the DASH manifest URL (from the Network tab) and re-run.
