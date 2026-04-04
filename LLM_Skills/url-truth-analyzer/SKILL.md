@@ -465,7 +465,31 @@ curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-<N>.jpg" "<IMA
 
 **If image download succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
 
-**If it fails**: Mark as failed with reason "Could not download images from post".
+**If it fails**: Stop automated download attempts and prompt the user to download the images manually:
+
+```
+⚠️  Could not automatically download carousel images for:
+    <URL>
+
+Instagram carousel images must be downloaded manually. Please:
+
+1. Go to https://snapinsta.app
+2. Paste the following URL into the download box:
+   <URL>
+3. Download all images from the carousel
+4. Save them into a dedicated folder, e.g.:
+   ~/Desktop/MyCarousel/
+5. Add the folder path to watch_urls.md under ## Pending:
+   ~/Desktop/MyCarousel/ [title: <descriptive title>]
+6. Re-run the analyzer — it will process the folder as a local image set
+
+The original URL has been moved to ## Processed with a (pending-manual-download) note.
+```
+
+Then update `watch_urls.md`: move the URL from `## Pending` to `## Processed` with the annotation:
+```
+- <URL> (pending-manual-download YYYY-MM-DD — download carousel from https://snapinsta.app and re-add as local folder)
+```
 
 **Supported URL patterns:**
 - `instagram.com/p/ID` (Instagram posts — may be carousel)
