@@ -15,7 +15,7 @@ AI agent skills for [Cursor](https://cursor.sh) — structured instruction sets 
 - **Medical content**: graded using EBM SORT taxonomy (A/B/C) with safety, outcomes, bias, and total-evidence lenses
 - **General science**: claim-by-claim validation with credible sources (PubMed, Cochrane, fact-checkers)
 - **Rate-limited**: built-in delays, exponential backoff, and batch cooldowns to avoid platform bans
-- **Automated pipeline**: `watch-urls.md` → download → transcribe → classify → analyze → save → git push
+- **Automated pipeline**: `LLM_Skills/watch_urls.md` → download → transcribe → classify → analyze → save → git push
 
 See the [full README](./url-truth-analyzer/README.md) for details.
 
@@ -28,7 +28,7 @@ These skills are designed for Cursor's `.cursor/skills/` directory:
 cp -r url-truth-analyzer ~/.cursor/skills/
 
 # Then in Cursor, the agent will automatically pick up the skill
-# when you mention relevant tasks (e.g., "analyze this URL", "process watch-urls.md")
+# when you mention relevant tasks (e.g., "analyze this URL", "process watch_urls.md")
 ```
 
 Each skill contains a `SKILL.md` that the agent reads at invocation time — it defines the full workflow, commands, error handling, and output formats.

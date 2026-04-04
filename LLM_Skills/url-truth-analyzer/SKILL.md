@@ -1,11 +1,15 @@
 ---
 name: url-truth-analyzer
-description: Analyzes video/audio/image content from URLs and performs truth-claim validation. Supports YouTube, Facebook/Instagram (reels and image posts), Twitter/X, and LinkedIn videos. For video/audio: transcribes with Whisper or captions. For images: downloads and extracts text via OCR, analyzes visual content. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting content. Supports transcript-only mode (YouTube captions) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, analyzing social media images, or asks to process the watch-urls.md file.
+description: Analyzes video/audio/image content from URLs and performs truth-claim validation. Supports YouTube, Facebook/Instagram (reels and image posts), Twitter/X, and LinkedIn videos. For video/audio: transcribes with Whisper or captions. For images: downloads and extracts text via OCR, analyzes visual content. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting content. Supports transcript-only mode (YouTube captions) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, analyzing social media images, or asks to process the watch_urls.md file.
 ---
 
 # URL Truth Analyzer
 
 ---
+
+## Watch file location
+
+Use `LLM_Skills/watch_urls.md` in this repository as the canonical watch file.
 
 ## URL directive syntax
 
@@ -69,7 +73,7 @@ For each file produced in Phase 1, **one at a time, in order** — no delays nee
 2. Step 3: Classify + analyze
 3. Step 4: Save analysis file
 4. Step 5: Cleanup audio/caption file
-5. Step 6: Update `watch-urls.md`
+5. Step 6: Update `watch_urls.md`
 
 ### Post-processing — after all URLs complete
 
@@ -164,7 +168,7 @@ Extract the video ID from the **pending URL** using these rules:
 | `fb.watch/ID` | path segment after `fb.watch/` |
 | Other platforms | skip Check A, go to Check B |
 
-Then parse every processed entry in `## Processed` in `watch-urls.md` and extract the video ID from each processed URL using the same rules.
+Then parse every processed entry in `## Processed` in `watch_urls.md` and extract the video ID from each processed URL using the same rules.
 
 If the pending URL's video ID matches any processed URL's video ID → **duplicate detected**. Note the matching processed entry (URL + analysis file path) and skip to Step 7.
 
@@ -332,7 +336,7 @@ fi
 
 ---
 
-#### Stage D-3: Direct DASH manifest URL (user-supplied or already in watch-urls.md)
+#### Stage D-3: Direct DASH manifest URL (user-supplied or already in watch_urls.md)
 
 When a `dms.licdn.com/playlist/vid/dash/` URL is in the pending list (user already extracted it from the Network tab), use ffmpeg directly — no yt-dlp needed.
 
@@ -374,7 +378,7 @@ Manual workaround — extract the DASH manifest URL:
 4. Play the video
 5. Look for a row with Type = "dash" and size ~20–25 KB
 6. Right-click that row → Copy → Copy URL
-7. Replace this URL in watch-urls.md with the copied DASH URL
+7. Replace this URL in watch_urls.md with the copied DASH URL
    (it looks like: https://dms.licdn.com/playlist/vid/dash/...)
 8. Re-run the analyzer — Stage D-3 will handle it automatically
 ```
@@ -478,7 +482,7 @@ curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-<N>.jpg" "<IMA
 
 When the `[browser-mode]` directive is specified for an Instagram URL, use Playwright browser automation to extract image URLs. This bypasses Instagram's anti-scraping measures that block `yt-dlp`.
 
-**When to use**: Instagram URLs that fail with Mode F due to platform blocks. Add `[browser-mode]` directive to the URL in `watch-urls.md`.
+**When to use**: Instagram URLs that fail with Mode F due to platform blocks. Add `[browser-mode]` directive to the URL in `watch_urls.md`.
 
 **Requirements**:
 - Python3 with playwright package installed (`pip3 install --user --break-system-packages playwright`)
@@ -582,7 +586,7 @@ Report retry attempts as they happen:
 
 If all 3 retries fail, report:
 ```
-❌ Failed: <URL> — rate limited after 3 retries. Marked in watch-urls.md for manual retry.
+❌ Failed: <URL> — rate limited after 3 retries. Marked in watch_urls.md for manual retry.
 ```
 
 ---
@@ -943,7 +947,7 @@ If the copy fails (e.g., repo directory missing), report a warning but do **not*
 The `extract_audio` command downloads video/audio files and creates working directories in the current working directory. After the analysis is complete, delete all downloaded files and folders to save disk space.
 
 **What to keep:**
-- The original URL (already in watch-urls.md)
+- The original URL (already in watch_urls.md)
 - The truth analysis markdown file in `~/Documents/truth-analyses/`
 
 **What to delete:**
@@ -964,7 +968,7 @@ rm -rf <hash-folder-name>
 
 ---
 
-## Step 7: Update watch-urls.md
+## Step 7: Update watch_urls.md
 
 After processing each URL (including cleanup), remove it from `## Pending` and add it to the `## Processed` section with the analysis date.
 
