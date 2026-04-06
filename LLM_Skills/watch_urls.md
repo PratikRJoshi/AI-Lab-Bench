@@ -1,7 +1,4 @@
 ## Pending
-https://youtu.be/scDmziIwUEY?si=Bkhw4XwT60obv7aO
-https://youtu.be/ZSSWQVPLUMw?si=rVPNqOucvi3xACQI
-https://youtu.be/scDmziIwUEY?si=0hLL2NaY9tXrWFPN
 https://youtu.be/m_6ZfxPVFYM?si=wqoIuhzxtNEZ5RQi
 https://youtu.be/awtmTJW9ic8?si=X1dotuJzyKYKQfG7
 https://youtu.be/kMVxbnfSP-Q?si=hEwWq_M_MalhKJYe
@@ -15,6 +12,9 @@ https://youtu.be/a_r8mIAiL00?si=Uz9f7_wE7SpK2RH6
 
 ## Processed
 
+- https://youtu.be/scDmziIwUEY?si=Bkhw4XwT60obv7aO (analyzed 2026-04-05 → truth-analyses/2026-04-05-probiotics-benefits-myths-improve-gut-health-doctor-mike.md)
+- https://youtu.be/ZSSWQVPLUMw?si=rVPNqOucvi3xACQI (analyzed 2026-04-05 → truth-analyses/2026-04-05-how-probiotics-work.md)
+- https://youtu.be/scDmziIwUEY?si=0hLL2NaY9tXrWFPN (duplicate of https://youtu.be/scDmziIwUEY?si=Bkhw4XwT60obv7aO → see truth-analyses/2026-04-05-probiotics-benefits-myths-improve-gut-health-doctor-mike.md)
 - https://www.instagram.com/p/DWtJdevk970/ (analyzed 2026-04-04 → truth-analyses/2026-04-04-video-by-saffrontrail.md)
 - https://www.instagram.com/p/Cu1tZmrRbvB/ (analyzed 2026-04-04 → truth-analyses/2026-04-04-video-by-masalalab.md)
 - https://www.instagram.com/reel/DWta6VqkXsj/ (analyzed 2026-04-04 → truth-analyses/2026-04-04-video-by-learnwithadithya.md)
