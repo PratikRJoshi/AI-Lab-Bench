@@ -6,18 +6,18 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 ---
 
 ## Pending
-https://youtu.be/m_6ZfxPVFYM?si=wqoIuhzxtNEZ5RQi
-https://youtu.be/awtmTJW9ic8?si=X1dotuJzyKYKQfG7
-https://youtu.be/kMVxbnfSP-Q?si=hEwWq_M_MalhKJYe
-https://youtu.be/2ycHwcV9MvM?si=9peJ35HR8wkmqVxr
-https://youtu.be/EnVXkTr9MTM?si=1nOexnoyWPseaWQ8
-https://youtu.be/DkZ7BJQupVA?si=YHLZyJwMLM3tsK97
-https://youtu.be/9RJpIqD8MGg?si=jHDof7Gbxif-lJPS
-https://youtu.be/w-M33PtwtM4?si=MlrJlvx7Ihuchyg5
-https://youtu.be/a_r8mIAiL00?si=Uz9f7_wE7SpK2RH6
 
 
 ## Processed
+- https://youtu.be/m_6ZfxPVFYM (analyzed 2026-04-06 → truth-analyses/2026-04-06-gut-brain-bacteria-optimize-dave-asprey-big-think.md)
+- https://youtu.be/awtmTJW9ic8 (analyzed 2026-04-06 → truth-analyses/2026-04-06-food-for-thought-belly-controls-brain-ruairi-robertson-tedx.md)
+- https://youtu.be/kMVxbnfSP-Q (analyzed 2026-04-06 → truth-analyses/2026-04-06-gut-microbes-change-your-mind-microbiome-gut-brain.md)
+- https://youtu.be/2ycHwcV9MvM (analyzed 2026-04-06 → truth-analyses/2026-04-06-truth-about-gut-brain-connection-microbiome.md)
+- https://youtu.be/EnVXkTr9MTM (analyzed 2026-04-06 → truth-analyses/2026-04-06-psychobiotics-mood-altering-probiotics-gut-bacteria.md)
+- https://youtu.be/DkZ7BJQupVA (analyzed 2026-04-06 → truth-analyses/2026-04-06-why-humans-bad-at-thinking-climate-change-psychology.md)
+- https://youtu.be/9RJpIqD8MGg (analyzed 2026-04-06 → truth-analyses/2026-04-06-escaping-rat-race-money-school-failed-to-teach.md)
+- https://youtu.be/w-M33PtwtM4 (analyzed 2026-04-06 → truth-analyses/2026-04-06-how-birds-get-oxygen-inside-eggs-skunk-bear-npr.md)
+- https://youtu.be/a_r8mIAiL00 (analyzed 2026-04-06 → truth-analyses/2026-04-06-are-all-calories-the-same-sugar-insulin-resistance-lustig.md)
 - https://www.instagram.com/reel/DWt4vKxk66y/ (analyzed 2026-04-06 → truth-analyses/2026-04-06-reduce-claude-code-token-usage-27x-notaboringdeveloper.md)
 - https://www.instagram.com/p/DWnT3SwEz_Z/ (analyzed 2026-04-06 → truth-analyses/2026-04-06-protein-water-fiber-ratio-10ml-035g-dietitian-soumya.md)
 - https://www.instagram.com/p/DWoh_s2iVdT/ (analyzed 2026-04-06 → truth-analyses/2026-04-06-performance-vs-aesthetic-goals-body-recomposition-shwetambari-shetty.md)
