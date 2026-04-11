@@ -111,3 +111,11 @@ None of the specific claims are supported by scientific evidence:
 - If you prefer farm-sourced products for taste/values, that's fine — but don't expect them to cure medical symptoms without evidence
 
 **Bottom line**: Personal preference for farm foods is valid, but selling it as a medical solution to immigrant health problems based on one person's story is unethical health coaching, not evidence-based medicine.
+
+## Share with a Friend
+
+Misleading and potentially dangerous. This health coach blames bloating and acne on store-bought Indian groceries and then sells you a paid guide to buy "farm-sourced" alternatives. The worst part: she calls pasteurized milk "dead," which is flat-out wrong — pasteurization is what stops you from getting seriously sick from bacteria like salmonella and listeria. Bloating after moving to a new country is super common and usually caused by stress, different eating patterns, and lifestyle changes — not because your atta came from a store instead of a farm. If you're having real gut issues, see an actual doctor, not an Instagram health coach selling a directory.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The anti-pasteurization advice is genuinely dangerous, especially for pregnant women or anyone with a compromised immune system. This analysis can help people avoid unsafe dietary choices driven by fear-based marketing.

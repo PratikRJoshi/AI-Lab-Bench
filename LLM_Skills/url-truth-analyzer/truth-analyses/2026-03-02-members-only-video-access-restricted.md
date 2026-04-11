@@ -22,3 +22,11 @@ To analyze this content, you would need to:
 
 ## Verdict
 **Cannot assess** — Content is access-restricted. Truth-claim analysis requires publicly accessible or member-authenticated content. Please provide a publicly accessible URL or authenticate your YouTube account with member credentials.
+
+## Share with a Friend
+
+Can't really share this one — the video is behind a paywall so there's nothing to fact-check. If you find a public version of whatever this was about, send it over and I can take a look.
+
+## Broadly Shareable?
+
+No — the source content is members-only and couldn't be analyzed.

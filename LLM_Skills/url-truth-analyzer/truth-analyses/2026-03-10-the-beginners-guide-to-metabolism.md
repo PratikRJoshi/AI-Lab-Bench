@@ -65,3 +65,13 @@ The "Swiggy-Zomato" analogy for metabolism is pedagogically effective and cultur
 
 ## Verdict
 An accurate, accessible explanation of carbohydrate metabolism with excellent Indian contextualization. All major claims are scientifically sound. The South Asian skinny-fat and epigenetics sections are particularly important and correctly described. The presenter's explicit disclaimer ("I am not a doctor; don't take advice from social media") is appropriate and followed consistently. **Highly reliable; excellent foundational health education for Indian audiences.**
+
+---
+
+## Share with a Friend
+This is trustworthy and super useful. It explains how your body turns food into energy, stores the extra as fat, and why South Asians are especially prone to diabetes even when they look thin. Basically: your body has limited storage for carbs, and when those tanks are full, the overflow becomes belly fat, which messes with how your body handles sugar. The best fix? Build more muscle (it gives your body more storage space) and don't overeat. If you have diabetes in your family, this is a must-watch.
+
+---
+
+## Broadly Shareable?
+Yes — and worth flagging. This is one of the best beginner explanations of why diabetes is so common in India. Safe and helpful for anyone, especially family members who might not understand why "looking thin" doesn't mean "being healthy."

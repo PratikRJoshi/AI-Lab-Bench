@@ -78,3 +78,11 @@ The claim that Costco's industrial Indian foods uniquely cause inflammation is *
 - Ends with sales pitch for paid service
 - Oversimplifies complex immigrant health patterns
 - Demonizes specific products (A2 milk, ghee) without basis
+
+## Share with a Friend
+
+Misleading. The video claims Costco's Indian food aisle is basically an inflammation trap, but there's no science behind that. Products like organic ghee, A2 milk, and Greek yogurt are totally fine — some are even good for you. The real reason immigrants sometimes feel worse after moving isn't Costco; it's eating more fast food and processed snacks overall, plus the stress of adjusting to a new country. The creator ends up pitching a paid guide, which tells you a lot about the real motivation. If you're having gut issues, talk to a doctor instead of blaming specific grocery stores.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. This video targets immigrant anxieties about navigating US grocery stores and could cause people to needlessly avoid affordable, safe food. Sharing this analysis helps counter that fear-based messaging.

@@ -58,3 +58,15 @@ The video exposes a regulatory and marketing grey zone in India: the word "cream
 ## Verdict
 
 The core claims in this video are **well-supported** and scientifically accurate. The distinction between dairy cream and vegetable-fat "cream" in biscuits is a real and documented labeling practice; the ingredient composition is verifiable from any packet. The sugar-parity comparison with chocolate is directionally correct. The broader concern — that cream biscuits are ultra-processed foods whose risks are underestimated by parents — is backed by nutrition science. The video's framing is advocacy-driven but not misleading. **Trust level: High for factual claims; the emotional framing (parental guilt) is rhetorical but grounded in real evidence.**
+
+---
+
+## Share with a Friend
+
+This one's legit. That "cream" in cream biscuits? It's not actual dairy cream — it's basically vegetable oil, sugar, and flavoring. And gram for gram, cream biscuits can have as much sugar as a chocolate bar, which most parents don't realize. Doesn't mean you can never eat them, but maybe don't treat them as a harmless everyday snack for kids — swap in something with actual nutrition when you can.
+
+---
+
+## Broadly Shareable?
+
+Yes — and worth flagging. This analysis debunks a common misunderstanding about a snack millions of Indian kids eat daily. Sharing it could genuinely help parents make more informed choices without being preachy.

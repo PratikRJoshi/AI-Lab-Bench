@@ -111,3 +111,11 @@ This animated explainer is **directionally correct but lacks precision, nuance, 
 6. **Zero mention of risks**: No contraindications, no injury warnings, no guidance on gradual progression for sedentary individuals
 
 **Bottom line**: Good motivational content for the already health-interested. Not suitable as medical guidance. The broad strokes are right; the fine print is missing. Grade B reflects solid mechanistic and epidemiological evidence behind the core message, tempered by the systematic absence of citations, caveats, and nuance that would be required for accurate health communication.
+
+## Share with a Friend
+
+Partly true. The big message — exercise is seriously good for your brain, mood, heart, and how long you live — is absolutely real and well-proven. But this video oversells some things: it calls exercise a "miracle drug" for depression (it helps mild cases, but severe depression needs a doctor), says it prevents Alzheimer's (it lowers risk a little, that's it), and implies you'll burn tons of fat just by building muscle (the actual calorie difference is tiny). Use it as motivation to move more, but don't treat it like a medical guide.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The motivational message is great, but the oversimplified depression advice could lead someone to skip professional help. If you share it, maybe add that exercise is amazing *alongside* proper medical care, not a replacement for it.

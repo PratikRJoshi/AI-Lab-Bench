@@ -111,3 +111,11 @@ This video presents **scientifically accurate and well-explained information** a
 **Trustworthiness: HIGH** - This is reliable science communication based on recent high-quality research. The core message (eat more fiber and diverse plants for better sleep) is solidly evidence-based.
 
 **Actionability**: The recommendations are practical, safe, and aligned with dietary guidelines regardless of sleep effects.
+
+## Share with a Friend
+
+This one's actually legit. The main idea — eating more fiber (like dal, veggies, and fruits) helps you sleep better — is backed by real research. Your gut bacteria break down fiber and send signals to your brain that improve deep sleep. The video slightly overhypes fiber as *the* biggest factor (it's one of several), and the specific numbers about how much fiber people eat are a bit rounded, but the core advice is solid. If you want to sleep better, try adding more variety of plants to your meals — it's good for you regardless.
+
+## Broadly Shareable?
+
+Yes. This is accurate, practical health advice with no harmful claims. Sharing it could genuinely help people improve their sleep and diet habits.

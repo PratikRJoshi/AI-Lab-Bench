@@ -57,3 +57,11 @@ The video makes a **reasonable and well-intentioned public health argument**, bu
 - Notably absent: thalassemia and sickle cell screening, which have strong guideline backing in India for exactly this premarital context.
 
 **Overall trustworthiness: Moderate.** The spirit and intent are medically sound. The specific panel and genetic claims deserve nuance. Worth following up with a physician who can recommend an evidence-based, population-appropriate premarital screen. **SORT Grade C.**
+
+## Share with a Friend
+
+The basic idea is good — getting a health checkup before marriage makes way more sense than spending lakhs on decorations. The blood tests he recommends (blood sugar, cholesterol, thyroid, vitamins) are totally standard and useful for anyone. Where it gets a bit off is the claim that health risks from both families just "stack up" in your kids — genetics is way more complicated than that. Also, he doesn't mention the one premarital test that actually has official guidelines in India: thalassemia screening. If you're getting married, definitely get a checkup, but ask your doctor what tests actually make sense for you rather than following a random Instagram list.
+
+## Broadly Shareable?
+
+Yes. The message "invest in health screening before marriage" is responsible and culturally relevant, especially in communities where expensive weddings are normalized. Sharing this analysis adds the practical note to ask a doctor for the right tests rather than just copying this specific list.

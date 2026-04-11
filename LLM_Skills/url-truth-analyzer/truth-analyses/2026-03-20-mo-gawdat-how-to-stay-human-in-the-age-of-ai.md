@@ -124,3 +124,11 @@ The **philosophical claims** ("intelligence is amoral," "love is irrational," "h
 **Weaknesses**: Inflated statistics (99% PTG, AGI months away), oversimplification of clinical conditions, hyperbolic media distrust, conflation of personal values with predictive science.
 
 **Overall trustworthiness**: **Moderately high for stress management principles**, **low for AGI timelines**, **mixed for philosophical claims**. The practical advice (identify stressors, build coping resources, prioritize connection) is grounded in psychology. The AI urgency is **alarmist but directionally plausible**—rapid AI progress warrants preparation, even if AGI is decades away. Take the stress science seriously, the philosophy as inspiration, and the AGI timeline with skepticism.
+
+## Share with a Friend
+
+Mixed bag. The stress management stuff is mostly solid — your body does freak out with stress hormones, and most of it comes from overthinking, not real danger. His advice to sort your worries into categories and focus on what you can control is backed by real psychology. But he inflates some numbers (he says 99% of trauma survivors "grow" from it — the real number is more like 30-70%). And his prediction that AI will reach human-level intelligence in months? Most experts say that's decades away, not months. Take the stress tips seriously, enjoy the philosophy, but don't let the AI doom talk keep you up at night.
+
+## Broadly Shareable?
+
+Yes, with caveats — the stress management advice is genuinely useful, but flag that the AI timeline predictions and the "99% post-traumatic growth" stat are exaggerated. Best shared as "good life advice, not a reliable tech forecast."

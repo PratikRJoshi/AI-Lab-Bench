@@ -104,3 +104,11 @@ Ali Pour Law Group's video is **legally accurate in substance but misleading in 
 **Is the advice sound?** Yes — avoiding handheld phone use while driving (including at red lights) is legally required and safer. But the video's framing ("cameras may be watching you") creates urgency that exceeds the current enforcement reality. Most California drivers are not currently subject to automated phone detection, and pilot programs have significant due process protections.
 
 **For drivers in pilot cities**: Ensure your phone is mounted, use voice commands or single-tap functions only, and avoid texting/scrolling even at red lights. For drivers elsewhere in California, enforcement remains traditional (officer observation).
+
+## Share with a Friend
+
+The basic advice is right — don't hold your phone while driving in California, even at a red light, that's really illegal. But the video makes it sound like cameras are everywhere watching you, which isn't true yet. It's only a small test program in a few cities like SF and LA, not all of California. If you drive in CA, just mount your phone on the dashboard and use voice commands — that's totally legal and way safer anyway.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The core safety message (don't use your phone while driving) is important, but the video overhypes the surveillance angle. Sharing this analysis helps people understand the real rules without the unnecessary scare factor.

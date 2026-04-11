@@ -61,3 +61,11 @@ The core claims (H. pylori as primary ulcer cause, NSAID gastropathy, LES dysfun
 ## Verdict
 
 One of the most scientifically accurate digestive health videos reviewed. Every major claim is either directly supported or represents a reasonable approximation of current scientific consensus. The video excels at distinguishing triggers from causes (a critical but often misunderstood distinction), correctly places H. pylori and NSAIDs as the primary ulcer causes, accurately explains lactase persistence genetics, and gives appropriate celiac disease prevalence figures. The one area of slight imprecision is non-celiac gluten sensitivity (5–6% is at the high end of estimated ranges and the condition itself remains debated). The video's overall approach — explicitly citing evidence, debunking social media misinformation, deferring to doctors — makes it a model for science communication.
+
+## Share with a Friend
+
+Really trustworthy video. The big takeaways: spicy food doesn't cause ulcers (a specific bacteria called H. pylori and painkillers like ibuprofen do), most people don't need to avoid gluten unless they have celiac disease (about 1 in 100 people), and your digestive system is way tougher than Instagram makes it seem. If you have ongoing stomach issues, get tested for H. pylori instead of just cutting out foods randomly. Don't self-diagnose from social media.
+
+## Broadly Shareable?
+
+Yes — this is excellent for anyone who's ever worried about digestive health or been scared by gut-health content on social media. Accurate, calming, and myth-busting. Great for group chats.

@@ -66,3 +66,11 @@ The carousel uses a consistent dark background with orange/red accent headers an
 ## Verdict
 
 This is excellent science communication. Krish Ashok applies the correct foundational toxicology principle — dose determines toxicity — and backs it with specific, verifiable numbers that are almost all accurate. The carousel covers six common food safety scares and in each case provides dose context that is consistent with positions held by the FDA, WHO, EFSA, and IARC. Minor points: the post doesn't mention that phenylketonuria patients should avoid aspartame, that EFSA does recommend minimizing acrylamide exposure under the precautionary ALARA principle, or that the Southampton food dyes study did find a statistically significant effect (even if the dose was far above normal). But these are nuance omissions in a format that necessarily simplifies — the core message ("pay attention to denominators before panicking") is scientifically sound and urgently needed in an era of food safety scaremongering.
+
+## Share with a Friend
+
+This one's legit — the numbers check out. The whole point is that the amount matters, not just the ingredient name. Like, you'd need to drink 17 Diet Cokes a day forever to even hit the safety limit for aspartame, and a glass of milk has way more of the same stuff people freak out about. MSG, food dyes, parabens — same deal, the doses in real life are tiny compared to what would actually be a problem. Next time someone sends you a scary post about chemicals in your food, just ask "yeah, but how much?"
+
+## Broadly Shareable?
+
+Yes — this is one of the most useful things you could forward to anyone who panics about food ingredients on social media. The claims are well-sourced, the tone is calm, and it teaches people a thinking tool (check the dose) rather than just debunking one scare.

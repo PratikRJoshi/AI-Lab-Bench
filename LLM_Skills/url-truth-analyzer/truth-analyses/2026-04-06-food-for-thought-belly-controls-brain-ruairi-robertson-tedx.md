@@ -78,3 +78,15 @@ No harms discussed. The recommendations (diverse plant-rich diet, fermented food
 ## Verdict
 
 A well-researched, intellectually honest TEDx talk. Robertson accurately represents the state of gut-brain science as of the mid-2010s, appropriately flagging what is known vs. what is still emerging. The core claims are directionally supported by evidence; the specific mechanisms (particularly for mental health) remain correlational rather than causal. The dietary recommendations (diverse, plant-rich, fermented food diet) are safe, evidence-consistent, and align with established nutritional guidelines. **Overall: trustworthy, Grade B — legitimate science presented with appropriate scientific humility.**
+
+---
+
+## Share with a Friend
+
+This one's legit. The speaker is an actual researcher, and the main idea — that eating a variety of plants, fiber, and fermented foods (like yogurt or kimchi) is good for your gut and possibly your mood — is backed by real science. The one thing to know is that scientists haven't fully proven that fixing your gut *causes* better mental health, just that the two seem to go together. But the food advice itself is solid and safe, so no harm in following it. Eat more veggies and fermented stuff — that's basically the takeaway.
+
+---
+
+## Broadly Shareable?
+
+Yes — this is trustworthy, well-presented science with safe dietary advice. Great to share with anyone curious about gut health or looking for a reason to eat more diverse, whole foods.

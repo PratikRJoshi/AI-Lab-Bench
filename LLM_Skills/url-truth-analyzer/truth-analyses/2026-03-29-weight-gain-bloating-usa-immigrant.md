@@ -24,3 +24,11 @@ This is the third carousel from the same creator making identical claims. No new
 - truth-analyses/2026-03-29-clean-aesthetic-country-health-claims.md
 
 Same dangerous misinformation about pasteurized milk, same commercial bias, same lack of scientific evidence.
+
+## Share with a Friend
+
+This one's misleading. It's the same person posting the same story over and over — blaming US food for weight gain and bloating, then selling a paid guide to "better" farm sources. There's no science behind the claims, and some of the advice (like avoiding pasteurized milk) is actually risky. If you moved to a new country and your body changed, that's super normal — talk to an actual doctor, not an Instagram health coach with something to sell.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. This analysis is useful to share because the original content is repeated misinformation with a sales pitch attached, and people who've moved countries may be especially vulnerable to it.

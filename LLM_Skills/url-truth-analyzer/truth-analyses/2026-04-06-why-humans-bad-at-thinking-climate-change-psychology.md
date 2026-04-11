@@ -72,3 +72,11 @@ The talk is polished and makes strong rhetorical use of the ozone analogy. The k
 ## Verdict
 
 The talk makes a valuable and well-supported behavioral science argument about climate communication: fear without efficacy causes paralysis, concrete imagery helps, and invisibility of harm is a genuine barrier. The ozone layer recovery timeline is accurately stated. The main weakness is the oversimplified treatment of the ozone crisis resolution — attributing success primarily to individual behavior change rather than binding regulatory action (Montreal Protocol). The underlying communication recommendations are sound. **Grade B overall — well-grounded behavioral science argument with a partially incomplete historical analogy.**
+
+## Share with a Friend
+
+Mostly trustworthy. The main point — that scaring people about climate change makes them shut down instead of act — is backed by real psychology research. The ozone hole comparison is cool but a bit misleading: it wasn't just people stopping hairspray that fixed it, it was governments banning the chemicals. The big takeaway is solid though: showing people what they *can* do works better than doom and gloom. Worth watching if you care about how we talk about climate stuff.
+
+## Broadly Shareable?
+
+Yes. The core message about effective climate communication is well-supported and practically useful. The ozone analogy oversimplifies a bit, but nothing here is harmful — it might actually help people have better conversations about climate action.

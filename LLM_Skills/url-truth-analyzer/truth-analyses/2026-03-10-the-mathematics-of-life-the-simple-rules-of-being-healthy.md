@@ -64,3 +64,13 @@ The Adweta the tortoise anecdote (Aldabra giant tortoise, Alipur Zoo, born ~1750
 
 ## Verdict
 An intellectually rich video that accurately communicates cutting-edge scaling biology. The one caveat: the "1 billion heartbeats" framing, while evocative, is a simplification and humans substantially exceed this allocation. The video uses it correctly as a conceptual scaffold rather than a precise claim. All actionable health advice (exercise, stress management, no alcohol, social connection, strength training) is well-supported by evidence. **Highly reliable.**
+
+---
+
+## Share with a Friend
+This is trustworthy and honestly fascinating. The big idea: most animals get about a billion heartbeats in their lives — tiny animals with fast hearts die young, big animals with slow hearts live longer. Humans have hacked the system to get way more than our share. The practical takeaway is solid — exercise (especially strength training) a couple times a week, stay connected to friends and family, manage stress, and skip alcohol. Loneliness is roughly as bad for you as smoking, which is wild. The health advice here is backed by real research.
+
+---
+
+## Broadly Shareable?
+Yes — safe and interesting for anyone. The health advice is well-supported (exercise, social connection, no alcohol), and the "billion heartbeats" concept is a great hook that makes people actually pay attention to the practical stuff.

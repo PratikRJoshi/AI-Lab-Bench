@@ -63,3 +63,11 @@ The practical dietary recommendations are reasonable healthy eating advice, but 
 ## Verdict
 
 The dietary advice in this video (high fiber, fermented foods, olive oil, avocado, eggs) is consistent with general healthy eating guidelines and will benefit most people. However, the framing that these interventions meaningfully "increase GLP-1 levels" to replicate or augment drug effects significantly overstates the current evidence. Beta-glucan's human GLP-1 evidence is mixed; berberine's evidence is primarily in cell/animal models for the GLP-1 mechanism specifically; and the overall magnitude of dietary GLP-1 elevation is far smaller and more transient than pharmacological agonism. Importantly, the video omits berberine's clinically relevant drug interactions, which is a safety gap for its target audience (people already on GLP-1 medications). Treat as reasonable dietary advice, but not as a validated drug-equivalent protocol.
+
+## Share with a Friend
+
+Partly true. The food advice is fine — eating more fiber, olive oil, avocado, eggs, and fermented foods is just good eating. But the video oversells it by saying these foods can seriously boost the same hormone that weight-loss drugs like Ozempic target. In reality, the boost from food is tiny and lasts minutes, while the drug works for a whole week. Also, the supplement berberine can mess with diabetes medications, and the video doesn't mention that. Eat the healthy foods, skip the hype about "natural Ozempic," and talk to your doctor before taking any supplements.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The dietary advice is sensible, but the "natural GLP-1 boosting" framing could mislead people into thinking they don't need medical treatment, or that supplements are risk-free. Add context if sharing.

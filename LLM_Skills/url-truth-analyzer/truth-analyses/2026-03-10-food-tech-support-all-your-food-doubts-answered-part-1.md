@@ -62,3 +62,15 @@ A Q&A format video by Krish Ashok addressing 15+ viewer questions on food scienc
 
 ## Verdict
 A solid Q&A that accurately addresses diverse food science questions. All major claims are well-grounded in established nutrition science. The advice on supplements ("food first, pills as plan B"), oil usage, and puberty demystification are particularly valuable for Indian audiences. Minor simplifications exist (e.g., the ω-6:ω-3 ratio discussion) but are appropriate for general audiences. **Reliable; excellent general nutrition education.**
+
+---
+
+## Share with a Friend
+
+Trustworthy across the board. This covers a ton of everyday food questions — like whether coffee blocks iron (yes, for plant-based iron), whether soaking rajma actually helps (yes, it removes stuff that blocks nutrients), and whether millet flour is always healthier (not if it's ground super fine). The advice is basically: get your vitamins from real food, not pills; soak your beans; and don't panic about your kid hitting puberty at 9 — that's normal now. Really solid, practical info.
+
+---
+
+## Broadly Shareable?
+
+Yes. This is the kind of content that answers questions people actually Google. Perfect for forwarding to anyone who sends you random food "facts" on WhatsApp.

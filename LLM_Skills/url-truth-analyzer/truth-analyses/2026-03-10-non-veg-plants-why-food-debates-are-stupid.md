@@ -53,3 +53,13 @@ The onion chemistry aside is accurate: cutting an onion releases syn-propanethia
 
 ## Verdict
 All factual claims about plant biology are well-supported and accurately described. The philosophical framing — that plant intelligence challenges our animal-centric definition of sentience — is a legitimate intellectual position held by plant neurobiologists, though mainstream neuroscience maintains that without neurons and a nervous system, "sentience" and "suffering" in the human/animal sense do not apply. The video is admirably careful to present this as a thought experiment, not a moral argument. **Reliable and intellectually stimulating.**
+
+---
+
+## Share with a Friend
+This one's legit and actually really cool. It's a fun science video about how plants do surprisingly smart things — like Venus Flytraps literally counting before they snap shut, and trees warning each other about danger through underground fungal networks. It's not telling you to go vegan or eat meat — it's just saying nature is way more complex than we give it credit for. Worth watching if you like "whoa, I didn't know that" science stuff.
+
+---
+
+## Broadly Shareable?
+Yes — this is safe and fun to share with anyone. It's pure science education with no health claims, no agenda, and no misinformation risk. Great conversation starter about how weird and wonderful plants are.

@@ -95,3 +95,11 @@ This Bright Side video is **directionally correct in its central message but sys
 **For viewers**: Walking daily is genuinely excellent for health. The specific claims in this video should be taken as motivational rather than medical guidance. The FIT formula (start with what you can, increase gradually) is sound advice. For evidence-based walking recommendations, refer to AHA (150 min/week moderate activity) or WHO physical activity guidelines rather than this video.
 
 **Grade B** — The broad recommendation is Grade A, but the execution downgrades it through exaggeration, vague sourcing, and content-farm production standards.
+
+## Share with a Friend
+
+Partly true. Walking every day really is great for you — your heart, mood, and overall health all benefit, and that's backed by tons of research. But this video hypes things up way too much. It says walking "prevents Alzheimer's" (it just lowers risk a bit), "improves eyesight" (barely), and that walkers beat runners 6x for diabetes (nobody can verify that number). The bottom line: definitely walk more, it's one of the best things you can do — but get your info from actual health guidelines (like the AHA's "150 minutes a week") instead of clickbait channels.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The "walk more" message is great, but sharing this specific video risks spreading exaggerated claims. If you forward it, add a note that the big picture is right but the specific numbers are overblown.

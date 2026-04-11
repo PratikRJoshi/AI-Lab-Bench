@@ -52,3 +52,11 @@ The specific techniques (sleep restriction, sleep hygiene, stimulus control) are
 ## Verdict
 
 This content is trustworthy and aligned with evidence-based practice. It correctly presents CBT-I as first-line treatment for chronic insomnia, describes the two-process model of sleep regulation accurately, and recommends sleep restriction and sleep hygiene in line with standard protocols. The advice to avoid alcohol as a sleep aid is supported by systematic reviews. The mindfulness component is presented as a complementary approach rather than a replacement for behavioral techniques. No unsupported medical claims or conflicts of interest were identified. The main caveat is that the course does not provide individualized assessment; people with comorbid conditions (e.g., depression, sleep apnea) should seek professional evaluation.
+
+## Share with a Friend
+
+This is solid advice. The main takeaway is: if you can't sleep, the best first step isn't pills — it's changing your habits and how you think about sleep (doctors call it CBT for insomnia, and it's the #1 recommended treatment). Also, alcohol might knock you out but it actually makes your sleep worse. One thing to try: only go to bed when you're actually sleepy, and get up at the same time every day — even on weekends.
+
+## Broadly Shareable?
+
+Yes — almost everyone knows someone who struggles with sleep, and this is genuinely helpful, evidence-backed advice with no product sales or gimmicks. Worth sharing widely.

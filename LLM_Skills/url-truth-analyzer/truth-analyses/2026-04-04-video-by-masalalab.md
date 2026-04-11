@@ -40,3 +40,11 @@ A short explainer video about why Cadbury changed the shape of the Dairy Milk ba
 
 ## Verdict
 This video is **highly accurate**. All major claims are well-supported by peer-reviewed sensory science research and documented real-world events. The Cadbury shape change and consumer backlash are a matter of public record, and the gastrophysics explanation (rounder = sweeter) is a reproducible, well-studied finding from crossmodal correspondence research led by Oxford's Prof. Charles Spence. The practical tip — making desserts rounder to reduce added sugar — is a logical and scientifically grounded application. **Trustworthiness: High.**
+
+## Share with a Friend
+
+This one's actually legit! Cadbury really did change the shape of their chocolate bar to be rounder, and people thought it tasted sweeter even though the recipe was the same — turns out your brain links round shapes with sweetness (scientists have tested this a bunch of times). The cool trick: if you make desserts rounder, people think they're sweeter so you can use less sugar. Next time you're baking, try rounding off the edges of your cookies!
+
+## Broadly Shareable?
+
+Yes — fun, accurate, and harmless. It's a cool food science fact backed by real research, and the practical tip about reducing sugar through shape is genuinely useful and easy to try.

@@ -79,3 +79,15 @@ The claims mix surrogate markers (insulin levels, metabolic rate, inflammation m
 ## Verdict
 
 This Short is superficially helpful in that two of its four recommendations (Omega-3, multivitamin with attention to magnesium/zinc/D) have genuine evidence backing for women with PCOS. However, the specific quantitative claims — particularly "200 extra calories a day" from Omega-3 — are overstated and not supported by high-quality evidence. CoQ10 and curcumin evidence is preliminary and confined to small trials. Most critically, the video presents no citations, no dosing guidance, no safety caveats, and no acknowledgment that results vary. It is motivationally engaging but not a reliable clinical reference. Consider it a starting point for conversations with a healthcare provider, not a standalone recommendation. **Grade C evidence: consensus/anecdotal, primarily disease-oriented markers, no patient-oriented outcome confirmation.**
+
+---
+
+## Share with a Friend
+
+Partly true, but overhyped. Fish oil and a good multivitamin (especially vitamin D, magnesium, zinc) can actually help with PCOS — that part's real. But the claim that fish oil burns 200 extra calories a day is exaggerated, and the other two supplements (CoQ10, curcumin) don't have strong enough research behind them yet. The biggest problem is there's zero mention of side effects or doses. Don't start any supplements based on a 45-second video — talk to your doctor first, especially with PCOS.
+
+---
+
+## Broadly Shareable?
+
+Yes — and worth flagging. PCOS supplement advice spreads fast on social media, and a lot of it is oversimplified. Sharing this analysis alongside the original video could prevent someone from wasting money or skipping a real doctor visit.

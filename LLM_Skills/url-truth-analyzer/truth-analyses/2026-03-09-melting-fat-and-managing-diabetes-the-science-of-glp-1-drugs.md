@@ -62,3 +62,11 @@ The core quantitative claims (weight loss, HbA1c reduction, weight regain, nause
 ## Verdict
 
 This is a high-quality, evidence-aligned science communication video. The major quantitative claims — 15–20% weight loss, ~1.5% HbA1c reduction, two-thirds weight regain after stopping, 40–50% nausea — are all consistent with large RCTs and meta-analyses. The pharmacological mechanism is accurately explained. The video is appropriately cautious about recommending the drug and correctly situates obesity as a hormonal/physiological condition rather than a willpower failure. The one area where it slightly undersells the evidence is gallbladder disease risk, which is better documented than the pancreatitis risk it emphasizes. The creator's explicit disclaimer that this is not medical advice is appropriate. Trustworthy as educational content.
+
+## Share with a Friend
+
+This one's trustworthy and really well done. It explains how those weight-loss drugs (like Ozempic) actually work — they copy a hormone your body already makes, just in a much stronger, longer-lasting form. The numbers it gives are accurate: roughly 15–20% body weight loss, but about two-thirds of that comes back if you stop. Nausea is common (almost half of people get it). One thing it downplays a bit is gallbladder problems, which are a real side effect. Good video to watch if you or someone you know is curious about these drugs — just remember it's not a substitute for talking to a doctor.
+
+## Broadly Shareable?
+
+Yes — GLP-1 drugs are one of the most talked-about topics in health right now, and there's a lot of misinformation out there. This video gives an honest, balanced explanation. Worth sharing with anyone considering these medications or just wanting to understand the hype.

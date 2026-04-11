@@ -60,3 +60,15 @@ Opens with extraordinary statistics on the maternal physiological transformation
 **Clinically reliable.** Dr. Lalitha Krishnan's recommendations are fully consistent with WHO, IAP (Indian Academy of Pediatrics), and AAP guidelines. The expert interview format ensures appropriate nuance — she consistently defers to pediatric assessment for edge cases rather than giving one-size-fits-all advice. The one area of active scientific debate (nipple confusion) is noted. The discussion of India's IBCLC shortage and the societal pressures on new mothers is accurate and important. The opening statistics about maternal physiology are all verifiable and scientifically sound. **Highly reliable; appropriate for sharing with new or expecting parents.**
 
 > ⚠️ **Note**: This video contains medical advice. Viewers with specific breastfeeding difficulties should consult a pediatrician or certified lactation consultant (IBCLC) rather than relying solely on this video.
+
+---
+
+## Share with a Friend
+
+Highly trustworthy — this is from a senior doctor with 35+ years of experience, and everything lines up with what major health organizations recommend. The big takeaways: breast milk is the only food a baby needs for the first 6 months (no water, no gripe water, nothing else), feed the baby when they're hungry rather than on a strict schedule, and cow's milk is too heavy for babies under 1 year. If breastfeeding isn't working out, formula is the safe backup — not random home substitutes. Really important stuff for new and expecting parents.
+
+---
+
+## Broadly Shareable?
+
+Yes — and worth flagging. Breastfeeding misinformation (especially pressure from family to add gripe water, honey, or cow's milk early) is widespread. This analysis is safe and valuable to share with new parents, expecting couples, or anyone giving advice to them.

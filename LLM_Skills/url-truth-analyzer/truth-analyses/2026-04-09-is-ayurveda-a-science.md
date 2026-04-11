@@ -58,3 +58,11 @@ This video tackles the question "Is Ayurveda a science?" by distinguishing two d
 
 ## Verdict
 This is an outstanding piece of science communication — arguably one of the most intellectually honest treatments of the "Ayurveda vs science" debate. The video accurately distinguishes observational science from the modern scientific method, gives genuine credit to historical Indian contributions (Aryabhata, Kerala School, metallurgy) without inflating them, and then applies the same critical lens to modern science's institutional failures (replication crisis, sugar industry corruption, Tuskegee). Every factual claim checked is accurate. The philosophical distinction between "what" questions that traditional knowledge answers well and "why" questions that require the scientific method is well-articulated. The video's admission of modern science's limitations (consciousness, values, meaning) is epistemically responsible. The criticism of industrialized Ayurveda marketing is backed by concrete evidence (heavy metals, Patanjali). Highly trustworthy and recommended for its balanced, evidence-based approach.
+
+## Share with a Friend
+
+Trustworthy — and honestly one of the fairest takes on this topic. Instead of the usual "Ayurveda is amazing" or "Ayurveda is nonsense" fight, this video actually explains: ancient Indians were great at noticing patterns (like which plants help which symptoms), but modern science added the tools to test *why* things work and catch mistakes. It also doesn't let modern science off the hook — it talks about real scandals and failures too. Every fact they mention checks out. If you've ever argued about this at a family dinner, this is the video to send.
+
+## Broadly Shareable?
+
+Yes. This is one of the most balanced and well-sourced videos on a topic that usually generates more heat than light. Useful for anyone navigating the "traditional vs modern medicine" conversation, especially in Indian households.

@@ -72,3 +72,15 @@ The reel uses a screen-recording / talking-head format common in Indian tech cre
 ## Verdict
 
 The **underlying advice is correct and useful**: creating a well-structured `CLAUDE.md` file in your project root is an official, documented Claude Code feature that provides persistent context across sessions and meaningfully reduces token consumption per task. The **"27x" reduction claim is anecdotal and unverifiable** — it is a personal benchmark without disclosed methodology, codebase size, or reproducible conditions. It is the kind of impressive-sounding number that optimizes for social media engagement rather than communicating scientific accuracy. Developers using Claude Code should absolutely use `CLAUDE.md` for context persistence — the advice is sound. But they should not expect a guaranteed 27x improvement; actual token savings will vary widely based on their specific workflow and codebase. **Verdict: technically correct direction, specific number unsupported.**
+
+---
+
+## Share with a Friend
+
+The actual tip is good — if you use Claude Code, you should create a CLAUDE.md file in your project so it doesn't waste time re-learning your codebase every session. That's a real, officially documented feature. But the "27x less tokens" headline is just a made-up number from one person's experience with no details on how they measured it. Your savings will depend on your project and how you use it. The post is also basically engagement bait to get you to comment for a link. Good tip buried under a clickbait number — just go read the official Claude Code docs instead.
+
+---
+
+## Broadly Shareable?
+
+Not broadly — only relevant if you use Claude Code or similar AI coding tools. For developers who do, the core tip is useful, but skip the "27x" claim and point people to Anthropic's official documentation instead.

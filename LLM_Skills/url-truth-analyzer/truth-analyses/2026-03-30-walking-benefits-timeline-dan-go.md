@@ -93,3 +93,11 @@ Rationale:
 
 ## Verdict
 The overall message is **largely accurate and well-supported**: walking is one of the most evidence-backed health interventions, and the 7,000-step target aligns with recent meta-analyses. However, the post employs typical social media oversimplification: the minute-by-minute timeline implies a mechanistic precision that no single study supports, relative risk reductions are presented without baseline rates (making them sound more dramatic), and some claims mix surrogate markers with true patient outcomes. The claim that walking produces "the same calming brain chemicals" as an hour of running is misleading. The final slide is overtly promotional. SORT Grade B — directionally correct with good observational evidence, but the framing and specificity exceed what the evidence strictly supports.
+
+## Share with a Friend
+
+The main point is actually true — walking really is great for you, and aiming for around 7,000 steps a day is backed by solid research. Where this post stretches the truth is the "at exactly 2 minutes this happens, at 10 minutes that happens" timeline — your body doesn't work like a stopwatch. Also, walking doesn't give you the same brain chemical hit as an hour of running, that's an exaggeration. Bottom line: walk more, it's genuinely good for you, but ignore the minute-by-minute drama and the free guide sales pitch at the end.
+
+## Broadly Shareable?
+
+Yes. Walking is one of the safest health recommendations out there, and the core message is solid. Sharing this analysis helps people get the real takeaway (walk more!) without buying into the overly precise claims or the marketing funnel.

@@ -76,3 +76,15 @@ The carousel uses Twitter/X-style screenshot text cards — a format that mimics
 ## Verdict
 
 The post contains **sound coaching advice for advanced athletes**, framed with more absolutism than the evidence strictly supports. The core argument — that simultaneously pursuing peak performance and aggressive fat loss creates a physiological conflict — is well-grounded in sports nutrition science, particularly for trained athletes working at high volumes. However, stating that "your body can't optimize for both simultaneously" as a universal rule ignores the well-documented body recomposition literature applicable to beginners and intermediate exercisers. The 3–6 month block approach is sensible practitioner guidance, not a scientifically mandated protocol. The post is **practically useful** for its target audience (competitive recreational athletes like HYROX participants), but oversimplifies the physiology for broader audiences. No dangerous or false health claims are made — the advice trends conservative and injury-protective.
+
+---
+
+## Share with a Friend
+
+Mostly true, but depends on who you are. If you're already pretty fit and training hard, the advice is solid — trying to get stronger AND lose fat at the same time usually doesn't work well because your body needs fuel to perform. Pick one goal, focus on it for a few months, then switch. But if you're a beginner or just getting back into working out, you actually *can* build muscle and lose fat at the same time — so the "you can't do both" part is too black-and-white. Nobody's going to get hurt following this advice, though, so it's on the safe side.
+
+---
+
+## Broadly Shareable?
+
+Yes, with a caveat — the advice is solid for serious athletes but overly absolute for beginners. If sharing, mention that people who are newer to exercise can actually work on both goals at once.

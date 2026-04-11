@@ -108,3 +108,11 @@ Rationale:
 ## Verdict
 
 **Mostly accurate in direction, overstated in magnitude and certainty.** Dr. Sethi's core message — that eating earlier in the evening is metabolically preferable, especially for people with insulin resistance — is consistent with circadian physiology and multiple small trials. The cited references (Sutton 2018, Jakubowicz 2019) are real and relevant. However, the specific percentages ("30–50% higher spikes," "15% lower glucose," "30–40% insulin sensitivity drop") are drawn from small, short-duration studies and presented without the caveats they deserve (tiny samples, surrogate endpoints, significant individual variation based on genetics and chronotype). The claims about bloating, morning fatigue, and "detox" on slides 8–9 go beyond what the cited evidence supports and venture into speculative territory. The overall SORT grade is **B** — the direction of evidence is promising but the magnitude of benefit and the causal certainty implied by the carousel exceed what the current evidence base can support. The ADA does not yet include specific meal-timing recommendations in its Standards of Care, indicating this is an active research area, not settled clinical practice.
+
+## Share with a Friend
+
+Partly true. The basic idea — eating dinner earlier is probably better for your blood sugar — has real science behind it, especially if you're at risk for diabetes. But the specific numbers he throws around (like "30-50% worse!") come from super tiny studies with like 8 people, and the stuff about waking up bloated and your liver needing to "detox" is just speculation. If you want to try eating earlier, go for it, it probably won't hurt — but don't stress about hitting exactly 7 PM like it's a magic cutoff.
+
+## Broadly Shareable?
+
+Yes, with caveats. The core advice (earlier dinner = probably better) is reasonable and low-risk. Sharing this analysis helps people separate the solid idea from the overhyped percentages — especially useful for anyone with diabetes in the family who might take the specific numbers too literally.

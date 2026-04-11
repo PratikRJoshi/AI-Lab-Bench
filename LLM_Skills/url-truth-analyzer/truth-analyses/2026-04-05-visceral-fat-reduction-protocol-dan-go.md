@@ -98,3 +98,11 @@ Health coach Dan Go presents a comprehensive visceral fat reduction protocol cit
 Dan Go's visceral fat protocol is **evidence-based in components but oversold as a package**. The individual recommendations — prioritize sleep, eat Mediterranean-style with vegetables, do resistance training 2x/week, walk regularly, optionally add HIIT — align with mainstream guidelines and have Grade B evidence for visceral fat reduction. The weaknesses: (1) vague study citations prevent verification, (2) synergistic effects of the combined protocol are untested, (3) visceral fat reduction is a surrogate endpoint, not a patient outcome, (4) harms and contraindications are omitted, (5) dramatic transformation photos and fear-based heart imagery manipulate emotion over evidence, and (6) the 90-day "melt away" promise conflates correlation with causation and ignores individual variability.
 
 The protocol is unlikely to cause harm for most people and may improve body composition, but the marketing exaggerates certainty. The Grade B rating reflects reasonable physiological plausibility backed by limited clinical trials, not the Grade A "science-based" certainty the post implies. For visceral fat reduction, the strongest evidence supports: caloric deficit (any method), resistance training, avoiding prolonged sitting, and adequate sleep. Dan Go's specific stack is one reasonable approach, not a uniquely validated protocol.
+
+## Share with a Friend
+
+The advice itself is mostly fine — sleep well, eat more vegetables, lift weights twice a week, and walk a lot. That's just solid general health stuff and science backs it up. But the post makes it sound like a magic "protocol" with dramatic before/after photos and scary heart pictures, and it's really a sales pitch for his coaching program. The specific stuff about green tea extract and "fighting fat at the cellular level" is oversold. Just focus on the basics: move more, eat real food, sleep enough, and lift some weights.
+
+## Broadly Shareable?
+
+Yes — with a caveat. The general lifestyle advice is sound and safe, but warn people that the post is a marketing funnel, the study citations are vague and unverifiable, and the dramatic transformations aren't typical results.

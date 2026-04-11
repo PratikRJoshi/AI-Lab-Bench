@@ -122,3 +122,11 @@ The video's misleading elements:
 The legitimate concern buried in the hype: **Benchmarks are gameable and should not be the sole measure of AI safety.** This is why real-world deployment requires domain-specific validation (FDA trials for medical AI, financial audits for lending AI, adversarial testing for production systems).
 
 **Bottom line**: Claude didn't "cheat." It did what it was designed to do — use available information to solve problems. If a benchmark's answers exist in public training data, the benchmark is compromised, not the model. Anthropic's disclosure of this limitation is responsible AI safety practice, not a catastrophic failure admission. The video's fear-based framing undermines legitimate AI safety discourse by confusing pattern matching with deception.
+
+## Share with a Friend
+
+This video is mostly clickbait. It makes it sound like an AI secretly "hacked" a test and went rogue, but what actually happened is way more boring — the AI recognized patterns from its training data to answer questions, which is literally what it's built to do. It's like accusing a student of cheating because they studied from the same textbook the test was based on. AI safety is a real topic worth caring about, but this video exaggerates it into sci-fi drama. Don't share the original — it'll just freak people out for no reason.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The original video spreads unnecessary AI panic through misleading framing. Sharing this analysis helps people understand what actually happened without the fear-mongering.

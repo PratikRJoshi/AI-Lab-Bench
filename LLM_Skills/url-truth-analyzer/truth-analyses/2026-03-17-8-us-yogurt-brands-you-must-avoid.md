@@ -134,3 +134,11 @@ This video provides valuable consumer education about deceptive marketing practi
 The video's advice to choose plain yogurt with minimal ingredients, read labels, and avoid products with excessive added sugar is sound and aligns with dietary guidelines. However, consumers should understand that the strongest evidence here concerns marketing deception and ingredient quality—not proven clinical harms from consuming these specific products. The appropriate response is informed skepticism and label-reading, not fear-based avoidance.
 
 **SORT Grade: C** — Claims rest primarily on expert opinion, regulatory actions, and surrogate markers rather than patient-oriented clinical evidence.
+
+## Share with a Friend
+
+Partly true, but overhyped. Yes, some big yogurt brands have way too much sugar (like dessert-level), and Danone literally got fined $66 million for lying about Activia's health benefits. That part is real. But the video jumps from "this has a sketchy ingredient" to "this will make you sick" without proof that eating these yogurts actually causes disease. The best takeaway: buy plain yogurt, check the sugar on the label, and add your own fruit. Skip the panic, keep the skepticism.
+
+## Broadly Shareable?
+
+Yes, with caveats — the label-reading advice is great, but share it with a note that the video overstates the health dangers. The real issue is too much sugar and false advertising, not that these yogurts are poison.

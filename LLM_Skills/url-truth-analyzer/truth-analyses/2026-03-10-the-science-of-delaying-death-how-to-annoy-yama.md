@@ -60,3 +60,13 @@ A creative video featuring a dialogue between Krish Ashok and "Yama" (the Hindu 
 
 ## Verdict
 An outstanding science communication video that accurately covers a broad sweep of longevity science — from evolutionary biology to cutting-edge interventions. The creative Yama dialogue format makes otherwise dense science accessible. All major scientific claims are accurate. The concluding message — that free behavioral interventions (diet and exercise) outperform any drug for healthspan — is precisely aligned with the current evidence. **Highly reliable; one of the best science communication pieces in this series.**
+
+---
+
+## Share with a Friend
+This is trustworthy and really entertaining — it's set up as a conversation with Yama (the god of death) who's annoyed that humans keep living longer. The science is solid: vaccines, better food, and modern medicine have massively extended our lives. But the real punchline is that the two best things you can do to live longer are completely free — eat a bit less and exercise regularly, especially strength training. No fancy supplement or drug comes close. If you only watch one health video this year, make it this one.
+
+---
+
+## Broadly Shareable?
+Yes — and worth flagging. This is one of the best science videos in the series. The message is empowering (the best longevity tools are free), the science is accurate, and the format is entertaining enough that people will actually watch the whole thing. Great for anyone interested in living healthier.

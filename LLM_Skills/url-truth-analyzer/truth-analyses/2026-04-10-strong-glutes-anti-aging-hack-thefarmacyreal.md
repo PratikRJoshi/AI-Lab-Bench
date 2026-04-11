@@ -59,3 +59,11 @@ The image uses an anatomical overlay of gluteal musculature on a female torso �
 ## Verdict
 
 This post contains a kernel of truth wrapped in significant overstatement. The strongest claims — that resistance training reduces mortality risk and prevents sarcopenia — are well-supported by large meta-analyses (Grade A evidence). The emerging finding that resistance training may improve skin structure has one promising but preliminary study behind it. However, the post makes at least two directly refuted claims (sweat detoxification, lactic acid exfoliation), fabricates a glute-specific framing unsupported by any study, and presents a false competition between exercise and skincare when evidence supports both as complementary. The absolutist "could never compete" framing is not warranted by current evidence. A more honest version of this post would say: "Resistance training has emerging evidence for skin benefits and strong evidence for longevity — it's a valuable complement to skincare, not a replacement."
+
+## Share with a Friend
+
+Partly true but overblown. Yes, strength training is genuinely great for your health and there's early hints it might help your skin too — but this post acts like doing glute exercises specifically will replace your skincare routine, and that's not what the science says. The stuff about sweating out toxins is flat-out wrong, and no study has shown glutes matter more than any other muscle group for this. Keep lifting if you want to (it really is good for you), but don't ditch your sunscreen.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The original post could mislead people into thinking exercise replaces skincare, or that sweating detoxes your body, both of which are wrong. Sharing this analysis helps correct those ideas while still giving credit to the real benefits of strength training.

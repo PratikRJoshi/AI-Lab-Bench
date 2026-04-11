@@ -52,3 +52,11 @@ The overall presentation is honest in tone — it doesn't promise rapid transfor
 ## Verdict
 
 This carousel delivers sound, evidence-aligned fitness advice. Every major claim — walking daily, moderate-frequency resistance training, whole-food nutrition, consistent sleep, and skepticism toward named diets and ice baths — is well-supported by systematic reviews and meta-analyses. The messaging is refreshingly anti-hype for social media fitness content. The main limitation is oversimplification: "That's it" glosses over individual variation, progressive overload principles, and the fact that some populations (competitive athletes, those with chronic conditions) may genuinely benefit from more structured or specialized approaches. For the general population seeking sustainable fitness, though, the "boring basics" philosophy is one of the most evidence-supported frameworks available.
+
+## Share with a Friend
+
+This is solid advice — basically, the fittest people just walk every day, lift weights a couple times a week, eat normal real food, and sleep at a consistent time. No crazy diets, no ice baths, no 3-hour gym sessions needed. Research actually backs all of this up pretty strongly. If you're looking for somewhere to start, just pick the most basic version of each of those things and stick with it for a long time — that's genuinely the whole secret.
+
+## Broadly Shareable?
+
+Yes — this is safe and helpful to share widely. The advice is evidence-based, anti-hype, and applies to almost everyone. It's especially good for people who feel overwhelmed by conflicting fitness content online.

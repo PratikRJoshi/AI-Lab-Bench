@@ -69,3 +69,11 @@ A comprehensive video on iron metabolism — opening with stellar nucleosynthesi
 **Clinically reliable and medically sound.** The iron biochemistry is accurate, the epidemiology is consistent with NFHS-5 national data, and the dietary/supplementation advice reflects current evidence-based guidelines. The nuanced treatment of heme vs. non-heme iron, the cultural tension around animal-derived supplements in India, and the alternate-day dosing recommendation are all sophisticated and accurate. The contribution from nutritionist Amita Gadre adds practical, clinically relevant detail.
 
 > ⚠️ **Note**: Iron supplementation should only be undertaken after confirmed deficiency via blood testing (serum ferritin is the key test). Self-supplementing without testing carries risk of iron overload. Consult a doctor or dietitian.
+
+## Share with a Friend
+
+This video is legit — really solid science. Basically, a LOT of people (especially in India) are low on iron and don't know it. The big takeaways: if you're always tired, get a blood test before popping iron pills. Eating dal or spinach? Add lemon or tomato to help your body actually absorb the iron, and don't drink tea or coffee right with your meal because they block it. Most importantly — don't just start taking iron supplements without a doctor checking your levels first, because too much iron is also bad for you.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. Iron deficiency is extremely common and often missed, especially in vegetarian households. This analysis could genuinely help someone recognize they need a blood test or adjust how they eat their meals.

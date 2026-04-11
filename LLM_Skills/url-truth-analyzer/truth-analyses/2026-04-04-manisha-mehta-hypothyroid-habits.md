@@ -58,3 +58,11 @@ A carousel by dietitian/health creator Manisha Mehta presenting 5 habits for imp
 
 ## Verdict
 The lifestyle habits presented are **reasonable adjuncts to conventional hypothyroid treatment** — morning sun, cycle awareness, blood sugar stability, and nervous system calming all have physiological rationale for supporting thyroid function. However, the framing that "hypothyroidism starts from a stressed brain" and the implicit suggestion that Levothyroxine fails due to liver issues **overstates the role of these factors** relative to the established autoimmune etiology. These habits should complement, not replace, medical management. Patients should continue thyroid medication as prescribed and not interpret this content as a standalone fix. **Trustworthiness: Moderate. SORT Grade C. Consult an endocrinologist for personalized thyroid management.**
+
+## Share with a Friend
+
+Partly true. The habits she recommends — morning sunlight, managing stress, keeping blood sugar steady — are genuinely good for you and can help alongside thyroid medication. But the big claim that hypothyroidism "starts from a stressed brain" is misleading — most thyroid problems are caused by your immune system attacking the thyroid, not stress. Don't let this post convince you or anyone to skip their thyroid meds or replace them with lifestyle changes. Do the healthy habits AND take your medication — talk to your doctor, not an Instagram page selling a course.
+
+## Broadly Shareable?
+
+Yes, with caveats. The lifestyle tips are harmless and helpful, but the framing could discourage someone from taking prescribed thyroid medication. Sharing this analysis adds the important context that these habits are add-ons, not replacements for medical treatment.

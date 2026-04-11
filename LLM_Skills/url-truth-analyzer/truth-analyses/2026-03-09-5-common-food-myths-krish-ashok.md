@@ -42,3 +42,11 @@ Toxicological principle: "the dose makes the poison." The IARC carcinogen classi
 ## Verdict
 
 All substantive claims in this video are scientifically accurate. Microwaves don't cause cancer (non-ionizing radiation), jaggery is biochemically equivalent to white sugar for metabolic purposes, refrigeration preserves nutrients effectively, and the relative/absolute risk distinction is a critical and underemphasized point in health communication. This is exactly the kind of media literacy content about food science that is needed to counter the wave of pseudoscientific influencer content in India. Highly reliable and useful for building scientific thinking skills.
+
+## Share with a Friend
+
+This is one of those "forward to your family group chat" videos. Everything in it checks out: microwaves don't cause cancer (they use the same kind of waves as your Wi-Fi, not X-rays), jaggery and honey are basically sugar as far as your body is concerned, and putting food in the fridge doesn't kill its nutrition. The best part is how he explains scary health headlines — when someone says "this food doubles your cancer risk," the actual risk might go from 0.1% to 0.2%, which is basically nothing. Great for building a BS detector.
+
+## Broadly Shareable?
+
+Yes — this is exactly the kind of content worth spreading. It fights common myths with clear explanations and no agenda. Especially useful in family or community groups where food misinformation circulates frequently.

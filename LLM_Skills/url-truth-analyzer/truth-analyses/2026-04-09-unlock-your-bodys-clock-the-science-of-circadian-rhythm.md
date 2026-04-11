@@ -51,3 +51,11 @@ This video explains the circadian rhythm — the body's 24-hour internal clock �
 
 ## Verdict
 This is a scientifically solid overview of circadian biology, pitched at an accessible level without sacrificing accuracy. Every major hormonal claim (melatonin, cortisol, insulin, ghrelin/leptin) is well-supported by peer-reviewed chronobiology research. The practical recommendations for meal timing, cognitive work, and exercise are consistent with current evidence. The video's framing of traditional medicine vs modern science ("appreciate the what, understand the why") is nuanced and intellectually fair. Minor oversimplification on red light and melatonin, but nothing materially misleading. Highly trustworthy.
+
+## Share with a Friend
+
+Trustworthy. Your body really does run on a 24-hour clock, and this video explains it well — when your energy peaks, why you crash after lunch, why late-night eating is worse for you than the same food at noon, and why screens before bed mess with your sleep. The science all checks out. One tiny thing: it says red light "increases" your sleep hormone — really it just doesn't block it like blue light does. Practical takeaway: try to eat your bigger meals earlier, do hard thinking in the morning, exercise in the late afternoon, and dim the screens before bed.
+
+## Broadly Shareable?
+
+Yes. Accurate, practical, and relevant to literally anyone with a sleep schedule or a phone. Great for family group chats — the meal timing and screen advice alone makes it worth sharing.

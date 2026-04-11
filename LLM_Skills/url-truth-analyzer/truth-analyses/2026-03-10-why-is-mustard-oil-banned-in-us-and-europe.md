@@ -43,3 +43,11 @@ The mustard oil ban is a case study in regulatory asymmetry — a ban based on r
 
 ## Verdict
 The claims are accurate. The video correctly identifies a genuine regulatory inconsistency and contextualizes the erucic acid concern appropriately. The single caveat is that "no human studies" slightly overstates the case — there are human observational studies, and they generally favor mustard oil. As a short video, it conveys the key point accurately: the ban reflects rat-model evidence and commercial interests, not established human harm. **Reliable; good critical thinking about food regulation.**
+
+## Share with a Friend
+
+This one's actually pretty trustworthy. The short version: mustard oil got banned in the US based on old rat studies, not because anyone proved it's bad for people. Meanwhile, canola oil — which is basically just rebranded rapeseed oil from Canada — got the green light. The studies that do exist in humans actually suggest mustard oil is fine, maybe even good for your heart. So if your family cooks with it, no need to panic — just know the "ban" is more about outdated rules and business interests than real danger.
+
+## Broadly Shareable?
+
+Yes — worth sharing, especially with South Asian friends or family who worry about using mustard oil at home. It's a well-sourced, balanced take that clears up a common misconception without overhyping anything.

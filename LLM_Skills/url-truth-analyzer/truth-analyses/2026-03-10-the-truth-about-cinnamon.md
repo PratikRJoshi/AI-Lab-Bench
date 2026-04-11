@@ -44,3 +44,13 @@ A short (~1.5-minute) video distinguishing true Ceylon cinnamon (*Cinnamomum ver
 
 ## Verdict
 All claims are accurate. The coumarin concern is real but correctly contextualized — it applies primarily to daily high-dose supplementation, not typical culinary use. The video provides good consumer science without unnecessary fear-mongering about cassia. The etymology note is a nice bonus. **Reliable; useful for understanding the cinnamon market.**
+
+---
+
+## Share with a Friend
+This is trustworthy. Quick version: there are two types of cinnamon — the fancy light-colored one from Sri Lanka ("true" cinnamon) and the common dark one from China (cassia), which is what most of us actually buy as dalchini. Some people online say cassia is dangerous because it contains a chemical called coumarin, but unless you're eating spoonfuls of cinnamon powder every single day, it's totally fine for normal cooking. Don't stress about it — just use whichever one you like.
+
+---
+
+## Broadly Shareable?
+Yes — it's a quick, harmless explainer. Useful if someone in your circle is panicking about cinnamon being "toxic" based on a viral post. No risk of harm from sharing, and it calms unnecessary food fears.

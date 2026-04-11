@@ -220,3 +220,11 @@ Krish Ashok demonstrates:
 6. **Context matters** - socioeconomics, genetics, lifestyle all factor in
 
 **Recommendation**: This is excellent nutrition education suitable for general audiences. The advice is science-based, practical, and culturally sensitive. Unlike much nutrition content online, this promotes a balanced, sustainable approach without fear-mongering or miracle cures.
+
+## Share with a Friend
+
+Highly trustworthy — one of the best nutrition talks you'll find. The big points: building muscle is the single best thing you can do for long-term health (prevents diabetes, helps your heart, keeps you strong as you age). Dal is great — but more for its fiber than protein (surprise!). Classic combos like dal-chawal and rajma-rice actually give you complete protein, so traditional Indian food is already pretty well designed. You don't need fancy "superfoods" or a Western diet — just eat your veggies, get enough protein, and stay active. No magic, just basics done consistently.
+
+## Broadly Shareable?
+
+Yes — this is one of the most useful, no-nonsense nutrition resources out there. Share it widely, especially with anyone confused by diet fads or thinking they need expensive supplements to be healthy.

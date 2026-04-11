@@ -78,3 +78,11 @@ A brief, promotional-style video presenting probiotics as a necessary daily supp
 
 ## Verdict
 This is promotional content with significant factual problems. The claim that the microbiome weighs "around 6 pounds" is simply wrong by a factor of roughly 14x. The recommendation that "most people need to supplement daily" directly contradicts the American Gastroenterological Association's 2020 evidence-based guidelines. The video omits all safety information, presents no credentials or citations, and uses vague benefit language ("sequester toxins," "upregulate enzyme production") characteristic of supplement marketing. Viewers should treat this content with considerable skepticism. The only accurate claim — that probiotic bacteria are transient — actually undermines the case for daily supplementation unless replenishment is ongoing. **Not recommended as a health information source.**
+
+## Share with a Friend
+
+This one's mostly wrong — skip it. The video says everyone needs to take probiotics every day, but actual medical guidelines say that's not true for healthy people. It also claims your gut bacteria weigh 6 pounds, which is off by like 14x (it's closer to half a pound). The whole thing feels like a supplement ad. If you're healthy and eating okay, you probably don't need a probiotic pill. If you have a specific gut issue, talk to your doctor instead of trusting a random short video.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The original video is misleading supplement marketing that could waste people's money. Sharing this analysis helps counter the "everyone needs probiotics" myth with what the science actually says.

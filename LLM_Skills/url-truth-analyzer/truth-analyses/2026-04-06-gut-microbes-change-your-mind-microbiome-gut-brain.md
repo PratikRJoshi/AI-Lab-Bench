@@ -76,3 +76,15 @@ All major claims in this video are accurately represented and consistent with th
 ## Verdict
 
 Accurate, well-calibrated science communication. Claims are correctly attributed to animal models where appropriate, and human clinical implications are presented as emerging rather than established. No misinformation detected. **Grade B overall — trustworthy educational content.**
+
+---
+
+## Share with a Friend
+
+This one's trustworthy. It's a science explainer about how gut bacteria might affect your brain and mood — and it's honest about what we know and don't know. The cool stuff about your gut having 500 million nerve cells and talking to your brain through the vagus nerve is real, textbook science. Where it gets less certain is whether we can actually *treat* things like depression by changing gut bacteria — that's still being figured out. But the video doesn't oversell it, which is refreshing. Good watch if you're curious about this topic.
+
+---
+
+## Broadly Shareable?
+
+Yes — this is solid, honest science communication with no misleading claims or product promotion. Safe and educational for anyone interested in how the body works.

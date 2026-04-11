@@ -102,3 +102,11 @@ The only claim approaching a POEM is **"0g safe amount of alcohol"**, which is d
 ## Verdict
 
 This Masala Lab carousel is a well-crafted piece of science communication that accurately represents the nutritional science consensus on most topics covered. Krish Ashok's numerical framing effectively counters common food anxieties (MSG, food colours, frozen food, gluten for non-celiacs) with data-backed perspective. The alcohol and B12 claims are particularly well-supported by robust evidence. The main weakness is inherent to the format: single numbers cannot capture individual variation in caloric needs, the nuanced spectrum of gluten sensitivity, or the variability in food colour toxicology. Overall, this is trustworthy general-audience content — viewers should treat the numbers as directional guides rather than personal prescriptions, especially for caloric intake and gluten sensitivity. **SORT Grade B** — consistent with established science but presented as disease-oriented evidence without specific study citations.
+
+## Share with a Friend
+
+Mostly trustworthy — this is a solid reality check on a bunch of food myths. MSG is safe, frozen food doesn't need preservatives because freezing *is* the preservation, food coloring won't kill you, and going gluten-free is pointless unless you actually have celiac disease (which is only about 1-2% of people). The one thing they nail perfectly: there's no safe amount of alcohol, and you can't get B12 from plants alone. Just keep in mind the calorie numbers are rough averages — your personal needs depend on your size and activity level. Overall, great content to calm down food anxiety.
+
+## Broadly Shareable?
+
+Yes. This is the kind of myth-busting content that's genuinely helpful in group chats where food fears get amplified. It's accurate, practical, and doesn't sell anything.

@@ -73,3 +73,11 @@ This content is **largely accurate and appropriately critical** of commercial be
 **Minor critiques**: The transcript conflates sugar-containing drinks with artificially sweetened ones (these are typically separate products), and specific sugar quantities would be strengthened by naming exact brands. The advice to "listen to your body" is well-intentioned but oversimplifies the challenge of overcoming learned preferences for hyperpalatable foods.
 
 **Overall trustworthiness**: High. The message promotes skepticism toward corporate health claims, encourages whole-food consumption, and correctly prioritizes water intake. The speaker's critique of marketing practices is well-founded. This is consumer advocacy grounded in nutritional consensus.
+
+## Share with a Friend
+
+Pretty trustworthy. The main point: those popular bottled drinks your kids love can have up to 7 teaspoons of sugar in one small bottle — that's more than an entire day's worth of what's recommended. Some even have caffeine and say "not for children" in tiny print while marketing directly to kids. The better options? Coconut water, nimbu paani, plain water, or homemade ginger drinks. Nothing groundbreaking, but a good reminder to check labels instead of trusting flashy packaging.
+
+## Broadly Shareable?
+
+Yes — especially useful for parents and families. The advice is simple, practical, and backed by basic nutrition science. Sharing this could help someone swap out a sugary habit for something genuinely healthier.

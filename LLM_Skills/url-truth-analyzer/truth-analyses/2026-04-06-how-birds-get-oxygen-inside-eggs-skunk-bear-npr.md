@@ -69,3 +69,15 @@ This is an exemplary science communication piece from a credible source (NPR). A
 ## Verdict
 
 Factually accurate, elegantly explained science content from a credible source. All claims are consistent with established developmental biology. The evolutionary analogy to mammalian placentation is valid. **Grade A — no misinformation, excellent science communication.**
+
+---
+
+## Share with a Friend
+
+100% trustworthy — this is just a really cool, well-made science video from NPR. It explains how baby birds breathe inside eggs (tiny holes in the shell, blood vessels that grab oxygen, and a little air pocket the chick breaks into right before hatching). Everything in it checks out with actual biology textbooks. If you like "whoa, I never thought about that" science content, this is a great one. No health claims, no agenda, just neat facts.
+
+---
+
+## Broadly Shareable?
+
+Yes — totally safe and fun to share. It's accurate science from a credible source with zero risk of misleading anyone. Great for kids, curious adults, or anyone who likes learning random cool things.

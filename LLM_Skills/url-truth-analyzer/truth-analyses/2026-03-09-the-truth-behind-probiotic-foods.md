@@ -69,3 +69,15 @@ The video makes accurate claims about how probiotics work and their limitations.
 ## Verdict
 
 Accurate and appropriately skeptical of probiotic hype. The video correctly identifies the key limitations: heat destroys bacteria, stomach acid kills most of what survives, and new bacteria struggle to colonize an established microbiome. The bacterial cell count (55/45) is coincidentally close to the current best estimate. The practical recommendation — eat uncooked fermented foods and plenty of prebiotic fiber — is evidence-supported and more nuanced than typical probiotic marketing. A reliable, well-calibrated short-form video.
+
+---
+
+## Share with a Friend
+
+Mostly trustworthy. The video's right that most "probiotic" foods lose their good bacteria during cooking or get killed by your stomach acid anyway. So that expensive probiotic yogurt drink? Probably not doing much. What actually helps your gut is eating regular homemade curd (not heated), fermented stuff, and lots of vegetables and whole grains. Save your money on fancy probiotic products and just eat real food.
+
+---
+
+## Broadly Shareable?
+
+Yes. Probiotic marketing is everywhere, and this is a helpful reality check. Good to share with anyone spending money on probiotic supplements or special drinks without understanding the limitations.

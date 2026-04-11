@@ -45,3 +45,11 @@ Comparative studies generally find similar or slightly better nutrient retention
 ## Verdict
 
 Every claim in this video is scientifically accurate. Pressure cooking is nutritionally equivalent to other wet cooking methods, and in some scenarios slightly better, due to shorter cooking times. The only nutrients meaningfully lost to heat are water-soluble (B vitamins, especially thiamine, and vitamin C), and this loss occurs with all cooking methods. The reminder to include raw foods (salads, fruits) is practical and correct. Highly reliable content.
+
+## Share with a Friend
+
+Totally trustworthy. Your pressure cooker is not killing your food's nutrition — all cooking changes food a little, and pressure cooking is actually no worse (maybe slightly better) than regular boiling because it's faster. The only things that take a small hit are vitamin C and some B vitamins, and that happens with any cooking method. Just have a side salad or some fruit with your meal and you're good. Keep using your cooker without guilt.
+
+## Broadly Shareable?
+
+Yes — short, accurate, and relevant to basically every Indian kitchen. Perfect for debunking the pressure cooker myth that circulates in family WhatsApp groups.

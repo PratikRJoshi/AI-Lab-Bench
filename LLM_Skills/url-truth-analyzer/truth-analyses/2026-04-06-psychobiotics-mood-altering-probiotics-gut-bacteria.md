@@ -83,3 +83,15 @@ This video introduces "psychobiotics" — probiotics that can influence mood, an
 ## Verdict
 
 Psychobiotics are a real and growing area of research with legitimate clinical trial data. The video accurately names real strains used in real trials and describes plausible mechanisms (neurotransmitter production, HPA axis modulation, anti-inflammatory effects). The main overclaim is applying these findings to clinical depression — most trials involve healthy volunteers with subclinical anxiety/stress, not diagnosed major depressive disorder. The specific dose and strain recommendations reflect trial protocols rather than established clinical guidelines. **Grade B on the mechanism and anxiety claims; Grade C on specific clinical applications and doses. Directionally trustworthy, with appropriate caution needed before applying to clinical contexts.**
+
+---
+
+## Share with a Friend
+
+Partly true — the idea that certain probiotics might help with stress and mood is real, and scientists are actively studying it. The specific bacteria strains the video names are actual ones from real studies. But here's the catch: most of those studies were done on people who felt a bit stressed, not people with actual diagnosed depression. So if someone is dealing with serious mental health stuff, probiotics aren't a replacement for real treatment. The science is promising but not there yet. If you're curious, try adding some yogurt or fermented foods to your diet — but don't ditch your therapist for a probiotic pill.
+
+---
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The science is real but early-stage, and there's a risk people could interpret this as "probiotics cure depression." Sharing this analysis alongside the video helps set realistic expectations about what probiotics can and can't do for mental health.

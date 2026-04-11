@@ -97,3 +97,15 @@ The carousel uses clean, text-only slides styled as Twitter/X screenshots and wh
 ## Verdict
 
 The **core finding is real but overstated**. The 2016 Steves twin study does show that leg power is associated with better cognitive aging trajectories over 10 years, independent of many confounders — this is a legitimate and well-controlled observational finding. However, Dr. Sethi presents a *correlation* study as though it establishes *causation* ("stronger legs = sharper brain"), which it does not. The mechanistic claims — particularly the 70% neural stem cell drop with leg restriction and the 4× BDNF advantage of leg training over upper body — are not cited, and appear to originate from animal immobilization studies that cannot be directly applied to humans. The exercise recommendations themselves (squats, lunges, etc.) are safe and broadly evidence-supported for overall health. **Bottom line**: exercise your legs — that advice is sound. But the specific framing that legs are uniquely and causally responsible for brain sharpness via these dramatic mechanisms is a significant overreach of the evidence. Rated **Grade B** overall.
+
+---
+
+## Share with a Friend
+
+Partly true. There's a real study showing that twins with stronger legs tended to have better brain health 10 years later — that part is legit. And exercising (including leg exercises like squats and lunges) is genuinely good for your brain as you age. But the post makes it sound way more dramatic than the science actually shows — the "70% drop in brain stem cells" and "legs make 4x more brain chemicals" claims come from mouse studies, not humans. The exercises are safe and great for you, so go ahead and do them. Just don't think skipping arm day is going to cost you brain cells.
+
+---
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The "exercise is good for your brain" message is solid and worth spreading, but the dramatic numbers (70%, 4×) are from animal studies and shouldn't be taken as human facts. Sharing this analysis helps people get the right takeaway: stay active, train your legs, but don't overinterpret one study.

@@ -62,3 +62,13 @@ An in-depth exploration of nutritional bioavailability — the fraction of a nut
 
 ## Verdict
 One of the most scientifically rigorous videos in this series. The bioavailability data is accurately cited, the practical guidance is evidence-based, and the framing around grandmother's wisdom vs. influencer advice is both fair and factually grounded. The central thesis — that traditional Indian food preparation practices (fermenting, pressure cooking, combining, soaking) have genuine nutritional justification — is strongly supported by modern food science. **Highly reliable; excellent reference video.**
+
+---
+
+## Share with a Friend
+This is trustworthy and honestly made me appreciate Indian cooking way more. The main idea is that it's not just about what nutrients are in your food — it's about how much your body actually absorbs. And it turns out a lot of traditional Indian practices, like pressure-cooking dal, eating rice with dal, adding a tadka (tempering) to vegetables, and even eating leftover rice soaked overnight, all have real science behind them that helps your body get more nutrition. Your grandmother wasn't just following tradition — she was accidentally being a food scientist. Next time someone tells you to ditch traditional food for a "superfood," show them this.
+
+---
+
+## Broadly Shareable?
+Yes — this is one of the best in the series. It validates traditional cooking wisdom with solid science, contains no harmful advice, and is relevant to anyone who eats Indian food. Perfect for sharing with family, especially elders who'll appreciate the "grandmother was right" angle.

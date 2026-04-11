@@ -86,3 +86,11 @@ The "Hanuman Complex" is **a culturally-informed therapeutic metaphor, not a val
 **For clients**: If the Hanuman story resonates, it's a helpful way to understand hesitation despite competence. But the intervention is grounded in established psychology (self-efficacy, behavioral activation), not unique to this framework.
 
 **Grade C means**: Expert opinion and clinical experience, not empirical validation. Useful as a culturally-adapted delivery mechanism for evidence-based techniques, not as a standalone diagnostic category.
+
+## Share with a Friend
+
+It's a neat idea but not quite what it seems. The "Hanuman Complex" — feeling like you can't do things even though you totally can — is a real feeling, but it's not a proven scientific diagnosis. It's basically one doctor's way of using the Hanuman story to help people understand self-doubt, and the actual fixes (tracking your wins, pushing yourself to try things) are just standard therapy techniques with a cultural spin. If the story clicks with you, great — but know it's more of a helpful metaphor than a medical discovery.
+
+## Broadly Shareable?
+
+Not broadly — only relevant if someone is interested in Indian psychology or culturally-specific therapy approaches. It's not harmful, but it could mislead people into thinking this is an established condition when it's really just one therapist's framework.

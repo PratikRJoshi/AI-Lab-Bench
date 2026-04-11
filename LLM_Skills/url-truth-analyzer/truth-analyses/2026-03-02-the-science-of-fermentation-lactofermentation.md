@@ -98,3 +98,11 @@ This is a meta-claim about epistemology, not a scientific claim. The presenter c
 The video contains no misleading claims, pseudoscience, or exaggerations. The presenter demonstrates solid understanding of food microbiology and appropriately distinguishes between empirical knowledge (traditional fermentation practices) and mechanistic understanding (modern microbiology). The claims are reproducible both in controlled laboratory settings and home kitchens.
 
 **Grade: A** — Accurate, well-explained science communication backed by current peer-reviewed literature.
+
+## Share with a Friend
+
+This one's legit — the science checks out. Fermented foods like yogurt, kimchi, sauerkraut, and idli are actually more nutritious than the raw ingredients because the good bacteria break things down and make vitamins your body can use. The 2% salt tip for homemade ferments is backed by research too. If you're into making stuff at home, this is a solid guide to follow.
+
+## Broadly Shareable?
+
+Yes — accurate, practical, and relevant to anyone who eats or makes fermented foods. No misleading claims, no product pushing. Great for sharing in cooking or health groups.

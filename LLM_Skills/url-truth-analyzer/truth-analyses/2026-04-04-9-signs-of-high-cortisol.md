@@ -51,3 +51,11 @@ Evaluating each claim against clinical evidence for hypercortisolism:
 
 ## Verdict
 The 3 classic Cushing's signs (bruising, moon face, central fat) are clinically accurate for pathological high cortisol. The other 6 signs are **too non-specific to be attributed to cortisol** without differential diagnosis. This content risks normalizing "cortisol as the root of all symptoms" — a popular wellness narrative that can delay proper diagnosis. If multiple symptoms apply, the appropriate action is a cortisol blood/urine test via a physician, not self-diagnosis. **Trustworthiness: Low-Moderate. SORT Grade C.**
+
+## Share with a Friend
+
+Mostly misleading. Three of the nine signs (easy bruising, puffy face, belly fat buildup) actually are linked to a real medical condition called Cushing's. But the other six — sugar cravings, tiredness, acne, low sex drive, irritability, neck tension — could mean literally anything. Being tired and craving sugar doesn't mean your cortisol is broken. "Cortisol" has become a buzzword that wellness accounts use to sell supplements. If you're worried about these symptoms, see a doctor for a simple blood test instead of self-diagnosing from an infographic.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The "everything is cortisol" trend is everywhere on social media right now and can lead people to waste money on unproven supplements or delay getting checked for what's actually going on.

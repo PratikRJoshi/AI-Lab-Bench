@@ -115,3 +115,11 @@ The carousel's core claims are scientifically accurate and align with medical co
 3. **Satirical framing**: The "Wellness Influenzas" attribution is a rhetorical device, not a real entity. While transparent, it could be seen as strawmanning if taken out of context.
 
 **Bottom line**: The content is didactically sound and addresses a common parental concern with evidence-based reasoning. Parents worried about hormones in food can be reassured that regulatory bans are in place and that childhood nutrition/BMI management is a more evidence-backed focus than avoiding commercial milk/chicken. The carousel would benefit from full citations for academic rigor, but the claims themselves are defensible and supported by mainstream science.
+
+## Share with a Friend
+
+This one's trustworthy. The post debunks a really common worry — that hormones in milk and chicken are making kids hit puberty early. Turns out, hormones in chicken farming have been banned for decades, and the tiny amount of estrogen in a glass of milk is nothing compared to what your body already makes on its own. The real driver of early puberty is childhood obesity, not food hormones. So instead of stressing about which brand of milk to buy, focus on keeping kids active and eating balanced meals.
+
+## Broadly Shareable?
+
+Yes. This is exactly the kind of science explainer that's useful to forward to parent group chats. It tackles a very common fear with solid evidence and could save a lot of unnecessary worry.

@@ -85,3 +85,11 @@ The before/after photo (Slide 8) deserves specific scrutiny:
 
 ## Verdict
 This carousel mixes genuinely important public health points (high UPF consumption in the US, South Asian metabolic risk, plastic chemical exposure) with oversimplified or unsupported claims (hybrid wheat is inflammatory, ultra-pasteurized dairy disrupts hormones, small ingredient swaps cause "massive metabolic shifts"). The before/after testimonial is uncontrolled anecdotal evidence. Critically, the entire carousel functions as a sales funnel for the creator's paid "IND→USA Healthy Sourcing" guide — every anxiety-inducing slide builds toward a commercial product. While some underlying concerns are valid, the presentation exaggerates risk, omits nuance, and exploits immigrant identity anxiety for commercial purposes. **SORT Grade C — some legitimate concerns mixed with unsupported claims, no clinical evidence cited, commercial motivation throughout.**
+
+## Share with a Friend
+
+Partly true, but mostly a sales pitch. Yes, a lot of packaged food in the US is heavily processed, and South Asians do have higher risk for things like diabetes — those parts are real. But the post blows everything way out of proportion, blames specific stores and products without evidence, and then conveniently sells you a paid guide as the fix. The before/after photo proves nothing. If you're worried about eating healthier after moving to the US, just focus on cooking more at home with whole ingredients and cutting back on junk food — you don't need to buy someone's guide for that.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. This type of content is widely shared in Indian immigrant communities and uses real fears to sell a product. Sharing this analysis can help people separate the valid health advice from the fear-based marketing.

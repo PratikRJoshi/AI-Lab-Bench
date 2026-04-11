@@ -35,3 +35,11 @@ Re-process with a language-specific Whisper model (e.g., `--language hi` or `--l
 
 ## Verdict
 The transcription quality is too poor to render a reliable truth verdict on this video. The content is short (53 words recovered), in a regional dialect, and the claims are not decodable with confidence. **Re-transcription in the correct language is required before this analysis can be considered complete.** Grade C by default due to no evidence of cited research or clinical backing.
+
+## Share with a Friend
+
+Honestly, I couldn't tell what this video is actually saying — it's in a regional dialect and the auto-transcription only caught a few words about weight loss stalling. Without knowing the actual claims, I can't say if it's good advice or not. If you're curious about why weight loss plateaus, better to ask a doctor or look up a source where you can actually understand the full explanation.
+
+## Broadly Shareable?
+
+Not broadly — this analysis is incomplete because the video couldn't be properly transcribed. Sharing it wouldn't help anyone since we can't confirm what's being claimed.

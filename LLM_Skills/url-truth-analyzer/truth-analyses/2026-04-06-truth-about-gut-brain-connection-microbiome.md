@@ -69,3 +69,11 @@ Content is consistent with the peer-reviewed literature. The 1970s mouse stress 
 ## Verdict
 
 Accurate, well-sourced science explainer with appropriate epistemic humility. Claims track the peer-reviewed literature closely and distinguish between animal model evidence and emerging human research. **Grade B — trustworthy educational content, no significant misinformation detected.**
+
+## Share with a Friend
+
+This one's legit. Your gut and your brain really do talk to each other — scientists are still figuring out exactly how, but the basic idea that stress messes with your gut bacteria (and vice versa) is backed by solid research. The video doesn't oversell anything or push weird products. If you're interested in the gut-brain stuff, this is a good starting point — just know it's still an active area of research, not settled answers yet.
+
+## Broadly Shareable?
+
+Yes. This is accurate, well-balanced science content with no harmful claims or misleading advice. Safe to share with anyone curious about how the gut and brain are connected.

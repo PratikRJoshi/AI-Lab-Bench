@@ -74,3 +74,15 @@ The video uses celebrity bankruptcy as a hook — a common and effective pedagog
 ## Verdict
 
 Solid, mainstream personal finance content with accurate factual anchors (Tyson bankruptcy, credit card debt records). The financial principles recommended (budget, avoid lifestyle inflation, invest early, build income-generating assets) are consistent with established personal finance guidance and behavioral economics research. The video does not promote specific products, scams, or dangerous financial advice. The main limitation is surface-level treatment — the "money = value expression" reframing is pedagogically useful but economically imprecise, and the Kiyosaki asset/liability framework has known critiques in financial planning circles. **Overall: trustworthy, practical personal finance content. No significant misinformation. Grade A on factual accuracy of cited figures; Grade B on the financial framework recommendations.**
+
+---
+
+## Share with a Friend
+
+This one's actually solid. The facts check out — Mike Tyson really did go broke, and credit card debt really is at record highs. The money tips are basically what every good financial advisor says: make a budget, don't blow your raises on fancier stuff, start investing early, and build things that make you money. It's not groundbreaking, but nothing here is wrong or scammy. If you want to get better with money, this is a decent starting point — just don't treat it like the only thing you need to learn.
+
+---
+
+## Broadly Shareable?
+
+Yes — safe and useful to share. It's mainstream personal finance advice with no misleading claims or product pitches, and most people could benefit from the reminders about budgeting and avoiding lifestyle inflation.

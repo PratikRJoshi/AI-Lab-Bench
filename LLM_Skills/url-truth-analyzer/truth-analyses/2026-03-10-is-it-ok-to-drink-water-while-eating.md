@@ -37,3 +37,15 @@ A very short (~1.5-minute) video debunking four common Indian water-related food
 
 ## Verdict
 A short but accurate myth-busting video. All claims are scientifically supported. The "snana = river walk" reinterpretation is the one speculative element, but the conclusion (modern shower doesn't affect digestion) is certainly correct. **Reliable; useful quick-reference for common Indian water myths.**
+
+---
+
+## Share with a Friend
+
+Totally trustworthy. Yes, you can drink water while eating — your stomach adjusts on its own and food is already mostly water anyway. Showering after a meal is also fine (the old advice was about walking to a river, not using your bathroom). RO water is safe, and drinking water while standing does absolutely nothing bad. Next time someone at dinner tells you to put your glass down, you can tell them science says otherwise.
+
+---
+
+## Broadly Shareable?
+
+Yes. These four myths come up in almost every Indian household. This is a great quick-reference to settle the debate — short, accurate, and nobody's going to get hurt by knowing the truth.

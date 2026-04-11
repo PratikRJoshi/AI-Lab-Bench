@@ -89,3 +89,11 @@ This is unusual — Lustig makes several POEM-level claims (mortality, diabetes 
 ## Verdict
 
 Dr. Lustig makes several important and well-supported points: the obesity-diabetes dissociation is real; the thin-fat South Asian phenotype is documented; fructose specifically drives de novo lipogenesis and liver fat accumulation via a well-established biochemical pathway; and insulin resistance is a central driver of metabolic disease. These are legitimate contributions to nutritional science. The main overclaims are: (1) that the rate of diabetes increase is equal in obese vs. normal-weight populations without a cited source; and (2) the framing that "a calorie is not a calorie" in a way that implies caloric balance is irrelevant (it isn't — the debate is about metabolic effects, not whether energy balance matters). **Grade B overall — important, credentialed medical science with one unsubstantiated epidemiological claim and some rhetorical overclaiming around the CICO model.**
+
+## Share with a Friend
+
+Mostly trustworthy — this is a real doctor from UCSF making some important points. The big takeaway: not all foods affect your body the same way even if they have the same calories, and sugar specifically is worse for you because of how your liver processes it. He's right that thin people can get diabetes too (especially common in South Asian countries). Where he stretches it: he kinda implies calories don't matter at all, but they still do — it's just that sugar calories are extra harmful on top of that. Bottom line: cutting back on added sugar is one of the best things you can do, and you don't have to be overweight to worry about diabetes.
+
+## Broadly Shareable?
+
+Yes — it's a credible, mostly accurate explanation of why sugar is uniquely harmful. The one caveat to mention is that calories still matter for weight, even though different calories affect your body differently. Good for anyone curious about nutrition science.

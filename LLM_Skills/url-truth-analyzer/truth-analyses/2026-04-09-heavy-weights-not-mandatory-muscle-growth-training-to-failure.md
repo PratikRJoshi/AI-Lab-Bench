@@ -99,3 +99,11 @@ This post is **largely accurate and well-supported** by current exercise science
 The post's weaknesses are: (1) it conflates "gains" with hypertrophy alone, omitting that strength gains are load-dependent; (2) the recommendation to train to true failure on "almost all sets" is more aggressive than most evidence-based guidelines (RIR 1–3 is typically recommended); (3) the 2kg example is rhetorical exaggeration — the low-load literature starts at ~30% 1RM, not essentially 0%; and (4) the yoga claim is weakly supported compared to the calisthenics claim.
 
 Overall, for a social media post, the science is presented with unusual accuracy. The Henneman's size principle explanation is mechanistically correct, the PubMed citation is directly relevant and from a credible source, and the core message — effort matters more than absolute load — aligns with scientific consensus.
+
+## Share with a Friend
+
+Mostly true — and pretty impressive for a social media post. The main idea is right: you don't need super heavy weights to build muscle. What actually matters is pushing your sets hard enough (close to the point where you can't do another rep). Real studies back this up. A couple of catches though: if you want to get *stronger* (not just bigger), heavier weights do matter. And the "even a 2kg dumbbell works" thing is an exaggeration — research usually tests with at least 30% of your max. Bottom line: don't stress about going heavy, just make your sets challenging.
+
+## Broadly Shareable?
+
+Yes. This is unusually well-sourced for social media and could help people who avoid the gym because they're intimidated by heavy weights. The core message is encouraging and evidence-based.

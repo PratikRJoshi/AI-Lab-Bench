@@ -98,3 +98,11 @@ This video presents **scientifically accurate and well-balanced information** ab
 - Could mention that "gluten sensitivity" research is evolving and some symptoms may be due to FODMAPs or other wheat components
 
 **Trustworthiness: HIGH** - This is reliable science communication that accurately represents current scientific understanding of wheat, gluten, and nutrition.
+
+## Share with a Friend
+
+This one's really reliable. Bottom line: wheat and gluten are totally fine for most people. Only about 1% have celiac disease and need to avoid it. The video explains how wheat is processed (whole wheat atta vs. refined maida), why maida isn't great on its own (spikes blood sugar, low fiber), but also why it's not poison if you eat it as part of a normal meal with veggies and protein. The myth that "maida sticks to your gut" is nonsense — if anything, it digests too fast, not too slow. Basically, don't fear your roti.
+
+## Broadly Shareable?
+
+Yes — great for anyone who's been scared into avoiding wheat or gluten without a medical reason. It's balanced, accurate, and explains the science without being preachy.

@@ -99,3 +99,11 @@ This TED-Ed lesson is **excellent science communication — accurate, well-scope
 3. No mention of how hypertrophy benefits translate to clinical outcomes (fall prevention in elderly, metabolic health, bone density)
 
 **Grade A** — This is what health/science communication should look like: evidence-based, well-produced, properly scoped, and honest about complexity. Suitable as educational material for general audiences and students.
+
+## Share with a Friend
+
+This one's really good — trustworthy all the way through. It explains how your muscles actually grow (you damage them a tiny bit during exercise, your body repairs them stronger, repeat). Everything it says lines up with what's in actual textbooks. It doesn't try to sell you supplements or a workout plan, it's just a clean explanation. Great watch if you've ever wondered what's happening inside your body when you lift weights.
+
+## Broadly Shareable?
+
+Yes. This is top-tier science education — accurate, no hidden agenda, and easy to understand. Share it with anyone who's curious about how exercise works.

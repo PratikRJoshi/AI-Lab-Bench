@@ -47,3 +47,11 @@ An 8-slide carousel from @neurolab._ claims that 16 hours of fasting triggers a 
 
 ## Verdict
 The core claims in this carousel are **scientifically grounded but selectively framed**. The mechanisms described (ketogenesis, autophagy, BDNF elevation, gut microbiome reset) are real phenomena, and 16-hour TRE is among the better-studied dietary interventions. However, the post overstates certainty on human neurological outcomes (particularly amyloid clearance), omits contraindications entirely, and uses naturalistic fallacy framing ("every civilization did this"). **Trustworthiness: Moderate-High for the metabolic framing; Moderate for the neurological benefit claims. SORT Grade B.**
+
+## Share with a Friend
+
+Mostly true, with some hype. The basic science is real — when you skip eating for 16 hours, your body does switch fuel sources and some cleanup processes kick in. But the post makes it sound like fasting is a brain miracle cure, and the "your brain clears out Alzheimer's proteins" claim hasn't been proven in actual humans yet — that's from mouse studies. Also, fasting isn't safe for everyone (people with diabetes, eating disorders, or who are pregnant should skip it). The takeaway: intermittent fasting can be a legit healthy choice for many people, but it's not magic, and check with your doctor first.
+
+## Broadly Shareable?
+
+Yes. Intermittent fasting is widely discussed, and this analysis helps separate what's actually proven from what's still just promising lab research. Useful for anyone considering trying a 16:8 eating schedule.

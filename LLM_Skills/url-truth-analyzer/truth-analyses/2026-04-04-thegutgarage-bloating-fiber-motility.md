@@ -62,3 +62,11 @@ Evaluating key claims:
 
 ## Verdict
 The core claim — that fiber worsens bloating when the colon lacks motility, and that restoring flow before adding fiber is the correct sequence — is **clinically sound and consistent with gastroenterology practice**. The individual recommendations (warm water, magnesium with guidance, low-and-slow fiber, movement) are safe and reasonable. The post is promotional (product funnel), lacks citations, and oversimplifies the differential diagnosis of fiber bloating. Nevertheless, the medical content is more accurate than typical wellness social media. **Trustworthiness: Moderate-High for the core protocol. SORT Grade B.**
+
+## Share with a Friend
+
+This one's actually pretty solid. If you've ever tried adding more fiber and ended up more bloated than before, the main idea here checks out: your gut might be backed up, so piling on fiber just makes things worse. The fix — drink more water, get things moving first, then slowly add fiber — is basically what a good gastro doctor would tell you. The warm salt water thing is fine but nothing special. Just know this account is selling a product at the end, and if bloating is a real ongoing problem, see an actual doctor to rule out anything serious.
+
+## Broadly Shareable?
+
+Yes. Fiber-induced bloating is extremely common, and the "fix the flow first, then add fiber" advice is practical and safe. This is one of the more helpful wellness posts out there, and the analysis adds useful context without undermining the core message.

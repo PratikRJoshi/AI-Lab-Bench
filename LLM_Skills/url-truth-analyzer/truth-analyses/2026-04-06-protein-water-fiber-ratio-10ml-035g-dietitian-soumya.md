@@ -97,3 +97,15 @@ The carousel uses a mix of real-photo backgrounds with text overlays and clean w
 ## Verdict
 
 The **core message is scientifically grounded**: protein metabolism does create a nitrogen/urea load requiring water for clearance, and fiber does help manage colonic protein fermentation. The general advice to increase water and fiber alongside protein is sound and consistent with nutrition science. However, the **specific numerical ratios — 10ml water and 0.35g fiber per gram of protein — are self-derived heuristics, not established clinical standards**, and are presented with a quantitative precision that the underlying evidence does not support. The author's own caveat ("not universal, but a functional system") partially acknowledges this. For healthy adults eating moderate-to-high protein diets, following this heuristic is unlikely to cause harm and may be beneficial. For people with kidney disease, fluid restrictions, or GI disorders, these numbers should not be applied without clinical guidance. Overall: **directionally trustworthy, numerically unverified** — Grade C on the specific ratio claims, Grade B on the directional advice.
+
+---
+
+## Share with a Friend
+
+The general idea is right — if you're eating a lot of protein, you should also be drinking more water and eating more fiber. Your kidneys need the water to process protein waste, and fiber helps your gut handle it all. That part is legit. But the specific numbers she gives (10ml water and 0.35g fiber per gram of protein) aren't from any study or official guideline — she made up those ratios as a rough guide. They're not harmful to follow, but don't treat them like a medical formula. The real takeaway: if you're loading up on protein shakes, don't forget your water and veggies.
+
+---
+
+## Broadly Shareable?
+
+Yes, with a caveat — the "drink more water and eat more fiber with protein" message is solid advice, but the exact numbers (10ml, 0.35g) aren't scientifically established. Share the general tip, not the specific formula, and note that people with kidney issues should check with their doctor first.

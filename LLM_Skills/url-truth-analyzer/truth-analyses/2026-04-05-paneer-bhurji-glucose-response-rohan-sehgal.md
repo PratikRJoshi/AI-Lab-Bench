@@ -94,3 +94,11 @@ However, this specific video earns Grade C because: (1) it's a single-subject ob
 **Practical takeaway:** The advice is sound — adding paneer (or other high-protein, high-fat foods like eggs, full-fat yogurt, nuts) to carb-heavy meals will reduce glucose spikes for most people. This strategy is particularly relevant for individuals with insulin resistance, prediabetes, or T2DM. But viewers should understand this is demonstrating known physiology, not discovering new science. For personalized guidance, use your own CGM data or consult a dietitian rather than relying on influencer experiments.
 
 **Missing for actionability:** Portion sizes, total meal macros, comparison metrics (peak glucose, area under curve), individual variability discussion, long-term sustainability vs short-term glucose effect.
+
+## Share with a Friend
+
+The basic idea is solid — adding something high in protein and fat like paneer to your meal really does help keep your blood sugar from spiking as much. Scientists have proven this in real studies. But this video is just one person's experiment, not a study, so don't take the specific results too seriously. The takeaway that works: when you eat rice or roti, adding paneer, eggs, yogurt, or nuts alongside it is a smart move for steadier energy. Just don't treat one influencer's glucose monitor graph as medical advice.
+
+## Broadly Shareable?
+
+Yes — with a caveat. The underlying advice (pair protein/fat with carbs) is genuinely useful and well-supported by science. Just note that this is one person's experiment, not a clinical study, so the specific numbers don't generalize to everyone.

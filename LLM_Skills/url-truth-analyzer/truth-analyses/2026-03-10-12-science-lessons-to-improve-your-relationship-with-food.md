@@ -63,3 +63,15 @@ Krish Ashok (author of *Masala Lab*) distills 12 practical lessons for improving
 
 ## Verdict
 This is a high-quality, scientifically sound general-audience video. All 12 lessons are well-aligned with nutritional science consensus, and the presenter explicitly disclaims individual medical advice. The content is notably more rigorous than typical food-influencer content — it actively debunks rather than promotes food fear. The one caveat: the protein recommendations (50–60 g/day) are appropriate for many adults but highly context-dependent on body weight, activity level, and age. **Reliable and safe to share as introductory food science education.**
+
+---
+
+## Share with a Friend
+
+Trustworthy — this is one of the good ones. The main takeaways: no single food is magic or poison, most Indians don't eat enough protein (dal-rice-curd is a great combo), detox drinks are a scam, and the best diet is the one you can actually stick to. Also, jaggery and white sugar are basically the same thing to your body. If you watch one food video this year, make it this one.
+
+---
+
+## Broadly Shareable?
+
+Yes. This is ideal for sharing — it busts common myths without being preachy, covers topics almost every Indian household argues about, and all the science checks out. Great for family group chats.

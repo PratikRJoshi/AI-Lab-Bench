@@ -62,3 +62,11 @@ This is a textbook fear-based marketing technique: create anxiety about commonly
 
 ## Verdict
 This video presents zero evidence for its central claim that common Costco grocery products are "inflammatory." Several of the products labeled with red ❌ marks — particularly organic ghee, A2 milk, and nonfat Greek yogurt — have published evidence suggesting anti-inflammatory properties. The video relies entirely on emotional framing ("betrayal hurts"), fear-based visual cues, and immigrant identity appeals rather than science. Given that the creator sells a paid alternative sourcing guide, this content functions primarily as anxiety-driven marketing rather than health education. **SORT Grade C — no clinical evidence presented; several claims contradicted by existing literature.**
+
+## Share with a Friend
+
+This one's misleading. The video just slaps red X marks on totally normal Costco products — ghee, yogurt, milk, flour — and calls them "inflammatory" without explaining why or showing any proof. Some of those products actually have *anti*-inflammatory benefits according to research. The whole thing is designed to scare you so you'll buy the creator's paid food sourcing guide. Your Costco groceries are fine. If something's bothering your stomach, see a doctor — don't let a 9-second Instagram video diagnose you.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. This video is designed to go viral by making immigrants feel betrayed by their grocery choices. Sharing this analysis can reassure people that their everyday groceries aren't secretly harming them.

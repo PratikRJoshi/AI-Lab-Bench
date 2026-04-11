@@ -46,3 +46,13 @@ A short (~1.5-minute) video debunking the "detox product" industry by explaining
 
 ## Verdict
 Every claim is accurate and well-supported. The insight that the benefit attributed to detox diets is actually from the behavioral changes (eating less, avoiding processed food) rather than the product is the key scientific point — and it is correct. The cautionary note about detox products potentially harming the liver adds important safety context. **Highly reliable; important consumer protection content.**
+
+---
+
+## Share with a Friend
+This is trustworthy and saves you money. Your body already has a full-time detox system — your liver, kidneys, lungs, and skin are doing it 24/7 without any help from a juice cleanse or tea. When people feel better after a "detox," it's because they ate less junk and drank more water for a few days — the product itself did nothing. Worse, some detox teas and supplements can actually damage your liver. Save your money and just eat a bit better for a week — you'll get the same result for free.
+
+---
+
+## Broadly Shareable?
+Yes — and worth flagging. Detox products are heavily marketed on social media, and people spend real money on them. This is important consumer protection content. Share it anytime someone in your group is considering buying a detox tea, juice cleanse, or "toxin flush" supplement.

@@ -50,3 +50,15 @@ Sodium bicarbonate is an effective deodorizer. It adsorbs volatile acidic and ba
 ## Verdict
 
 Nearly all claims in this video are correct and supported by food chemistry evidence. The Maillard reaction, pectin breakdown, onion caramelization, antacid effect, and deodorizing are all well-documented. The one notable oversight is the baking soda + vinegar combination: while both are useful cleaners individually, mixing them neutralizes their effectiveness. Also, the antacid use is portrayed as purely positive without the important caveat that it's for short-term use only. Overall, this is highly reliable food chemistry content.
+
+---
+
+## Share with a Friend
+
+Almost entirely true! Baking soda really does speed up cooking beans, caramelize onions faster, and help with heartburn in a pinch. Two things the video gets slightly wrong: mixing baking soda with vinegar for cleaning basically cancels both out (use them separately instead), and using it for heartburn is fine occasionally but not something you should do every day. Otherwise, solid kitchen tips — try the onion trick, it's a game-changer.
+
+---
+
+## Broadly Shareable?
+
+Yes. It's practical kitchen science that's fun and mostly accurate. Safe to share in any cooking or household tips group chat.

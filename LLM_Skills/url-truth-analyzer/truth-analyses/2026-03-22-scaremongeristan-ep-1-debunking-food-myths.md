@@ -100,3 +100,11 @@ Despite transcription challenges, the identifiable scientific content is accurat
 **Trustworthiness: HIGH** - This appears to be reliable science communication that correctly debunks pseudoscientific nutrition claims. The creator demonstrates solid understanding of biochemistry and physiology.
 
 **Recommendation**: Watch the original video for full context, as the audio transcription had significant errors due to language mixing.
+
+## Share with a Friend
+
+This one's trustworthy — it's debunking myths, not spreading them. The video takes apart some common food scares: no, almonds you buy at the store don't have dangerous cyanide (wild ones did centuries ago, but modern ones are bred to be safe). No, "acidic food" doesn't pull calcium out of your bones — your body keeps your blood pH locked in a tight range no matter what you eat. And whole wheat is a bit better than maida for blood sugar, but neither is poison. Basically, if someone online wearing a lab coat is trying to scare you about your food, be skeptical.
+
+## Broadly Shareable?
+
+Yes — great for anyone who's been spooked by food fear content on social media. It's accurate science wrapped in humor, and it teaches people to question scary health claims instead of just forwarding them.

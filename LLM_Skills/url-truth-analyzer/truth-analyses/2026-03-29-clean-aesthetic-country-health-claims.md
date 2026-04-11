@@ -37,3 +37,11 @@ This carousel repeats the same claims as the previous two analyses:
 **Duplicate misleading content with commercial bias.** Same creator, same claims, same product being sold. The analysis from the "bloating" carousel applies identically here. The dangerous misinformation about pasteurized milk being "dead" remains the most concerning claim, as it could lead people to consume unsafe raw dairy products.
 
 **See previous analysis for detailed evidence:** truth-analyses/2026-03-29-immigrant-bloating-farm-sourcing-directory.md
+
+## Share with a Friend
+
+Misleading. This is the same creator recycling the same scare tactics — blaming pasteurized milk and store-bought flour for health problems after moving to the US, then selling a paid sourcing guide as the solution. Calling pasteurized milk "dead" is straight-up wrong and potentially dangerous, since pasteurization is what keeps milk safe from serious infections. If you're feeling off after moving countries, it's way more likely due to stress, lifestyle changes, and eating more packaged food overall — not because you bought atta from the wrong store. See a doctor if symptoms persist, and skip the paid guides.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The anti-pasteurization messaging is genuinely dangerous, especially for pregnant women or anyone with a weaker immune system. Sharing this analysis could prevent someone from switching to risky raw milk based on bad advice.

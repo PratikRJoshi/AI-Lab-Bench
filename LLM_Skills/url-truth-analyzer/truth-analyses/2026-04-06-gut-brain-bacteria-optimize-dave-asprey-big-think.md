@@ -75,3 +75,15 @@ The gut-brain axis and dietary microbiome modulation are active, legitimate rese
 ## Verdict
 
 The core science is legitimate: the gut-brain axis is real, diet does modulate the microbiome, and these changes can influence brain function and mood. However, Dave Asprey presents these connections with clinical certainty that the evidence does not support, and his commercial interest in high-fat dietary products (Bulletproof brand) represents an undisclosed conflict of interest. The video is best understood as a well-packaged, directionally accurate but overclaimed summary of emerging science. **Grade B on the core mechanism; Grade C on the specific dietary prescriptions.**
+
+---
+
+## Share with a Friend
+
+Partly true — take it with a grain of salt. The basic idea that your gut and brain are connected and that what you eat matters is real science. But this guy sells his own food products (Bulletproof Coffee), which he doesn't mention, and he talks like the science is way more settled than it actually is. Eating more vegetables and less junk food? Great advice. But his specific claims about high-fat diets and coffee "optimizing your brain bacteria" are ahead of what research actually shows. Don't let one guy with a product line tell you exactly what to eat — talk to a doctor or dietitian instead.
+
+---
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The general gut-health message is fine, but sharing without context could lead people to take Asprey's specific dietary advice (and commercial products) at face value. Sharing this analysis alongside the video helps people separate the real science from the sales pitch.

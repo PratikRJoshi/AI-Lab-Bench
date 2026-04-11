@@ -52,3 +52,13 @@ The video effectively demonstrates the "availability heuristic" (Tversky & Kahne
 
 ## Verdict
 An excellent media literacy video grounded in accurate data. The protein nutrition facts are correct, the market size comparison is accurate, and the deconstruction of the influencer's study misrepresentation is technically valid and important. The core message — that social media virality is not reality, and India is a protein-deficient country despite what your feed suggests — is supported by national nutritional surveillance data. **Highly reliable; valuable critical thinking content.**
+
+---
+
+## Share with a Friend
+This is trustworthy and actually eye-opening. The main point is that your Instagram feed makes it look like the whole world is obsessed with protein shakes, but that's just the algorithm showing you more of what you clicked on once. In reality, most Indians get their protein from dal and grains, not supplements. One influencer even twisted a computer study to scare people about protein — the video catches him red-handed. Next time you see a protein ad, remember: the algorithm is selling to you, not educating you.
+
+---
+
+## Broadly Shareable?
+Yes — and worth flagging. This is excellent for anyone bombarded by protein supplement ads on social media. It teaches people how algorithms create fake "trends" and how influencers misread studies. Great for family group chats where someone keeps forwarding supplement advice.

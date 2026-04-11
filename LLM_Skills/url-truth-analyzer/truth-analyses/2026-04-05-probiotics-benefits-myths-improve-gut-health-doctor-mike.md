@@ -75,3 +75,11 @@ Dr. Mike appropriately flags that probiotics are generally considered safe but c
 
 ## Verdict
 This is a responsible, evidence-aligned video from a credentialed physician. The core message — that probiotics are not a universal health supplement, that they have real but narrow evidence-based applications, and that a diet-first approach is best for gut health — is consistent with the scientific consensus as of both 2019 (when the video was made) and 2026. The video appropriately hedges the gut–brain axis as preliminary, correctly names the conditions where clinical evidence exists, and warns against uncritical supplement use. The main limitation is the absence of cited sources within the video itself, which would allow viewers to verify claims independently. On the whole, this content is trustworthy and can be recommended to health-curious viewers with the caveat that specific supplement decisions should always be made with a physician.
+
+## Share with a Friend
+
+This one's actually good — a real doctor explaining that you probably don't need to buy probiotic supplements if you're healthy. He says they do help for a few specific things (like after antibiotics or traveler's stomach issues), but for everyday health, eating well and sleeping enough does more for your gut than any pill. He's honest about what science knows and doesn't know, which is refreshing. If you're thinking about buying probiotics, watch this first — it might save you money.
+
+## Broadly Shareable?
+
+Yes — this is exactly the kind of balanced, credible health content that's worth passing along. It counters supplement hype with actual evidence and comes from a licensed doctor who's upfront about scientific uncertainty.

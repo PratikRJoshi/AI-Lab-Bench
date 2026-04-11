@@ -126,3 +126,11 @@ This video presents a **moderately healthy juice recipe** but makes **unsupporte
 **Recommendation**: Consuming these ingredients as part of a varied, balanced diet is reasonable. However, don't expect this juice to be a cure-all or disease-prevention miracle. Focus on overall dietary patterns, not individual "superfoods."
 
 **Cultural Context**: This appears to be content from an Ayurvedic or traditional medicine practitioner. While traditional knowledge has value, it should be balanced with modern nutritional science and realistic expectations about health outcomes.
+
+## Share with a Friend
+
+Mostly harmless, but the claims are overblown. The juice itself — beetroot, amla, turmeric, ginger, garlic, citrus — is fine and has some real nutritional benefits (vitamins, antioxidants, anti-inflammatory stuff). Nothing wrong with drinking it. But the video basically implies this juice will prevent all disease and keep you perfectly healthy, which is just not how health works. No single drink can do that. Enjoy the juice as part of eating well overall, but don't skip your doctor thinking a glass of red juice has you covered.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The recipe is harmless, but the "this prevents all disease" framing could give people false confidence. Share this analysis so people enjoy the juice without the magical thinking.

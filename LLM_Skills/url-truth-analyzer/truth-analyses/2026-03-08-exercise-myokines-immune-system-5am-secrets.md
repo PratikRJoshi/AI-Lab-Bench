@@ -112,3 +112,11 @@ Several red flags:
 ---
 
 *Analysis performed using EBM SORT framework. SORT Grade B = limited or inconsistent patient-oriented evidence, or good-quality evidence for disease-oriented outcomes only.*
+
+## Share with a Friend
+
+The big picture is true — lifting weights regularly really does help you live longer and get sick less. That part is backed by strong research. But the post oversimplifies *how* it works. It says exercise makes your muscles release special proteins that power up your cancer-killing cells, and while that's a cool theory, it's not actually proven to work that way in people. Think of it like this: we know exercise is medicine, but this post is guessing about the exact recipe. Share the conclusion (exercise = good), but don't repeat the detailed science claims as fact.
+
+## Broadly Shareable?
+
+Yes — and worth flagging. The "exercise is good for you" message is important and true, but the specific mechanism claims (myokines activating NK cells to kill cancer) are oversimplified. If sharing, add a note that the *why* is more complicated than the post makes it seem.

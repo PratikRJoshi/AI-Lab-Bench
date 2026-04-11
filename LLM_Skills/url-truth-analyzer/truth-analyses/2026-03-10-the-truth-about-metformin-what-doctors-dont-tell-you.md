@@ -76,3 +76,13 @@ The mechanistic explanations of insulin resistance and metformin's mechanisms (A
 ## Verdict
 
 This video is a reasonable *introductory* resource for someone newly diagnosed with pre-diabetes or type 2 diabetes who wants to understand what metformin does and what side effects to watch for. The mechanistic explanations are largely correct and the practical tips (titrate slowly, take with food, extended-release has fewer GI effects) align with clinical guidance. However, it has notable weaknesses: it omits metformin's well-established cardiovascular mortality benefit (the strongest reason clinicians keep it as first-line therapy), it overstates the equivalence of supplements like berberine to metformin, and it appears to contain a dosing error for inositol (mg vs. g). The "band-aid" framing, while motivationally useful for encouraging lifestyle change, is scientifically incomplete. **Do not use this video as a basis for starting, stopping, or substituting metformin without consulting your physician.**
+
+---
+
+## Share with a Friend
+This one is partly true but has some problems. The basic explanation of how metformin works and its side effects is mostly right, and the advice to focus on diet and exercise is good. But the video leaves out something really important — metformin doesn't just lower blood sugar, it actually helps people live longer by protecting the heart, which is a huge deal. It also suggests some herbal supplements are "just as good" as metformin, but the evidence for that is weak. Bottom line: don't stop or swap your medication based on a YouTube video — talk to your doctor first.
+
+---
+
+## Broadly Shareable?
+Yes — and worth flagging. The original video could lead someone to stop taking metformin or substitute it with unproven supplements, which is risky. Sharing this analysis alongside the video helps people understand what the video gets right and where it's misleading. Especially important if someone with diabetes is in the group.

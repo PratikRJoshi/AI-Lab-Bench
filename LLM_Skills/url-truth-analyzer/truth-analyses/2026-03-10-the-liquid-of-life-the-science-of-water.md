@@ -67,3 +67,13 @@ The closing thought experiment — that any cup of water has effectively 100% pr
 
 ## Verdict
 Excellent chemistry and biology education with accurate science throughout. The water myth-busting section is particularly valuable for Indian audiences given the prevalence of alkaline water marketing and social media misconceptions. Every scientific claim checked out. **Highly reliable; share broadly.**
+
+---
+
+## Share with a Friend
+This one is totally trustworthy. It covers the real science of water and then demolishes a bunch of myths you've probably seen forwarded on WhatsApp — alkaline water doesn't do anything special, "moon-charged" water is nonsense, drinking while standing doesn't hurt your knees, and hot water doesn't melt fat. Also: you don't need to force eight glasses a day — just drink when you're thirsty. Next time someone forwards you a water miracle cure, send them this video instead.
+
+---
+
+## Broadly Shareable?
+Yes — and worth flagging. This is perfect for family group chats where water myths get shared constantly. It debunks common misconceptions with solid science, and there's zero risk of harm from sharing it. One of the most useful "forward this to your parents" videos.

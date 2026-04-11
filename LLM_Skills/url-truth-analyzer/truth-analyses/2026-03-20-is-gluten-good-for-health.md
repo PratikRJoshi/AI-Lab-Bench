@@ -108,3 +108,11 @@ This short video delivers **highly accurate, evidence-based information** on glu
 - Could clarify that NCGS diagnosis requires excluding celiac disease and wheat allergy first
 
 **Overall trustworthiness: Very High.** This is textbook-accurate public health messaging. The creator demonstrates strong scientific literacy and avoids the fearmongering/orthorexia common in nutrition social media. The advice to seek clinical testing rather than self-diagnosing is **medically responsible** and potentially life-saving (undiagnosed celiac disease has serious long-term sequelae). This video is an **antidote to gluten-free fad dieting** and should be widely shared.
+
+## Share with a Friend
+
+This is spot on. Unless you have celiac disease (about 1 in 100 people) or a diagnosed wheat sensitivity, going gluten-free does nothing for your health — and might actually be worse because you miss out on fiber from whole grains. A quarter of people in the West buy gluten-free stuff thinking it's healthier, but there's zero evidence for that. Oh, and rice and millets never had gluten in the first place, so labeling them "gluten-free" is just marketing tricks. If you genuinely think gluten bothers you, get a proper test from a doctor instead of just cutting it out yourself.
+
+## Broadly Shareable?
+
+Yes — this is one of the most useful things you could forward to anyone who's gone gluten-free "for health reasons." It's accurate, concise, and could save someone from an unnecessary (and potentially harmful) dietary restriction.
