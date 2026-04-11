@@ -945,7 +945,14 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 Example tone: "That migraine remedy reel is mostly wishful thinking. The poppy-seed-in-milk trick sounds legit because poppy seeds *do* contain tiny traces of painkillers, but the amount you'd get from a spoonful is nowhere near enough to actually help a headache — like trying to fill a swimming pool with an eyedropper. If you get migraines often, seeing a neurologist will help way more than any home remedy."
 
 ## Broadly Shareable?
-<A one-line yes / no / with-caveats verdict on whether this analysis is safe and useful to forward to friends, family, or group chats — followed by 1–2 sentences explaining why. Consider: Could sharing the *original post* (not this analysis) cause harm if someone follows the advice uncritically? Would sharing this analysis help people make better decisions? If the original content is mostly harmless or mostly accurate, a simple "Yes" with a brief note is fine. If the original content could cause real harm (e.g., delay medical treatment, unsafe remedy), say "Yes — and worth flagging" to encourage sharing the analysis as a counterweight. If the analysis is too niche or technical to be broadly useful, say "Not broadly — only relevant if…">
+<A one-line verdict on whether the *original post/URL* is safe to forward to friends, family, or group chats, based on the analysis grade:
+
+- **Grade A** → "Yes — this content is backed by strong evidence and is safe to share."
+- **Grade B** → "No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't."
+- **Grade C** → "No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims."
+- **General science (no SORT grade)**: If most claims are "supported" by consensus → treat as shareable. If most claims are "contested" or "refuted" → treat as not shareable, and recommend sharing the analysis instead.
+
+Follow the verdict with 1–2 sentences explaining the key reason. When the original post is not shareable, always suggest sharing this analysis as the alternative so friends get the fact-check rather than the misinformation.>
 ```
 
 **After saving**: Report `✓ Step 5/7: Analysis saved to ~/Documents/truth-analyses/YYYY-MM-DD-<slug>.md`
