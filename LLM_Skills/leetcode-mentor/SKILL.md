@@ -60,9 +60,68 @@ After the full solution is written:
 
 After completion:
 
+- **Update the progress tracker** (see "Progress Tracking" section below)
 - Suggest **one problem** using the **same core technique** but with a twist.
 - State why it's related in one sentence.
 - Ask: "Want to try it?" — then repeat from Phase 1.
+
+---
+
+## Progress Tracking
+
+**File location:** `~/PracticeCode/Leetcode/lc-by-order-of-difficulty.md`  
+**Repository:** https://github.com/PratikRJoshi/PracticeCode
+
+After **each problem completion** (Phase 4 complete, before Phase 5):
+
+1. **Read the current markdown file**
+2. **Add the new problem** in the "Problems Solved (In Order)" section using this format:
+
+```markdown
+### N. Problem Name (LeetCode ###)
+**Difficulty:** Easy/Medium/Hard  
+**Pattern:** Pattern description  
+**Key Concepts:**
+- Bullet point 1
+- Bullet point 2
+- Time: O(?), Space: O(?)
+
+**Solution:**
+```java
+// Complete working solution
+```
+
+**Key Insight:** (optional)
+- Important insight or trap to avoid
+```
+
+3. **Update pattern sections** if new pattern introduced
+4. **Update Next Steps** section with new upcoming problems
+5. **Commit and push** to remote:
+
+```bash
+cd ~/PracticeCode
+git add Leetcode/lc-by-order-of-difficulty.md
+git commit -m "Add [Problem Name] to LeetCode progress tracker
+
+Problem added:
+- Problem Name (LeetCode ###) - Difficulty
+
+Key concepts:
+- Concept 1
+- Concept 2
+
+Pattern learned: [Pattern name]
+- Pattern details
+
+Total problems solved: N"
+
+git push origin master
+```
+
+6. **Display commit URL** to user after successful push
+
+**Do this automatically** after Phase 4, before suggesting the next problem in Phase 5.
 
 ## Progression Ladder
 
