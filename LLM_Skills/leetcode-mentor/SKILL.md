@@ -78,22 +78,20 @@ After **each problem completion** (Phase 4 complete, before Phase 5):
 2. **Add the new problem** in the "Problems Solved (In Order)" section using this format:
 
 ```markdown
-### N. Problem Name (LeetCode ###)
+### N. [Problem Name](https://leetcode.com/problems/problem-slug/)
 **Difficulty:** Easy/Medium/Hard  
 **Pattern:** Pattern description  
 **Key Concepts:**
 - Bullet point 1
 - Bullet point 2
 - Time: O(?), Space: O(?)
-
-**Solution:**
-```java
-// Complete working solution
 ```
 
-**Key Insight:** (optional)
-- Important insight or trap to avoid
-```
+**Important:** 
+- **DO NOT include the solution code** in the markdown
+- Only add problem name (as hyperlink), difficulty, pattern, key concepts, and complexity
+- The hyperlink format is: `[Problem Name](https://leetcode.com/problems/problem-slug/)`
+- Convert problem name to slug: lowercase, replace spaces with hyphens (e.g., "Binary Tree Maximum Path Sum" → "binary-tree-maximum-path-sum")
 
 3. **Update pattern sections** if new pattern introduced
 4. **Update Next Steps** section with new upcoming problems
