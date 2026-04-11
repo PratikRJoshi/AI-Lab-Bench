@@ -938,6 +938,14 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 
 ## Verdict
 <One-paragraph plain-language summary of how trustworthy this content is>
+
+## Share with a Friend
+<A 2–4 sentence casual, jargon-free explanation written as if you're texting a friend who sent you the post. Start with the bottom line (trustworthy, partly true, or misleading), then explain what's right and what's wrong in everyday language. No medical or scientific terminology — a 15-year-old should understand it. End with one concrete suggestion for what to do instead, if relevant.>
+
+Example tone: "That migraine remedy reel is mostly wishful thinking. The poppy-seed-in-milk trick sounds legit because poppy seeds *do* contain tiny traces of painkillers, but the amount you'd get from a spoonful is nowhere near enough to actually help a headache — like trying to fill a swimming pool with an eyedropper. If you get migraines often, seeing a neurologist will help way more than any home remedy."
+
+## Broadly Shareable?
+<A one-line yes / no / with-caveats verdict on whether this analysis is safe and useful to forward to friends, family, or group chats — followed by 1–2 sentences explaining why. Consider: Could sharing the *original post* (not this analysis) cause harm if someone follows the advice uncritically? Would sharing this analysis help people make better decisions? If the original content is mostly harmless or mostly accurate, a simple "Yes" with a brief note is fine. If the original content could cause real harm (e.g., delay medical treatment, unsafe remedy), say "Yes — and worth flagging" to encourage sharing the analysis as a counterweight. If the analysis is too niche or technical to be broadly useful, say "Not broadly — only relevant if…">
 ```
 
 **After saving**: Report `✓ Step 5/7: Analysis saved to ~/Documents/truth-analyses/YYYY-MM-DD-<slug>.md`

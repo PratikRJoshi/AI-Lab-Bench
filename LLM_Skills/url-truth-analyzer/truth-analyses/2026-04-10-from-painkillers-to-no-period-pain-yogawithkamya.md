@@ -64,3 +64,6 @@ This reel mixes genuinely helpful advice (exercise/yoga for period pain has real
 
 ## Share with a Friend
 That period pain reel has some good ideas buried under some stuff that's just not true. The yoga part is legit — actual studies show it can help with cramps, so that's worth trying. Good sleep and stress management? Also real. But the navel oiling thing has zero science behind it — oil on your belly button doesn't reach your uterus, that's just not how bodies work. And the "stop cold foods" advice is an old wives' tale, not medicine. The biggest problem is she's basically saying "ditch painkillers and do these things instead" without ever mentioning that really bad period pain could be a sign of something like endometriosis. If your cramps are bad enough to need painkillers every month, see a gynecologist first — then add yoga on top of whatever they recommend.
+
+## Broadly Shareable?
+Yes — and worth flagging. The suggestion to replace painkillers with unproven remedies could delay medical evaluation for conditions like endometriosis. Many people with periods encounter this type of advice regularly, and sharing this analysis helps them sort the useful tips (yoga, sleep) from the myths (navel oiling, cold food avoidance).

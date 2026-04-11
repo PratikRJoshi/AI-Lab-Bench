@@ -89,3 +89,6 @@ Both claims in this carousel are **SORT Grade C** — the weakest level of evide
 
 ## Share with a Friend
 These beauty tips sound nice but aren't really backed by science. The coconut oil + lemon juice dandruff trick is the bigger concern — lemon juice is acidic enough to irritate your scalp, and if you go out in the sun after, you can get painful blisters (it's a real thing called phytophotodermatitis). Coconut oil alone is fine for your hair, but for actual dandruff, a ketoconazole shampoo from the pharmacy works way better and has real clinical proof behind it. The rice water ice cube thing is basically just... putting ice on your face, which makes your skin look temporarily tighter because of the cold, not because of anything special in rice water. If you want to keep your skin healthy, sunscreen and a basic moisturizer will do 100x more than frozen rice water.
+
+## Broadly Shareable?
+Yes — and worth flagging. The lemon juice on scalp advice can genuinely cause painful skin reactions if someone goes out in the sun afterward. Sharing this analysis could save someone from blistering burns and steer them toward dandruff treatments that actually work.
