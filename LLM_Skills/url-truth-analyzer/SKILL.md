@@ -1108,6 +1108,12 @@ $(git diff --cached --name-only | sed 's/^/  /')"
 
 # 4. Push to remote
 git push origin main
+
+# 5. Get commit SHA and construct GitHub URL
+COMMIT_SHA=$(git rev-parse HEAD)
+COMMIT_SHORT=$(git rev-parse --short HEAD)
+REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//' | sed 's|git@github.com:|https://github.com/|')
+COMMIT_URL="${REPO_URL}/commit/${COMMIT_SHA}"
 ```
 
 ### Error handling
@@ -1128,7 +1134,10 @@ git push origin main
 ```
 ✅ GitHub sync complete: pushed N new analysis file(s) to AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/
    Commit: <short-hash> — <first line of commit message>
+   View commit: <COMMIT_URL>
 ```
+
+Where `<COMMIT_URL>` is the full GitHub URL to view the commit (e.g., `https://github.com/PratikRJoshi/AI-Lab-Bench/commit/abc1234...`)
 
 **On partial failure** (some files committed but push failed):
 ```
