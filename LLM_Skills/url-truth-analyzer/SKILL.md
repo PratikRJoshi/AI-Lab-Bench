@@ -1,6 +1,6 @@
 ---
 name: url-truth-analyzer
-description: Analyzes video/audio/image content from URLs and performs truth-claim validation. Supports YouTube, Facebook/Instagram (reels and image posts), Twitter/X, and LinkedIn videos. For video/audio: transcribes with Whisper or captions. For images: downloads and extracts text via OCR, analyzes visual content. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting content. Supports transcript-only mode (YouTube captions) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, analyzing social media images, or asks to process the watch_urls.md file.
+description: Analyzes URLs for truth claims via transcription, OCR, and EBM SORT grading. Use when the user provides a URL for fact-checking, truth analysis, or asks to process watch_urls.md.
 ---
 
 # URL Truth Analyzer
