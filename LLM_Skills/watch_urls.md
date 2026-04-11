@@ -7,8 +7,8 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 
 ## Pending
 
-
 ## Processed
+- https://www.instagram.com/p/C2kVfKyhrz9/ (analyzed 2026-04-10 → truth-analyses/2026-04-10-do-not-make-your-bed-dust-mites-health.md)
 - https://youtu.be/m_6ZfxPVFYM (analyzed 2026-04-06 → truth-analyses/2026-04-06-gut-brain-bacteria-optimize-dave-asprey-big-think.md)
 - https://youtu.be/awtmTJW9ic8 (analyzed 2026-04-06 → truth-analyses/2026-04-06-food-for-thought-belly-controls-brain-ruairi-robertson-tedx.md)
 - https://youtu.be/kMVxbnfSP-Q (analyzed 2026-04-06 → truth-analyses/2026-04-06-gut-microbes-change-your-mind-microbiome-gut-brain.md)
