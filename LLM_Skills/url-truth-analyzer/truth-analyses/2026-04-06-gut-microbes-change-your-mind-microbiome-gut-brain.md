@@ -87,4 +87,4 @@ This one's trustworthy. It's a science explainer about how gut bacteria might af
 
 ## Broadly Shareable?
 
-Yes — this is solid, honest science communication with no misleading claims or product promotion. Safe and educational for anyone interested in how the body works.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The video is well-made and honest about caveats, but most of the exciting findings (germ-free mice, microbiome transplant effects, stress-microbiome links) come from animal models — and the leap to human mental health treatments, while appropriately hedged in the video, may not land that way when shared casually.

@@ -108,4 +108,4 @@ Partly true. There's a real study showing that twins with stronger legs tended t
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The "exercise is good for your brain" message is solid and worth spreading, but the dramatic numbers (70%, 4×) are from animal studies and shouldn't be taken as human facts. Sharing this analysis helps people get the right takeaway: stay active, train your legs, but don't overinterpret one study.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The underlying association between leg power and cognitive aging is from a single observational cohort (n=324 female twins), not an RCT, and the dramatic mechanistic claims (70% neural stem cell drop, 4× BDNF advantage) are unsourced animal-model data presented as human facts — making the post misleadingly conclusive about a correlation finding.

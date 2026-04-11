@@ -87,4 +87,4 @@ Mostly true, but depends on who you are. If you're already pretty fit and traini
 
 ## Broadly Shareable?
 
-Yes, with a caveat — the advice is solid for serious athletes but overly absolute for beginners. If sharing, mention that people who are newer to exercise can actually work on both goals at once.
+Yes — this content is backed by strong evidence and is safe to share. The majority of claims — that performance requires adequate fueling, that caloric deficits impair high-volume training and recovery, and that block periodization is a sound approach — are well-supported by sports nutrition science and RED-S research. The one caveat worth mentioning when sharing: beginners can often build muscle and lose fat simultaneously, so the "you can't do both" framing is too absolute for newer exercisers.

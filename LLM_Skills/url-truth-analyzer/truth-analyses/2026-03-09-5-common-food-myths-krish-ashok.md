@@ -49,4 +49,4 @@ This is one of those "forward to your family group chat" videos. Everything in i
 
 ## Broadly Shareable?
 
-Yes — this is exactly the kind of content worth spreading. It fights common myths with clear explanations and no agenda. Especially useful in family or community groups where food misinformation circulates frequently.
+Yes — this content is backed by strong evidence and is safe to share. Every debunked myth — microwaves causing cancer, jaggery being healthier than sugar, refrigeration destroying nutrients — is refuted by well-established scientific consensus from organizations like the WHO and fundamental biochemistry.

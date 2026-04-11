@@ -73,4 +73,4 @@ Trustworthy across the board. This covers a ton of everyday food questions — l
 
 ## Broadly Shareable?
 
-Yes. This is the kind of content that answers questions people actually Google. Perfect for forwarding to anyone who sends you random food "facts" on WhatsApp.
+Yes — this content is backed by strong evidence and is safe to share. All major claims are grounded in established nutrition science (iron absorption, phytic acid reduction, glycemic index, calorie measurement), and the advice consistently aligns with ICMR dietary guidelines.

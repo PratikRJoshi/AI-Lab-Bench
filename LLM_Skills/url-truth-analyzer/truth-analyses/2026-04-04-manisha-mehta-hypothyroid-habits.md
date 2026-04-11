@@ -65,4 +65,4 @@ Partly true. The habits she recommends — morning sunlight, managing stress, ke
 
 ## Broadly Shareable?
 
-Yes, with caveats. The lifestyle tips are harmless and helpful, but the framing could discourage someone from taking prescribed thyroid medication. Sharing this analysis adds the important context that these habits are add-ons, not replacements for medical treatment.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The lifestyle habits described are reasonable adjuncts, but the central framing that "hypothyroidism starts from a stressed brain" misrepresents the dominant autoimmune etiology (Hashimoto's) and could discourage timely medication use — none of the claims are backed by RCTs as a thyroid-specific protocol.

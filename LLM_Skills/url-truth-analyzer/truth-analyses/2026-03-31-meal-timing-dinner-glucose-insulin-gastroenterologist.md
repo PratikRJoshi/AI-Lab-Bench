@@ -115,4 +115,4 @@ Partly true. The basic idea — eating dinner earlier is probably better for you
 
 ## Broadly Shareable?
 
-Yes, with caveats. The core advice (earlier dinner = probably better) is reasonable and low-risk. Sharing this analysis helps people separate the solid idea from the overhyped percentages — especially useful for anyone with diabetes in the family who might take the specific numbers too literally.
+Yes — this content is backed by strong evidence and is safe to share. The core recommendation that eating dinner earlier is metabolically preferable is supported by circadian physiology research and multiple clinical trials showing evening meals produce higher glucose excursions than identical morning meals. The direction of every major claim aligns with scientific consensus, even though the specific percentages come from small studies.

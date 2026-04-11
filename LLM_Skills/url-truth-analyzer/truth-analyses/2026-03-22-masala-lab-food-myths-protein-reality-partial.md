@@ -227,4 +227,4 @@ Highly trustworthy — one of the best nutrition talks you'll find. The big poin
 
 ## Broadly Shareable?
 
-Yes — this is one of the most useful, no-nonsense nutrition resources out there. Share it widely, especially with anyone confused by diet fads or thinking they need expensive supplements to be healthy.
+Yes — this content is backed by strong evidence and is safe to share. Every major claim — protein quality and complementation, muscle-building for longevity, micronutrient guidance (B12, iron, vitamin D), and the value of traditional Indian food combinations — aligns with WHO/ISSN guidelines and established nutritional science.

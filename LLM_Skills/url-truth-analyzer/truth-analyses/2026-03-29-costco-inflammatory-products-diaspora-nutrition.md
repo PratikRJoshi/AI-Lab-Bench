@@ -69,4 +69,4 @@ This one's misleading. The video just slaps red X marks on totally normal Costco
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. This video is designed to go viral by making immigrants feel betrayed by their grocery choices. Sharing this analysis can reassure people that their everyday groceries aren't secretly harming them.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The video presents zero evidence for labeling seven common Costco grocery products as "inflammatory" — several of those products (organic ghee, A2 milk, nonfat Greek yogurt) actually have published research suggesting anti-inflammatory properties, and the entire video functions as fear-based marketing for the creator's paid sourcing guide.

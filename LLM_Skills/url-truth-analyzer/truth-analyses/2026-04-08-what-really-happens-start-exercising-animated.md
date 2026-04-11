@@ -118,4 +118,4 @@ Partly true. The big message — exercise is seriously good for your brain, mood
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The motivational message is great, but the oversimplified depression advice could lead someone to skip professional help. If you share it, maybe add that exercise is amazing *alongside* proper medical care, not a replacement for it.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The video presents exercise as a "miracle drug" for depression and neurodegenerative diseases without distinguishing severity levels or citing sources, and the oversimplified depression advice could lead someone to delay or skip professional medical treatment.

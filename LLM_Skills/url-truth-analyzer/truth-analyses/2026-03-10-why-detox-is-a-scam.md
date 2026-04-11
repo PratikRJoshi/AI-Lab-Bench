@@ -55,4 +55,4 @@ This is trustworthy and saves you money. Your body already has a full-time detox
 ---
 
 ## Broadly Shareable?
-Yes — and worth flagging. Detox products are heavily marketed on social media, and people spend real money on them. This is important consumer protection content. Share it anytime someone in your group is considering buying a detox tea, juice cleanse, or "toxin flush" supplement.
+Yes — this content is backed by strong evidence and is safe to share. All five claims are supported by scientific consensus, including a 2015 systematic review finding no clinical evidence for detox diets. The video accurately explains the body's built-in detoxification systems and correctly identifies that any perceived benefit from detox protocols comes from accompanying dietary improvements, not the product itself.

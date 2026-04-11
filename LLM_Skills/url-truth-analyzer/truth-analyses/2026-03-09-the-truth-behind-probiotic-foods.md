@@ -80,4 +80,4 @@ Mostly trustworthy. The video's right that most "probiotic" foods lose their goo
 
 ## Broadly Shareable?
 
-Yes. Probiotic marketing is everywhere, and this is a helpful reality check. Good to share with anyone spending money on probiotic supplements or special drinks without understanding the limitations.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While individual claims about heat killing bacteria, stomach acid destroying probiotics, and colonization resistance are accurate, the broader implication that dietary changes will meaningfully improve long-term health via the microbiome is still an area where causality is not established.

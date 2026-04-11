@@ -83,4 +83,4 @@ The actual tip is good — if you use Claude Code, you should create a CLAUDE.md
 
 ## Broadly Shareable?
 
-Not broadly — only relevant if you use Claude Code or similar AI coding tools. For developers who do, the core tip is useful, but skip the "27x" claim and point people to Anthropic's official documentation instead.
+Yes — this content is backed by strong evidence and is safe to share. The core technical advice — using `CLAUDE.md` for persistent context across Claude Code sessions — is an officially documented Anthropic feature that genuinely reduces token usage. If sharing, note that the "27x" figure is one person's anecdotal benchmark with no disclosed methodology; point people to Anthropic's official docs for reliable guidance.

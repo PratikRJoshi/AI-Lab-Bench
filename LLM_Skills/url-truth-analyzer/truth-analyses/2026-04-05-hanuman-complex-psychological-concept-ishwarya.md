@@ -93,4 +93,4 @@ It's a neat idea but not quite what it seems. The "Hanuman Complex" — feeling 
 
 ## Broadly Shareable?
 
-Not broadly — only relevant if someone is interested in Indian psychology or culturally-specific therapy approaches. It's not harmful, but it could mislead people into thinking this is an established condition when it's really just one therapist's framework.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The "Hanuman Complex" is a single-author concept from one 2004 paper with no independent validation, no RCTs, and no evidence it identifies a phenomenon distinct from well-established constructs like self-efficacy deficits or imposter syndrome.

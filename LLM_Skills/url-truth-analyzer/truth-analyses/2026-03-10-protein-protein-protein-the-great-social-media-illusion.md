@@ -61,4 +61,4 @@ This is trustworthy and actually eye-opening. The main point is that your Instag
 ---
 
 ## Broadly Shareable?
-Yes — and worth flagging. This is excellent for anyone bombarded by protein supplement ads on social media. It teaches people how algorithms create fake "trends" and how influencers misread studies. Great for family group chats where someone keeps forwarding supplement advice.
+Yes — this content is backed by strong evidence and is safe to share. Every claim in the video — from algorithmic echo chambers to Indian protein source data to the influencer's misrepresentation of an in-silico study — is supported by scientific consensus and verifiable data. This is excellent media literacy content with zero risk of harm.

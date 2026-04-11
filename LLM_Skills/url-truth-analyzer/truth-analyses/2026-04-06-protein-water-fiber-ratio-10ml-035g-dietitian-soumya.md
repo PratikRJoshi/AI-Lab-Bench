@@ -108,4 +108,4 @@ The general idea is right — if you're eating a lot of protein, you should also
 
 ## Broadly Shareable?
 
-Yes, with a caveat — the "drink more water and eat more fiber with protein" message is solid advice, but the exact numbers (10ml, 0.35g) aren't scientifically established. Share the general tip, not the specific formula, and note that people with kidney issues should check with their doctor first.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The directional advice (increase water and fiber when eating more protein) is sound, but the specific numerical ratios — 10ml water and 0.35g fiber per gram of protein — are self-derived heuristics not found in any clinical guideline or RCT, and are likely to be extracted and shared as established facts.

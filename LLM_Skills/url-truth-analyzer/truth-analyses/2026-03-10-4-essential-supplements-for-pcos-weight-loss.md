@@ -90,4 +90,4 @@ Partly true, but overhyped. Fish oil and a good multivitamin (especially vitamin
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. PCOS supplement advice spreads fast on social media, and a lot of it is oversimplified. Sharing this analysis alongside the original video could prevent someone from wasting money or skipping a real doctor visit.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The supplement recommendations are based on small, short-duration trials measuring biomarkers (not actual weight loss or fertility outcomes), and the video provides no citations, no dosing guidance, and no safety caveats for any of the four supplements.

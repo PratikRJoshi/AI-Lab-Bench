@@ -85,4 +85,4 @@ This one's mostly wrong — skip it. The video says everyone needs to take probi
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The original video is misleading supplement marketing that could waste people's money. Sharing this analysis helps counter the "everyone needs probiotics" myth with what the science actually says.
+No — most claims in this video are contested or factually incorrect. Share this analysis instead so people can see what's supported and what isn't. The video promotes universal daily probiotic supplementation, which directly contradicts AGA clinical guidelines, includes a factually wrong claim about microbiome weight (off by 14x), and reads as supplement marketing with no credentials, citations, or safety information.

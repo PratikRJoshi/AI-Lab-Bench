@@ -100,4 +100,4 @@ The main point is actually true — walking really is great for you, and aiming 
 
 ## Broadly Shareable?
 
-Yes. Walking is one of the safest health recommendations out there, and the core message is solid. Sharing this analysis helps people get the real takeaway (walk more!) without buying into the overly precise claims or the marketing funnel.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While the overall message that walking is beneficial is strongly supported by large observational studies, the minute-by-minute timeline implies a mechanistic precision no single study supports, and the specific risk-reduction percentages are drawn from observational data with residual confounding and no absolute baseline rates provided.

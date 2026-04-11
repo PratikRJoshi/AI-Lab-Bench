@@ -67,4 +67,4 @@ Trustworthy and really well done. The key idea: "processed food" isn't automatic
 
 ## Broadly Shareable?
 
-Yes. This is a great antidote to both "all processed food is poison" and "everything the food industry makes is fine." Balanced enough to share with anyone who has strong opinions on either side.
+Yes — this content is backed by strong evidence and is safe to share. All claims are grounded in food science literature and the NOVA classification framework, and the video avoids both the "all processed food is poison" and "everything the food industry makes is fine" extremes.

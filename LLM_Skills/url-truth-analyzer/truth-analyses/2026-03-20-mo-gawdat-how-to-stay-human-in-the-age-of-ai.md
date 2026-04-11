@@ -131,4 +131,4 @@ Mixed bag. The stress management stuff is mostly solid — your body does freak 
 
 ## Broadly Shareable?
 
-Yes, with caveats — the stress management advice is genuinely useful, but flag that the AI timeline predictions and the "99% post-traumatic growth" stat are exaggerated. Best shared as "good life advice, not a reliable tech forecast."
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While the stress biology is sound, key statistics are inflated (the "99% post-traumatic growth" claim is refuted — the real range is 30–70%), the AGI timeline contradicts median expert predictions, and several philosophical claims are normative rather than evidence-based.

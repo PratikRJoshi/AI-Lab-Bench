@@ -61,4 +61,4 @@ Bottom line: non-stick pans are safe to use. The scary chemical (PFOA) was remov
 
 ## Broadly Shareable?
 
-Yes. Non-stick fear comes up constantly in family group chats, and this analysis gives a calm, science-backed answer. Safe and useful to forward to anyone worried about their pans.
+Yes — this content is backed by strong evidence and is safe to share. The core claims about PTFE safety, the PFOA phase-out, and the negligible risk from non-stick cookware under normal use are all well-supported by regulatory bodies (EPA, FDA) and peer-reviewed science.

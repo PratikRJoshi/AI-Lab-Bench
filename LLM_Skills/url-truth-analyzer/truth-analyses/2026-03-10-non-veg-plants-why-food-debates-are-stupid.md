@@ -62,4 +62,5 @@ This one's legit and actually really cool. It's a fun science video about how pl
 ---
 
 ## Broadly Shareable?
-Yes — this is safe and fun to share with anyone. It's pure science education with no health claims, no agenda, and no misinformation risk. Great conversation starter about how weird and wonderful plants are.
+
+Yes — this content is backed by strong evidence and is safe to share. All factual claims about plant biology are well-supported by peer-reviewed research (Böhm et al., Gagliano et al., Simard et al.), and the video makes no health claims — it is pure science education with no misinformation risk.

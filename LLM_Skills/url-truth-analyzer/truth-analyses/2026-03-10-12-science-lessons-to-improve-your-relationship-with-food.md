@@ -74,4 +74,4 @@ Trustworthy — this is one of the good ones. The main takeaways: no single food
 
 ## Broadly Shareable?
 
-Yes. This is ideal for sharing — it busts common myths without being preachy, covers topics almost every Indian household argues about, and all the science checks out. Great for family group chats.
+Yes — this content is backed by strong evidence and is safe to share. All 12 lessons align with nutritional science consensus from ICMR, WHO, and peer-reviewed literature, and the presenter actively debunks myths rather than promoting food fear.

@@ -42,4 +42,4 @@ Honestly, I couldn't tell what this video is actually saying — it's in a regio
 
 ## Broadly Shareable?
 
-Not broadly — this analysis is incomplete because the video couldn't be properly transcribed. Sharing it wouldn't help anyone since we can't confirm what's being claimed.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The video could not be reliably transcribed due to regional dialect limitations, and the recoverable content shows no cited research, clinical backing, or patient-oriented evidence — only opinion-based commentary on weight loss.

@@ -65,4 +65,4 @@ Trustworthy — and honestly one of the fairest takes on this topic. Instead of 
 
 ## Broadly Shareable?
 
-Yes. This is one of the most balanced and well-sourced videos on a topic that usually generates more heat than light. Useful for anyone navigating the "traditional vs modern medicine" conversation, especially in Indian households.
+Yes — this content is backed by strong evidence and is safe to share. Every factual claim checked is accurate, the philosophical framework distinguishing observational science from the scientific method is intellectually honest, and the video applies critical scrutiny equally to both traditional and modern institutions.

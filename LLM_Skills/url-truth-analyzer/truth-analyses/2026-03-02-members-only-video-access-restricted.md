@@ -29,4 +29,4 @@ Can't really share this one — the video is behind a paywall so there's nothing
 
 ## Broadly Shareable?
 
-No — the source content is members-only and couldn't be analyzed.
+No — the source content is behind a paywall and could not be analyzed. Without access to the actual claims, there is no way to verify accuracy or recommend sharing.

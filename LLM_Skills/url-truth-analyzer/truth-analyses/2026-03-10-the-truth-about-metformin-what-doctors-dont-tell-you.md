@@ -85,4 +85,4 @@ This one is partly true but has some problems. The basic explanation of how metf
 ---
 
 ## Broadly Shareable?
-Yes — and worth flagging. The original video could lead someone to stop taking metformin or substitute it with unproven supplements, which is risky. Sharing this analysis alongside the video helps people understand what the video gets right and where it's misleading. Especially important if someone with diabetes is in the group.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The video omits metformin's proven cardiovascular mortality benefit (UKPDS 34), overstates supplement equivalence (e.g., berberine "just as effective" based on small, low-quality trials), and contains a dosing error for inositol (mg vs. g). Someone could use this video to justify stopping or substituting prescribed medication without medical guidance.

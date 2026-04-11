@@ -80,4 +80,5 @@ This video makes a medically misleading claim. While the general principles unde
 This smoothie isn't going to cure anyone's migraines. The video says almonds, walnuts, and poppy seeds are packed with magnesium that fixes migraines — and magnesium *does* have some real science behind it for migraines, but you'd need about 4-5x more than what's in this smoothie to get the amount that actually worked in studies. The one good takeaway is "don't skip breakfast" — skipping meals really can trigger migraines, and that part is backed by research. But if someone is getting migraines 4-5 times a week, they need a neurologist, not a smoothie recipe from Instagram.
 
 ## Broadly Shareable?
-Yes — and worth flagging. The word "cure" for a neurological condition is a red flag. Someone with frequent migraines might delay seeing a doctor if they think a smoothie will fix things. Sharing this analysis helps set realistic expectations about what diet can and can't do for migraines.
+
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The smoothie delivers roughly a quarter of the magnesium dose shown to help in clinical trials, the "cure" claim is unsupported by any clinical evidence, and someone with 4-5 weekly migraine attacks needs neurological evaluation, not an Instagram smoothie recipe.

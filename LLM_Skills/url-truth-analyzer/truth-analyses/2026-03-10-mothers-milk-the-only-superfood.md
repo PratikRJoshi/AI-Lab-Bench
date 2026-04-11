@@ -71,4 +71,4 @@ Highly trustworthy — this is from a senior doctor with 35+ years of experience
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. Breastfeeding misinformation (especially pressure from family to add gripe water, honey, or cow's milk early) is widespread. This analysis is safe and valuable to share with new parents, expecting couples, or anyone giving advice to them.
+Yes — this content is backed by strong evidence and is safe to share. The vast majority of claims are supported by Grade A evidence (WHO, AAP, and IAP guidelines with consistent RCT-level backing), and the expert interview format from a senior neonatologist ensures appropriate clinical nuance for new and expecting parents.

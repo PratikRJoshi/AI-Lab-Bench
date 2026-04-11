@@ -80,4 +80,4 @@ Factually accurate, elegantly explained science content from a credible source. 
 
 ## Broadly Shareable?
 
-Yes — totally safe and fun to share. It's accurate science from a credible source with zero risk of misleading anyone. Great for kids, curious adults, or anyone who likes learning random cool things.
+Yes — this content is backed by strong evidence and is safe to share. Every claim in the video — eggshell pore structure, the chorioallantoic membrane gas exchange system, air cell formation, and the evolutionary analogy to mammalian placentation — is textbook-established developmental biology from a credible source (NPR) with zero commercial agenda or health risk.

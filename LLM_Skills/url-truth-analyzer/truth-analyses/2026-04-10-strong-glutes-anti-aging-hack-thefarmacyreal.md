@@ -66,4 +66,4 @@ Partly true but overblown. Yes, strength training is genuinely great for your he
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The original post could mislead people into thinking exercise replaces skincare, or that sweating detoxes your body, both of which are wrong. Sharing this analysis helps correct those ideas while still giving credit to the real benefits of strength training.
+Yes — this content is backed by strong evidence and is safe to share. The core claim that resistance training benefits longevity and may improve skin health is supported by large meta-analyses on mortality reduction and an emerging study on skin structure improvements from resistance exercise.

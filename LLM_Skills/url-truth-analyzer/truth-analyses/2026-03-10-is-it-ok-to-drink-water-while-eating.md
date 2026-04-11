@@ -48,4 +48,4 @@ Totally trustworthy. Yes, you can drink water while eating — your stomach adju
 
 ## Broadly Shareable?
 
-Yes. These four myths come up in almost every Indian household. This is a great quick-reference to settle the debate — short, accurate, and nobody's going to get hurt by knowing the truth.
+Yes — this content is backed by strong evidence and is safe to share. All four myth-busting claims are supported by established physiology and WHO guidelines, and none of the advice carries any health risk.

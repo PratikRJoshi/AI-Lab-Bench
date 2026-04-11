@@ -59,4 +59,4 @@ This is solid advice — basically, the fittest people just walk every day, lift
 
 ## Broadly Shareable?
 
-Yes — this is safe and helpful to share widely. The advice is evidence-based, anti-hype, and applies to almost everyone. It's especially good for people who feel overwhelmed by conflicting fitness content online.
+Yes — this content is backed by strong evidence and is safe to share. Every major claim — daily walking, moderate-frequency resistance training, whole-food nutrition, consistent sleep, and skepticism toward fad diets and ice baths — is well-supported by systematic reviews and meta-analyses.

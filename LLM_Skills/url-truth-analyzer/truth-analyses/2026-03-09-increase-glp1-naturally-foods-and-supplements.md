@@ -70,4 +70,4 @@ Partly true. The food advice is fine — eating more fiber, olive oil, avocado, 
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The dietary advice is sensible, but the "natural GLP-1 boosting" framing could mislead people into thinking they don't need medical treatment, or that supplements are risk-free. Add context if sharing.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. Most food-to-GLP-1 claims are based on animal/cell studies or small, inconsistent human trials, and the video omits clinically important berberine drug interactions while overstating the ability of diet to replicate pharmacological GLP-1 effects.

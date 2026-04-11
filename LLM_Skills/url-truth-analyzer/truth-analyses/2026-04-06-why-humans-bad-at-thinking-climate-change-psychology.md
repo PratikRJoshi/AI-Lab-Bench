@@ -79,4 +79,4 @@ Mostly trustworthy. The main point — that scaring people about climate change 
 
 ## Broadly Shareable?
 
-Yes. The core message about effective climate communication is well-supported and practically useful. The ozone analogy oversimplifies a bit, but nothing here is harmful — it might actually help people have better conversations about climate action.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While the behavioral science around fear-based climate messaging is well-grounded, the ozone crisis analogy oversimplifies the actual resolution (regulatory action via the Montreal Protocol, not consumer behavior change) and could mislead viewers about what drives real environmental progress.

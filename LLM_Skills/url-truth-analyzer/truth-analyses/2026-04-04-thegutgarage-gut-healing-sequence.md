@@ -66,4 +66,4 @@ Mostly trustworthy. The three-step approach — calm down your stress first, get
 
 ## Broadly Shareable?
 
-Yes. The "calm the stress before loading up on supplements" message is genuinely useful and something many people with gut issues need to hear. This analysis adds the important reminder to get properly checked out for serious conditions first.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The individual mechanisms (gut lining turnover, stress-motility link, SCFA-vagal signaling, polyphenol-diversity) are well-supported, but the integrated 3-step healing protocol has not been tested as a combined intervention, and the claim that probiotics "do nothing" under stress overstates the evidence.

@@ -52,4 +52,4 @@ Totally trustworthy. Your pressure cooker is not killing your food's nutrition �
 
 ## Broadly Shareable?
 
-Yes — short, accurate, and relevant to basically every Indian kitchen. Perfect for debunking the pressure cooker myth that circulates in family WhatsApp groups.
+Yes — this content is backed by strong evidence and is safe to share. Every claim — from the physics of pressure cooking to nutrient retention comparisons — is confirmed by food science research, and the practical advice to supplement with raw foods for vitamin C is sound.

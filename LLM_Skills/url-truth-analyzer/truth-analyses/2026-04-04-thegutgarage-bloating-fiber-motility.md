@@ -69,4 +69,4 @@ This one's actually pretty solid. If you've ever tried adding more fiber and end
 
 ## Broadly Shareable?
 
-Yes. Fiber-induced bloating is extremely common, and the "fix the flow first, then add fiber" advice is practical and safe. This is one of the more helpful wellness posts out there, and the analysis adds useful context without undermining the core message.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The individual components (motility-first sequencing, butyrate, vagal tone, kiwi for constipation) are each supported by evidence of varying quality, but the specific combined two-step protocol has never been validated in an RCT, and the post oversimplifies the differential diagnosis of fiber-related bloating.

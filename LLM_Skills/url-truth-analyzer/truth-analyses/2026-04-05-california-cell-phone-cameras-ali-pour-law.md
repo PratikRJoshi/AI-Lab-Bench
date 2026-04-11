@@ -111,4 +111,4 @@ The basic advice is right — don't hold your phone while driving in California,
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The core safety message (don't use your phone while driving) is important, but the video overhypes the surveillance angle. Sharing this analysis helps people understand the real rules without the unnecessary scare factor.
+No — most claims in this video are contested or misleading in scope. Share this analysis instead so people can see what's supported and what isn't. While the core safety advice (don't use your phone while driving) is sound, the video exaggerates the extent of camera enforcement, cites an outdated statute, and omits critical context about pilot program limitations and due process protections.

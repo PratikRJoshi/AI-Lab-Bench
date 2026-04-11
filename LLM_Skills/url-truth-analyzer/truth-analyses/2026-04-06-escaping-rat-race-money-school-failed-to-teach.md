@@ -85,4 +85,4 @@ This one's actually solid. The facts check out — Mike Tyson really did go brok
 
 ## Broadly Shareable?
 
-Yes — safe and useful to share. It's mainstream personal finance advice with no misleading claims or product pitches, and most people could benefit from the reminders about budgeting and avoiding lifestyle inflation.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While the factual anchors (Tyson bankruptcy, record credit card debt) are accurate and the personal finance principles are mainstream, the Kiyosaki-influenced asset/liability framework is criticized by financial professionals for oversimplification, and the overall treatment is surface-level.

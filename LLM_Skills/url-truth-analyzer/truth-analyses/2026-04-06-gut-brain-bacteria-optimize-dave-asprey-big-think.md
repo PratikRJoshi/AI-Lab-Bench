@@ -86,4 +86,4 @@ Partly true — take it with a grain of salt. The basic idea that your gut and b
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The general gut-health message is fine, but sharing without context could lead people to take Asprey's specific dietary advice (and commercial products) at face value. Sharing this analysis alongside the video helps people separate the real science from the sales pitch.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The core gut-brain axis science is real, but Asprey presents specific dietary prescriptions (high-fat diets, coffee polyphenols "optimizing brain bacteria") with clinical certainty that far exceeds the evidence, and his undisclosed commercial interest in Bulletproof products makes the advice indistinguishable from a sales pitch.

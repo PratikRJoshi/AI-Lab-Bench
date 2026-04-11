@@ -109,4 +109,4 @@ Mostly trustworthy — this is a solid reality check on a bunch of food myths. M
 
 ## Broadly Shareable?
 
-Yes. This is the kind of myth-busting content that's genuinely helpful in group chats where food fears get amplified. It's accurate, practical, and doesn't sell anything.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While most claims align with nutritional science consensus, the carousel relies primarily on disease-oriented evidence (glycemic index values, calorie numbers, nutrient comparisons) rather than patient-oriented outcomes, cites no specific studies, and oversimplifies complex topics like gluten sensitivity prevalence and individual caloric needs.

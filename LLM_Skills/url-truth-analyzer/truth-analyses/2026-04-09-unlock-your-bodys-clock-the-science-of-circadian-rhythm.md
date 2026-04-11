@@ -58,4 +58,4 @@ Trustworthy. Your body really does run on a 24-hour clock, and this video explai
 
 ## Broadly Shareable?
 
-Yes. Accurate, practical, and relevant to literally anyone with a sleep schedule or a phone. Great for family group chats — the meal timing and screen advice alone makes it worth sharing.
+Yes — this content is backed by strong evidence and is safe to share. Every major hormonal and chronobiological claim is well-supported by peer-reviewed research, and the practical recommendations for meal timing, cognitive work scheduling, and sleep hygiene are consistent with current evidence.

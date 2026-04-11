@@ -82,4 +82,4 @@ This one's actually good — a real doctor explaining that you probably don't ne
 
 ## Broadly Shareable?
 
-Yes — this is exactly the kind of balanced, credible health content that's worth passing along. It counters supplement hype with actual evidence and comes from a licensed doctor who's upfront about scientific uncertainty.
+Yes — this content is backed by scientific consensus and is safe to share. Dr. Mike's core message — that probiotics are not a universal supplement, have evidence only for specific conditions, and that diet comes first for gut health — aligns with current AGA guidelines and Cochrane reviews, and is delivered with appropriate scientific hedging by a licensed physician.

@@ -59,4 +59,4 @@ This is solid advice. The main takeaway is: if you can't sleep, the best first s
 
 ## Broadly Shareable?
 
-Yes — almost everyone knows someone who struggles with sleep, and this is genuinely helpful, evidence-backed advice with no product sales or gimmicks. Worth sharing widely.
+Yes — this content is backed by strong evidence and is safe to share. CBT-I as first-line insomnia treatment is endorsed by major clinical guidelines (ACP, AASM) and supported by multiple meta-analyses of RCTs, and the alcohol warning is confirmed by systematic review evidence.

@@ -44,4 +44,4 @@ Misleading. This is the same creator recycling the same scare tactics — blamin
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The anti-pasteurization messaging is genuinely dangerous, especially for pregnant women or anyone with a weaker immune system. Sharing this analysis could prevent someone from switching to risky raw milk based on bad advice.
+No — most claims in this content are unsupported or contradicted by scientific consensus. Share this analysis instead so people can see what's actually evidence-based. The carousel repeats debunked claims about pasteurized milk being "dead" and blames store-bought Indian foods for health problems without citing any studies, while promoting a paid sourcing guide — and the anti-pasteurization messaging is genuinely dangerous, especially for pregnant women and immunocompromised individuals.

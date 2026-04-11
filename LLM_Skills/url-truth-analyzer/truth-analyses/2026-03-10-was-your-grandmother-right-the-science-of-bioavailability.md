@@ -71,4 +71,4 @@ This is trustworthy and honestly made me appreciate Indian cooking way more. The
 ---
 
 ## Broadly Shareable?
-Yes — this is one of the best in the series. It validates traditional cooking wisdom with solid science, contains no harmful advice, and is relevant to anyone who eats Indian food. Perfect for sharing with family, especially elders who'll appreciate the "grandmother was right" angle.
+Yes — this content is backed by strong evidence and is safe to share. All 12 claims are supported by peer-reviewed nutritional science, including PDCAAS data from FAO/WHO, isotope-labeled digestibility studies, and glycemic index research. The video accurately validates traditional Indian food preparation practices (pressure cooking, fermenting, protein complementarity) with modern bioavailability evidence.

@@ -54,4 +54,4 @@ Mostly true, with some hype. The basic science is real — when you skip eating 
 
 ## Broadly Shareable?
 
-Yes. Intermittent fasting is widely discussed, and this analysis helps separate what's actually proven from what's still just promising lab research. Useful for anyone considering trying a 16:8 eating schedule.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The metabolic mechanisms described (ketogenesis, autophagy, BDNF) are real, but the neurological benefit claims — particularly amyloid-beta clearance in humans — are extrapolated from animal studies and presented with far more certainty than the current human evidence supports.

@@ -118,4 +118,4 @@ Misleading and potentially dangerous. This health coach blames bloating and acne
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The anti-pasteurization advice is genuinely dangerous, especially for pregnant women or anyone with a compromised immune system. This analysis can help people avoid unsafe dietary choices driven by fear-based marketing.
+No — most claims in this content are unsupported or contradicted by scientific consensus. Share this analysis instead so people can see what's evidence-based and what's marketing. The carousel attributes complex health issues (bloating, acne, weight changes) to a single cause — food sourcing — without any scientific evidence, promotes dangerous anti-pasteurization misinformation, and sells a paid directory as the cure, all while ignoring the well-documented confounding factors of immigration stress and overall dietary pattern changes.

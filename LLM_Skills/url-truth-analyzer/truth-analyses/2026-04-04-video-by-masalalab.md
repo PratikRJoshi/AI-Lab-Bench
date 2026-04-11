@@ -47,4 +47,4 @@ This one's actually legit! Cadbury really did change the shape of their chocolat
 
 ## Broadly Shareable?
 
-Yes — fun, accurate, and harmless. It's a cool food science fact backed by real research, and the practical tip about reducing sugar through shape is genuinely useful and easy to try.
+Yes — this content is backed by strong evidence and is safe to share. Every major claim — the 2013 Cadbury shape change, the geometric volume reduction, and the rounder-shapes-taste-sweeter phenomenon — is well-documented in public record and replicated in peer-reviewed crossmodal correspondence research by Prof. Charles Spence at Oxford.

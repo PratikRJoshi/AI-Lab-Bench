@@ -94,4 +94,4 @@ Partly true — the idea that certain probiotics might help with stress and mood
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The science is real but early-stage, and there's a risk people could interpret this as "probiotics cure depression." Sharing this analysis alongside the video helps set realistic expectations about what probiotics can and can't do for mental health.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. While the psychobiotic concept is legitimate and the named strains are from real trials, most evidence comes from small studies on healthy volunteers with subclinical stress — not clinical depression — and the specific strain/dose recommendations are trial protocols, not established clinical guidelines. Sharing the video without context risks people interpreting it as "probiotics cure depression."

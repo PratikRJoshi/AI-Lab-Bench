@@ -85,4 +85,4 @@ Misleading. The video claims Costco's Indian food aisle is basically an inflamma
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. This video targets immigrant anxieties about navigating US grocery stores and could cause people to needlessly avoid affordable, safe food. Sharing this analysis helps counter that fear-based messaging.
+No — most claims in this content are unsupported or contradicted by scientific evidence. Share this analysis instead so people can see what the research actually says. The video singles out Costco's Indian food aisle as "inflammatory" without citing any studies, while several of the red-flagged products (organic ghee, A2 milk, Greek yogurt) actually have published evidence of anti-inflammatory properties — and the entire video funnels toward a paid sourcing guide, revealing the commercial motivation behind the fear-based claims.

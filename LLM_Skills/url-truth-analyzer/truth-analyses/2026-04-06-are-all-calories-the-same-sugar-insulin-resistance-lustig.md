@@ -96,4 +96,4 @@ Mostly trustworthy — this is a real doctor from UCSF making some important poi
 
 ## Broadly Shareable?
 
-Yes — it's a credible, mostly accurate explanation of why sugar is uniquely harmful. The one caveat to mention is that calories still matter for weight, even though different calories affect your body differently. Good for anyone curious about nutrition science.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While Dr. Lustig's claims about fructose metabolism and the obesity-diabetes dissociation are well-supported, his dismissal of caloric balance is contested by metabolic ward studies, and one key epidemiological claim (equal diabetes rate increase across weight classes) lacks a cited source.

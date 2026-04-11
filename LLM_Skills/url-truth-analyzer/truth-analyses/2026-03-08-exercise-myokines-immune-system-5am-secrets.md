@@ -119,4 +119,4 @@ The big picture is true — lifting weights regularly really does help you live 
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The "exercise is good for you" message is important and true, but the specific mechanism claims (myokines activating NK cells to kill cancer) are oversimplified. If sharing, add a note that the *why* is more complicated than the post makes it seem.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While resistance training's survival benefits are well-established, the post presents the myokine → NK cell → cancer destruction mechanism as proven when the highest-quality evidence (a meta-analysis of 13 RCTs) found no consistent effect of exercise on NK cell activity in cancer survivors.

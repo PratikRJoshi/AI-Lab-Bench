@@ -68,4 +68,4 @@ Really trustworthy video. The big takeaways: spicy food doesn't cause ulcers (a 
 
 ## Broadly Shareable?
 
-Yes — this is excellent for anyone who's ever worried about digestive health or been scared by gut-health content on social media. Accurate, calming, and myth-busting. Great for group chats.
+Yes — this content is backed by strong evidence and is safe to share. Core claims about H. pylori as the primary ulcer cause, NSAID gastropathy, lactase persistence genetics, and GERD mechanisms are all backed by meta-analyses, systematic reviews, and established clinical guidelines.

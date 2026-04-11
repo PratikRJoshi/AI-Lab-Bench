@@ -123,4 +123,5 @@ This post provides a mix of reasonable precautions and poorly supported claims, 
 That reel about chia and sabja seeds being "not for everyone" is a mix of okay advice and stuff that's just not backed by science. The kidney stone warning is real — if you've had stones before, go easy on chia since they're high in oxalates. And yeah, if you suddenly eat a ton of fiber you might get bloated, but that's true of any high-fiber food, not just chia. The rest — like "it increases mucus" or "avoid if you have a cold body type" — is Ayurvedic tradition, not medical science. For most people, a spoonful or two of chia or sabja a day is perfectly safe and actually good for you. Don't let a scary-sounding Instagram list put you off.
 
 ## Broadly Shareable?
-Yes — worth sharing. The original post creates unnecessary anxiety about two safe, nutritious foods. Forwarding this analysis helps friends who might see the reel and needlessly cut chia or sabja from their diet.
+
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. Most claims rest on Ayurvedic tradition, mechanistic reasoning, or generic dietary advice without clinical outcome data, and the post creates unnecessary anxiety about two generally safe and nutritious foods by omitting dosage context and benefits.

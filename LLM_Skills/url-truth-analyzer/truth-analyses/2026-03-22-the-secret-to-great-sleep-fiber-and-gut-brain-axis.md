@@ -118,4 +118,4 @@ This one's actually legit. The main idea — eating more fiber (like dal, veggie
 
 ## Broadly Shareable?
 
-Yes. This is accurate, practical health advice with no harmful claims. Sharing it could genuinely help people improve their sleep and diet habits.
+Yes — this content is backed by strong evidence and is safe to share. The fiber-sleep connection via the gut-brain axis, short-chain fatty acid production, and the importance of dietary diversity are all supported by recent high-quality research published in the Journal of Clinical Sleep Medicine and Nature Medicine.

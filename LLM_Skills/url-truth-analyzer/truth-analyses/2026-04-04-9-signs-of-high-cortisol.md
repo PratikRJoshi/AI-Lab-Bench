@@ -58,4 +58,4 @@ Mostly misleading. Three of the nine signs (easy bruising, puffy face, belly fat
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The "everything is cortisol" trend is everywhere on social media right now and can lead people to waste money on unproven supplements or delay getting checked for what's actually going on.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. Only 3 of the 9 listed symptoms (bruising, moon face, central obesity) are clinically validated signs of pathological hypercortisolism; the remaining 6 are too non-specific to attribute to cortisol and risk fueling the wellness-industry "cortisol" trend that can delay proper medical diagnosis.

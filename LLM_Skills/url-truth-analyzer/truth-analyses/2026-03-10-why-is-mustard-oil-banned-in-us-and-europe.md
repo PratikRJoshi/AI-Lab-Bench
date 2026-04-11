@@ -49,5 +49,4 @@ The claims are accurate. The video correctly identifies a genuine regulatory inc
 This one's actually pretty trustworthy. The short version: mustard oil got banned in the US based on old rat studies, not because anyone proved it's bad for people. Meanwhile, canola oil — which is basically just rebranded rapeseed oil from Canada — got the green light. The studies that do exist in humans actually suggest mustard oil is fine, maybe even good for your heart. So if your family cooks with it, no need to panic — just know the "ban" is more about outdated rules and business interests than real danger.
 
 ## Broadly Shareable?
-
-Yes — worth sharing, especially with South Asian friends or family who worry about using mustard oil at home. It's a well-sourced, balanced take that clears up a common misconception without overhyping anything.
+Yes — this content is backed by strong evidence and is safe to share. All claims are supported or mostly supported, including by the HEART India RCT which found favorable cardiovascular outcomes for mustard oil. The video correctly identifies that the US ban is based on rat studies never validated in humans, while human epidemiological data generally favors mustard oil consumption at normal dietary levels.

@@ -105,4 +105,4 @@ This one's really reliable. Bottom line: wheat and gluten are totally fine for m
 
 ## Broadly Shareable?
 
-Yes — great for anyone who's been scared into avoiding wheat or gluten without a medical reason. It's balanced, accurate, and explains the science without being preachy.
+Yes — this content is backed by strong evidence and is safe to share. The biochemistry of gluten, nutritional composition of wheat, processing differences between atta and maida, and the consensus that gluten is safe for the vast majority of people are all accurately presented and consistent with current food science and USDA data.

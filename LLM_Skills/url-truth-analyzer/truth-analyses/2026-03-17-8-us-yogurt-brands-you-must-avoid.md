@@ -141,4 +141,4 @@ Partly true, but overhyped. Yes, some big yogurt brands have way too much sugar 
 
 ## Broadly Shareable?
 
-Yes, with caveats — the label-reading advice is great, but share it with a note that the video overstates the health dangers. The real issue is too much sugar and false advertising, not that these yogurts are poison.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The health claims rest primarily on expert opinion, ingredient analysis, and regulatory findings (Grade C evidence) rather than clinical outcome studies — no RCTs demonstrate that consuming these yogurts causes measurable health harms, and the leap from "contains a sketchy additive" to "causes disease" is not supported.

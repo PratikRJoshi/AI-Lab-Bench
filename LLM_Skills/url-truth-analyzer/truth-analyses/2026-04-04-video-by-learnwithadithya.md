@@ -64,4 +64,4 @@ The basic idea is good — getting a health checkup before marriage makes way mo
 
 ## Broadly Shareable?
 
-Yes. The message "invest in health screening before marriage" is responsible and culturally relevant, especially in communities where expensive weddings are normalized. Sharing this analysis adds the practical note to ask a doctor for the right tests rather than just copying this specific list.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The spirit of premarital health screening is sound, but the specific panel proposed is a general wellness check with no guideline backing as a premarital protocol, the genetic-risk-stacking argument oversimplifies polygenic inheritance, and the video omits the one premarital test that actually has official guidelines in India — thalassemia screening.

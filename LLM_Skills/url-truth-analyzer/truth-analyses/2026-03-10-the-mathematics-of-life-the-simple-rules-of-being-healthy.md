@@ -73,4 +73,4 @@ This is trustworthy and honestly fascinating. The big idea: most animals get abo
 ---
 
 ## Broadly Shareable?
-Yes — safe and interesting for anyone. The health advice is well-supported (exercise, social connection, no alcohol), and the "billion heartbeats" concept is a great hook that makes people actually pay attention to the practical stuff.
+Yes — this content is backed by strong evidence and is safe to share. Ten of eleven claims are fully supported by peer-reviewed research; the "billion heartbeats" concept is acknowledged as an oversimplification but used correctly as a teaching device. All actionable health advice — strength training, social connection, stress management, no alcohol — is well-supported by meta-analyses and large cohort studies.

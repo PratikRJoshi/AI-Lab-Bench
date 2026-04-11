@@ -29,4 +29,4 @@ Misleading — same creator, same playbook. This is another post from the same h
 
 ## Broadly Shareable?
 
-Not broadly — only relevant if someone specifically shared this cooking oils post with you. The detailed analyses of this creator's other carousels cover the same issues more thoroughly.
+No — most claims in this content are unsupported by scientific evidence. Share this analysis instead so people can evaluate what's real and what's marketing. The carousel follows the same pattern of blaming common grocery-store cooking oils for immigrant health problems without citing any studies, then promoting a paid sourcing guide as the fix — there is no evidence that specific store-bought oils are uniquely harmful compared to "farm-sourced" alternatives.

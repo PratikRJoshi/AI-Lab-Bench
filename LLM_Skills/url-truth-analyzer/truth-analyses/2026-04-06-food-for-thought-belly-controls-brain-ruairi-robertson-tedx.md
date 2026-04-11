@@ -89,4 +89,4 @@ This one's legit. The speaker is an actual researcher, and the main idea — tha
 
 ## Broadly Shareable?
 
-Yes — this is trustworthy, well-presented science with safe dietary advice. Great to share with anyone curious about gut health or looking for a reason to eat more diverse, whole foods.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While the gut-brain axis is well-established and the dietary advice is safe, the specific claims linking microbiome diversity to mental health outcomes remain correlational, not causal — and the talk blends Grade A established science with Grade C emerging hypotheses without clearly distinguishing them for the viewer.

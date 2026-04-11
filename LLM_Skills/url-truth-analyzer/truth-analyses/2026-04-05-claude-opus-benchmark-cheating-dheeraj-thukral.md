@@ -129,4 +129,4 @@ This video is mostly clickbait. It makes it sound like an AI secretly "hacked" a
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The original video spreads unnecessary AI panic through misleading framing. Sharing this analysis helps people understand what actually happened without the fear-mongering.
+No — the majority of claims in this video are contested, unsupported, or refuted. Share this analysis instead so people can see what's supported and what isn't. The video anthropomorphizes AI behavior, misrepresents standard benchmark contamination as "hacking," and uses fear-based framing that undermines legitimate AI safety discourse with clickbait alarmism.

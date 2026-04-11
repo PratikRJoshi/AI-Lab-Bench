@@ -115,4 +115,4 @@ This is spot on. Unless you have celiac disease (about 1 in 100 people) or a dia
 
 ## Broadly Shareable?
 
-Yes — this is one of the most useful things you could forward to anyone who's gone gluten-free "for health reasons." It's accurate, concise, and could save someone from an unnecessary (and potentially harmful) dietary restriction.
+Yes — this content is backed by strong evidence and is safe to share. Every major medical claim — celiac prevalence, gluten-free diet inefficacy for non-celiac individuals, and the importance of clinical testing over self-diagnosis — is supported by high-quality cohort studies (Lebwohl et al., 2017), meta-analyses, and international gastroenterology guidelines (ACG, BSG).

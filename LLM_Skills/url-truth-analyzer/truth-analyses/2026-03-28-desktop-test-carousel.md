@@ -122,4 +122,4 @@ This one's trustworthy. The post debunks a really common worry — that hormones
 
 ## Broadly Shareable?
 
-Yes. This is exactly the kind of science explainer that's useful to forward to parent group chats. It tackles a very common fear with solid evidence and could save a lot of unnecessary worry.
+Yes — this content is backed by strong evidence and is safe to share. The carousel accurately debunks the myth that hormones in commercial milk and chicken cause early puberty, citing regulatory bans, established biochemistry, and cohort-level data identifying childhood obesity — not dietary hormones — as the primary driver of early puberty.

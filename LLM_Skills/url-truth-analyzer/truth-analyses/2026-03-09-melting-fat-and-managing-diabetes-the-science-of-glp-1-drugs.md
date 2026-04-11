@@ -69,4 +69,4 @@ This one's trustworthy and really well done. It explains how those weight-loss d
 
 ## Broadly Shareable?
 
-Yes — GLP-1 drugs are one of the most talked-about topics in health right now, and there's a lot of misinformation out there. This video gives an honest, balanced explanation. Worth sharing with anyone considering these medications or just wanting to understand the hype.
+Yes — this content is backed by strong evidence and is safe to share. The quantitative claims (15–20% weight loss, ~1.5% HbA1c reduction, two-thirds weight regain after stopping) are all confirmed by large RCTs and meta-analyses, and the pharmacological mechanism is accurately explained.

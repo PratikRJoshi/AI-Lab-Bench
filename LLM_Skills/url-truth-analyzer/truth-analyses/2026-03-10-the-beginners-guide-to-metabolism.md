@@ -74,4 +74,4 @@ This is trustworthy and super useful. It explains how your body turns food into 
 ---
 
 ## Broadly Shareable?
-Yes — and worth flagging. This is one of the best beginner explanations of why diabetes is so common in India. Safe and helpful for anyone, especially family members who might not understand why "looking thin" doesn't mean "being healthy."
+Yes — this content is backed by strong evidence and is safe to share. All 11 claims are supported by established endocrinology, exercise physiology, and epidemiological data including the well-documented "Asian Indian Phenotype." The explanation of carbohydrate metabolism, insulin resistance, and the South Asian diabetes risk is accurate and important for Indian audiences.

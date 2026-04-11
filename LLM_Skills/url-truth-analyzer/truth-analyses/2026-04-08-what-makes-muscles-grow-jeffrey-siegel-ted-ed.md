@@ -106,4 +106,4 @@ This one's really good — trustworthy all the way through. It explains how your
 
 ## Broadly Shareable?
 
-Yes. This is top-tier science education — accurate, no hidden agenda, and easy to understand. Share it with anyone who's curious about how exercise works.
+Yes — this content is backed by strong evidence and is safe to share. Every major physiological claim aligns with established exercise science textbooks and peer-reviewed research, and TED-Ed's editorial oversight ensures accuracy without commercial bias.

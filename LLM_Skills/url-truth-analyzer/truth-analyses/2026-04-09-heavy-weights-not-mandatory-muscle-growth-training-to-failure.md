@@ -106,4 +106,4 @@ Mostly true — and pretty impressive for a social media post. The main idea is 
 
 ## Broadly Shareable?
 
-Yes. This is unusually well-sourced for social media and could help people who avoid the gym because they're intimidated by heavy weights. The core message is encouraging and evidence-based.
+Yes — this content is backed by strong evidence and is safe to share. The core claim that muscle hypertrophy is load-independent when training near failure is one of the most well-replicated findings in exercise science, supported by multiple systematic reviews and a directly cited RCT from a leading research group.

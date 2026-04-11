@@ -76,4 +76,4 @@ This one is totally trustworthy. It covers the real science of water and then de
 ---
 
 ## Broadly Shareable?
-Yes — and worth flagging. This is perfect for family group chats where water myths get shared constantly. It debunks common misconceptions with solid science, and there's zero risk of harm from sharing it. One of the most useful "forward this to your parents" videos.
+Yes — this content is backed by strong evidence and is safe to share. All 12 claims — from water chemistry to systematic debunking of alkaline water, moon charging, water memory, and the "eight glasses a day" myth — are supported by scientific consensus and WHO guidelines. This is particularly valuable for countering viral water misinformation.

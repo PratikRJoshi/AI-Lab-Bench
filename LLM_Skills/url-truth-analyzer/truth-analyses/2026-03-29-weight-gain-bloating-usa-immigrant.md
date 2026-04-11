@@ -31,4 +31,4 @@ This one's misleading. It's the same person posting the same story over and over
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. This analysis is useful to share because the original content is repeated misinformation with a sales pitch attached, and people who've moved countries may be especially vulnerable to it.
+No — most claims in this content are unsupported by scientific evidence. Share this analysis instead so people can evaluate the claims critically. This is repeat content from the same creator making identical unsupported claims — blaming US food sourcing for weight gain and bloating without any studies, promoting dangerous anti-pasteurization advice, and funneling viewers toward a paid sourcing guide rather than recommending medical evaluation for persistent symptoms.

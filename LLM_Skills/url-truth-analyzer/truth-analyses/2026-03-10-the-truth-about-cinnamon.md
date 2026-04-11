@@ -53,4 +53,4 @@ This is trustworthy. Quick version: there are two types of cinnamon — the fanc
 ---
 
 ## Broadly Shareable?
-Yes — it's a quick, harmless explainer. Useful if someone in your circle is panicking about cinnamon being "toxic" based on a viral post. No risk of harm from sharing, and it calms unnecessary food fears.
+Yes — this content is backed by strong evidence and is safe to share. All six claims are supported by food science literature and EFSA risk assessments. The video accurately distinguishes Ceylon from cassia cinnamon and correctly contextualizes the coumarin concern as relevant only to high-dose supplementation, not normal cooking use.

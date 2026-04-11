@@ -69,4 +69,4 @@ This is trustworthy and really entertaining — it's set up as a conversation wi
 ---
 
 ## Broadly Shareable?
-Yes — and worth flagging. This is one of the best science videos in the series. The message is empowering (the best longevity tools are free), the science is accurate, and the format is entertaining enough that people will actually watch the whole thing. Great for anyone interested in living healthier.
+Yes — this content is backed by strong evidence and is safe to share. All 11 claims — from the Haber-Bosch process to mTOR signaling to GLP-1 agonists — are supported by scientific consensus. The concluding message that exercise and caloric restraint are the most effective and accessible longevity tools is precisely aligned with the current weight of evidence across multiple meta-analyses.

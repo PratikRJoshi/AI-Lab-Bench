@@ -102,4 +102,4 @@ Partly true. Walking every day really is great for you — your heart, mood, and
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The "walk more" message is great, but sharing this specific video risks spreading exaggerated claims. If you forward it, add a note that the big picture is right but the specific numbers are overblown.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. While daily walking is genuinely one of the best-evidenced health interventions, this Bright Side video systematically exaggerates specific claims (preventing Alzheimer's, improving eyesight, 6x better than running for diabetes) and provides unverifiable citations from a content farm with no expert oversight.

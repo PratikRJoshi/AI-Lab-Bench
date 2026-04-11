@@ -133,4 +133,4 @@ Mostly harmless, but the claims are overblown. The juice itself — beetroot, am
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. The recipe is harmless, but the "this prevents all disease" framing could give people false confidence. Share this analysis so people enjoy the juice without the magical thinking.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. While the individual ingredients (beetroot, amla, ginger, garlic) are generally safe and nutritious, the central claim that this juice prevents all disease is pseudoscientific — no single food prevents disease, and the video provides no clinical evidence, dosing information, or acknowledgment that health is multifactorial.

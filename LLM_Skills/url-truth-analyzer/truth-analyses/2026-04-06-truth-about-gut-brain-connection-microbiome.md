@@ -76,4 +76,4 @@ This one's legit. Your gut and your brain really do talk to each other — scien
 
 ## Broadly Shareable?
 
-Yes. This is accurate, well-balanced science content with no harmful claims or misleading advice. Safe to share with anyone curious about how the gut and brain are connected.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The video is accurate and well-caveated, but the core evidence it presents (stress-microbiome links, microbiome-brain interaction pathways) is primarily from animal models, and the human clinical implications remain emerging rather than established — context that is easily lost when shared casually.

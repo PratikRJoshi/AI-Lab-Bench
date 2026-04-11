@@ -80,4 +80,4 @@ Pretty trustworthy. The main point: those popular bottled drinks your kids love 
 
 ## Broadly Shareable?
 
-Yes — especially useful for parents and families. The advice is simple, practical, and backed by basic nutrition science. Sharing this could help someone swap out a sugary habit for something genuinely healthier.
+Yes — this content is backed by strong evidence and is safe to share. The core nutritional science — that commercial sugary drinks contain excessive sugar, that caffeine in these products is inappropriate for children, and that whole-food alternatives like coconut water and plain water are healthier — is consistent with WHO dietary guidelines and nutritional consensus.

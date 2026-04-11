@@ -52,4 +52,4 @@ Partly true. The science connecting too much sugar to brain health problems is r
 
 ## Broadly Shareable?
 
-Yes. Most people eat more added sugar than they realize, and the core message (less sugar = better brain health over time) is sound. This analysis adds the important nuance that it's about long-term habits, not instant damage.
+No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't. The sugar-BDNF-learning connection is grounded in legitimate neuroscience, but the supporting evidence comes primarily from animal models, and the carousel implies that everyday sugar intake causes rapid cognitive harm — conflating a chronic, multifactorial process with immediate causation.

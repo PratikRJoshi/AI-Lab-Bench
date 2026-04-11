@@ -92,4 +92,4 @@ Partly true, but mostly a sales pitch. Yes, a lot of packaged food in the US is 
 
 ## Broadly Shareable?
 
-Yes — and worth flagging. This type of content is widely shared in Indian immigrant communities and uses real fears to sell a product. Sharing this analysis can help people separate the valid health advice from the fear-based marketing.
+No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims. The carousel mixes a few valid population-level health points with unsupported individual-level claims, cites no clinical studies, relies on a single before/after testimonial, and functions primarily as a sales funnel for a paid sourcing guide — exaggerating risk and exploiting immigrant identity anxiety for commercial purposes.

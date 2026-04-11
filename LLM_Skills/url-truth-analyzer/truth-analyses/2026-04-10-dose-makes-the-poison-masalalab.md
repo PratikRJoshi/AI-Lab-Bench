@@ -73,4 +73,4 @@ This one's legit — the numbers check out. The whole point is that the amount m
 
 ## Broadly Shareable?
 
-Yes — this is one of the most useful things you could forward to anyone who panics about food ingredients on social media. The claims are well-sourced, the tone is calm, and it teaches people a thinking tool (check the dose) rather than just debunking one scare.
+Yes — this content is backed by strong evidence and is safe to share. Nearly every dose calculation and regulatory reference checks out against FDA, WHO, EFSA, and IARC positions, and the core toxicology principle ("the dose makes the poison") is the foundational framework of modern food safety science.
