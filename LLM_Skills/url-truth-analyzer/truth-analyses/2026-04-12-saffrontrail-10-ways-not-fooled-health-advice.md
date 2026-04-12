@@ -50,3 +50,6 @@ Clean, professional design: cream/beige background with bold serif typography, r
 ## Verdict
 
 This is high-quality science communication from a credentialed health communicator (Dr Nandita Iyer, author of "No Gods, No Gurus: A Radical Guide to Your Wellbeing"). The extractable content accurately represents core principles of evidence-based reasoning — cherry picking is a real methodological concern, single studies genuinely do not constitute scientific consensus, and the distinction between headlines and evidence bodies is crucial for health literacy. The World Health Day 2026 framing adds institutional context. The only caveat is that 11 of 13 slides could not be verified — the analysis covers only the title and first tip. Based on what's visible, this is exactly the kind of content that helps audiences become better consumers of health information.
+
+## ELI5 — Friend to Friend
+100% share this one. It's basically saying "don't believe a health claim just because ONE study said so" — and that's exactly right. Think of it like reading one Yelp review vs. a hundred. One study is one review. Science is the whole picture. The person posting this (Dr Nandita Iyer) knows her stuff. I couldn't see all 13 slides, but what's there is spot on.

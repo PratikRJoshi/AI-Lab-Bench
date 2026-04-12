@@ -1,23 +1,22 @@
 ---
 name: url-truth-analyzer
-description: Analyzes URLs for truth claims via transcription, OCR, and EBM SORT grading. Use when the user provides a URL for fact-checking, truth analysis, or asks to process watch_urls.md.
+description: Analyzes video/audio/image content from URLs and performs truth-claim validation. Supports YouTube, Facebook/Instagram (reels and image posts), Twitter/X, and LinkedIn videos. For video/audio: transcribes with Whisper or captions. For images: downloads and extracts text via OCR, analyzes visual content. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting content. Supports transcript-only mode (YouTube captions) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, analyzing social media images, or asks to process the watch-urls.md file.
 ---
 
 # URL Truth Analyzer
 
 ---
 
-## Watch file location
-
-Use `LLM_Skills/watch_urls.md` in this repository as the canonical watch file.
-
 ## URL directive syntax
 
 Each entry in `## Pending` is a URL, optionally followed by inline directives inside `[...]`. Directives modify *how* the URL is processed; they do not affect the URL itself.
 
 ```
-# Default — full audio download + Whisper transcription
+# Default — captions-first for YouTube; falls back to audio + Whisper if no captions
 https://youtu.be/VIDEO_ID
+
+# Audio-only — skip caption attempt, force audio download + Whisper
+https://youtu.be/VIDEO_ID [audio-only]
 
 # Transcript-only — fetch YouTube captions; skip audio download and Whisper entirely
 https://youtu.be/VIDEO_ID [transcript-only]
@@ -43,7 +42,8 @@ https://www.instagram.com/p/DWKE4kJDbfz/ [browser-mode]
 - The `[...]` block is stripped before any URL is passed to `yt-dlp` or used for video ID extraction.
 - Timestamps use `HH:MM:SS` or `MM:SS` format, separated by a hyphen. Both the start and end must be specified.
 - Directives are case-insensitive: `[Transcript-Only]` and `[transcript-only]` are equivalent.
-- If no directive is present, the existing default behaviour (full audio download + Whisper) applies.
+- If no directive is present, YouTube URLs default to **captions-first**: attempt to fetch captions, then fall back to audio download + Whisper if no captions are available. Non-YouTube platforms always use audio download (no captions available).
+- **`[audio-only]`**: Forces audio download + Whisper transcription, skipping the caption attempt entirely. Use when auto-generated captions are known to be poor quality or in the wrong language.
 - **Local folder paths**: If the entry starts with `/` (absolute path) instead of `http`, it is treated as a local folder containing images. All supported image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`) are treated as a single post. The `[transcript-only]` and timestamp directives are ignored for folder entries. Only flat directory scanning (no recursion into subdirectories).
 - **Browser automation**: The `[browser-mode]` directive forces the use of Playwright browser automation instead of `yt-dlp`. Use this for Instagram URLs that fail with the standard download methods. Requires playwright Python package and chromium browser installed.
 
@@ -51,29 +51,45 @@ https://www.instagram.com/p/DWKE4kJDbfz/ [browser-mode]
 
 ## Workflow overview
 
-Processing happens in **two strictly sequential phases**. Never interleave them.
+Processing happens in **three phases** plus post-processing. Phase 0 is instant and local. Phase 1 pipelines server calls with local transcription. Phase 2 runs analysis sequentially.
 
-### Phase 1 — Server-touching (rate-limited)
+### Phase 0 — Batch triage (instant, local)
 
-For each pending URL, **one at a time, in order**:
+Before any server calls, run a single pass over ALL pending URLs:
 
-1. Step 0: Parse URL directives, then run duplicate content check (Check A is local; Check B calls `yt-dlp --get-title` — see rate-limit rules below)
-2. Step 1: Download based on mode — captions (transcript-only) or audio (default), with optional timestamp trimming. Rate-limit rules apply to all server calls.
-3. After each URL's download completes: apply the inter-request delay before starting the next URL (see Step 1)
+1. Parse directives for every entry
+2. Run Check A (video ID match) for every entry against the `## Processed` list
+3. Partition into three lists:
+   - `DUPLICATES[]` — Check A matched; write Step 7 entries immediately, no further processing
+   - `NEEDS_PROCESSING[]` — URL entries requiring download + analysis
+   - `LOCAL_FOLDERS[]` — local folder entries (skip Phase 1, go directly to Phase 2)
 
-Phase 1 produces either a caption file (`.vtt`) or an audio file (`.mp3`) per URL, plus a record of which URLs were duplicates, skipped, or failed.
+Phase 0 makes zero server calls. Duplicates are resolved instantly.
 
-**Local folder entries** skip Phase 1 entirely (no server calls). They proceed directly to Phase 2 starting at Step 2 (Path C). Step 0 runs a local-only dedup variant (Check A skipped, Check B uses folder basename slug against local files only).
+### Phase 1 — Download + transcribe (rate-limited, pipelined)
 
-### Phase 2 — Local only (unthrottled)
+For each URL in `NEEDS_PROCESSING`, **one at a time, in order**:
 
-For each file produced in Phase 1, **one at a time, in order** — no delays needed, nothing hits the network:
+1. Step 0b: Check B title/slug match (server call — `yt-dlp --get-title`)
+2. Step 1: Download content — captions-first for YouTube (lightweight), fall back to audio if no captions found. Other platforms use audio download directly.
+3. Step 2 (pipelined): Immediately after download, start transcription:
+   - If captions were fetched → convert VTT to plain text inline (instant, ~1s)
+   - If audio was downloaded → spawn Whisper as a **background process** so it runs during the mandatory inter-request delay
+4. Inter-request delay (45–75s randomized) — Whisper runs concurrently during this wait
 
-1. Step 2: Get transcript — either convert `.vtt` captions to plain text (fast, local), or run Whisper on the `.mp3` (CPU-intensive, local)
-2. Step 3: Classify + analyze
-3. Step 4: Save analysis file
-4. Step 5: Cleanup audio/caption file
-5. Step 6: Update `watch_urls.md`
+Phase 1 produces a transcript `.txt` file per URL. Whisper jobs that outlast the delay are awaited before analysis begins.
+
+**Local folder entries** skip Phase 1 entirely (no server calls). They proceed directly to Phase 2 starting at Step 2 (Path C). Step 0b runs a local-only dedup variant (slug match against `~/Documents/truth-analyses/` filenames).
+
+### Phase 2 — Analyze + save (local, sequential)
+
+For each transcript produced in Phase 1 (plus local folder entries), **one at a time, in order** — no delays needed:
+
+1. Step 3: Classify content (Medical vs General Science)
+2. Step 4: Analyze (EBM SORT or Claim Validation)
+3. Step 5: Save analysis file
+4. Step 6: Cleanup temporary files
+5. Step 7: Update `watch-urls.md`
 
 ### Post-processing — after all URLs complete
 
@@ -81,19 +97,81 @@ For each file produced in Phase 1, **one at a time, in order** — no delays nee
 
 ---
 
-**Progress reporting**: At the start of processing each URL, output a status message to the user:
+**Progress reporting**: Output status messages at each phase transition:
 ```
-🔄 Processing URL 1 of N: <URL>
-  ⏳ Step 0/7: Checking for duplicate content...
+📋 Phase 0: Triaging N URLs... (X duplicates, Y to download, Z local folders)
+🔄 Phase 1 [1/Y]: Downloading + transcribing <URL> (captions-first)
+   ⏳ Whisper running in background during inter-request delay...
+🔄 Phase 1 [2/Y]: Downloading + transcribing <URL>
+✓ Phase 1 complete: Y downloaded, X transcripts ready
+🔬 Phase 2 [1/M]: Analyzing <URL>
+🔬 Phase 2 [2/M]: Analyzing <URL>
+✅ All URLs processed. Syncing to GitHub...
 ```
 
-Update progress after each major step (duplicate check, transcribe, classify, analyze, save, cleanup).
+Update progress after each major step within each phase.
 
 ---
 
-## Step 0: Parse directives + duplicate content check
+## Phase 0: Batch triage (instant, local)
 
-**Progress indicator**: `⏳ Step 0/7: Parsing directives, checking for duplicate content...`
+**Progress indicator**: `📋 Phase 0: Triaging N URLs...`
+
+Before any server calls, run a single pass over ALL pending entries in `## Pending`:
+
+### Step 1: Parse all directives
+
+For every pending entry, run Sub-step 0a (directive parsing — see below) to extract the clean URL and any mode flags.
+
+### Step 2: Run Check A for all URLs
+
+Extract the video ID from each pending URL using these rules:
+
+| URL pattern | Video ID extraction |
+|---|---|
+| `youtube.com/watch?v=ID` | value of `v=` query parameter |
+| `youtu.be/ID` | path segment after `youtu.be/` |
+| `m.youtube.com/watch?v=ID` | value of `v=` query parameter |
+| `youtube.com/shorts/ID` | path segment after `/shorts/` |
+| `m.youtube.com/shorts/ID` | path segment after `/shorts/` |
+| `dms.licdn.com/playlist/vid/dash/ID/...` | 4th path segment (e.g. `D4D05AQEnN8uEJr57uA`) |
+| `facebook.com/reel/ID` | path segment after `/reel/` (e.g. `862786000111258`) |
+| `facebook.com/watch/?v=ID` | value of `v=` query parameter |
+| `fb.watch/ID` | path segment after `fb.watch/` |
+| Other platforms | no video ID — goes to `NEEDS_PROCESSING` for Check B |
+
+Then parse every processed entry in `## Processed` in `watch-urls.md` and extract the video ID from each processed URL using the same rules.
+
+For each pending URL whose video ID matches any processed URL's video ID → add to `DUPLICATES[]` with the matching processed entry (URL + analysis file path).
+
+### Step 3: Partition entries
+
+Classify each pending entry into one of three lists:
+
+- **`DUPLICATES[]`** — Check A matched a processed entry. These are done — write their Step 7 entries immediately (duplicate format).
+- **`LOCAL_FOLDERS[]`** — Entry starts with `/` and is not an `http` URL. These skip Phase 1 entirely.
+- **`NEEDS_PROCESSING[]`** — Everything else. These enter Phase 1 for Check B + download + transcription.
+
+### Step 4: Resolve duplicates immediately
+
+For each entry in `DUPLICATES[]`, update `watch-urls.md` now (Step 7 duplicate format):
+```
+- <URL> (duplicate of <original-URL> → see truth-analyses/<existing-file>.md)
+```
+
+Report:
+```
+📋 Phase 0 complete: N total URLs triaged
+   ⚠️  X duplicate(s) resolved instantly (Check A video ID match)
+   📥 Y URL(s) queued for Phase 1 (download + transcribe)
+   📁 Z local folder(s) queued for Phase 2 (OCR + analysis)
+```
+
+---
+
+## Step 0b: Parse directives + Check B title dedup (Phase 1 — per URL)
+
+**Progress indicator**: `⏳ Step 0b: Parsing directives, checking title dedup...`
 
 ### Sub-step 0a: Parse URL directives
 
@@ -104,6 +182,7 @@ Before anything else, check whether the pending line contains a `[...]` directiv
    - If it contains `transcript-only` → set mode flag `TRANSCRIPT_ONLY=true`
    - If it matches a timestamp pattern like `00:05:00-00:15:00` or `5:00-15:00` → extract `START` and `END` values and set `TIMESTAMP_RANGE=true`
    - If it contains `browser-mode` → set mode flag `BROWSER_MODE=true`
+   - If it contains `audio-only` → set mode flag `AUDIO_ONLY=true`
    - Multiple directives can be present in the same block, e.g. `[transcript-only 00:05:00-00:15:00]`
 3. Use the **clean URL** (without the directive block) for all subsequent processing.
 
@@ -129,7 +208,7 @@ After parsing directives, check if the clean entry (after stripping any `[...]` 
      RELATIVE_DEPTH=$((MAX_DEPTH - BASE_DEPTH))
      ```
    - If `RELATIVE_DEPTH > 5` → mark as failed: `(failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)` and skip to Step 7.
-   - Report depth in progress indicator: `⏳ Step 0/7: Local folder detected (depth: N levels), checking for duplicates...`
+   - Report depth in progress indicator: `⏳ Step 0b: Local folder detected (depth: N levels), checking for duplicates...`
 4. **Scan for supported image files recursively**:
    - Look for files with extensions: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp` (case-insensitive)
    - Scan recursively up to depth 5 using:
@@ -143,38 +222,15 @@ After parsing directives, check if the clean entry (after stripping any `[...]` 
    - Otherwise, slugify the folder basename (e.g., `/path/to/my-carousel-images` → slug `my-carousel-images`)
 6. For dedup, run Check B only (local slug match against `~/Documents/truth-analyses/` filenames). Skip Check A entirely. No `yt-dlp --get-title` network call is made.
 
-Progress indicator for local folder: `⏳ Step 0/7: Local folder detected (depth: N levels, M images), checking for duplicates...`
+Progress indicator for local folder: `⏳ Step 0b: Local folder detected (depth: N levels, M images), checking for duplicates...`
 
 If this is NOT a local folder entry, continue with the normal URL duplicate check below.
 
-### Duplicate content check for URLs
+### Check B — Title/slug match (Phase 1 — server call)
 
-Before transcribing, check whether this URL points to content that has already been analyzed under a different URL. Run two checks in order — stop at the first match.
+> Check A (video ID match) has already run for all URLs in Phase 0. Only URLs that passed Check A without a match reach this step.
 
-### Check A — Video ID match
-
-Extract the video ID from the **pending URL** using these rules:
-
-| URL pattern | Video ID extraction |
-|---|---|
-| `youtube.com/watch?v=ID` | value of `v=` query parameter |
-| `youtu.be/ID` | path segment after `youtu.be/` |
-| `m.youtube.com/watch?v=ID` | value of `v=` query parameter |
-| `youtube.com/shorts/ID` | path segment after `/shorts/` |
-| `m.youtube.com/shorts/ID` | path segment after `/shorts/` |
-| `dms.licdn.com/playlist/vid/dash/ID/...` | 4th path segment (e.g. `D4D05AQEnN8uEJr57uA`) |
-| `facebook.com/reel/ID` | path segment after `/reel/` (e.g. `862786000111258`) |
-| `facebook.com/watch/?v=ID` | value of `v=` query parameter |
-| `fb.watch/ID` | path segment after `fb.watch/` |
-| Other platforms | skip Check A, go to Check B |
-
-Then parse every processed entry in `## Processed` in `watch_urls.md` and extract the video ID from each processed URL using the same rules.
-
-If the pending URL's video ID matches any processed URL's video ID → **duplicate detected**. Note the matching processed entry (URL + analysis file path) and skip to Step 7.
-
-### Check B — Title/slug match
-
-If Check A found no match, run:
+To check for title-based duplicates, run:
 
 ```bash
 yt-dlp --get-title '<PENDING_URL>'
@@ -205,24 +261,28 @@ Then go directly to **Step 7** (skip Steps 1–6). In Step 7, use the special du
 
 ### If no duplicate found
 
-Report `✓ Step 0/7: No duplicate found — proceeding with full analysis.` and continue to Step 1.
+Report `✓ Step 0b: No duplicate found — proceeding with download.` and continue to Step 1.
 
 ---
 
-## Step 1: Download content (Phase 1 — rate-limited)
+## Step 1: Download content (Phase 1 — rate-limited, pipelined with Step 2)
 
 All server calls in this step are subject to the inter-request delay and exponential backoff rules described at the end of this section.
 
-**Content type detection**: First, determine what type of content the URL contains:
-- **If `BROWSER_MODE=true`**: Skip yt-dlp entirely, proceed directly to Mode G (browser automation)
-- Otherwise, try downloading with yt-dlp:
-  - If yt-dlp reports "No video formats found" but successfully extracts metadata → **image/carousel post** → proceed to Mode F
-  - If yt-dlp successfully downloads → **video/audio content** → proceed to Modes A-E based on directives
-  - If yt-dlp fails with other errors → apply retry logic
+**Content type detection and download strategy**:
+
+1. **If `BROWSER_MODE=true`**: Skip yt-dlp entirely → Mode G (browser automation)
+2. **If YouTube URL and NOT `AUDIO_ONLY=true`**: Try captions first (Mode A). If captions found → set `TRANSCRIPT_SOURCE=captions`, done. If no captions → fall back to Mode B (audio download + Whisper).
+3. **If `AUDIO_ONLY=true`**: Skip caption attempt → Mode B (audio download + Whisper) directly.
+4. **If LinkedIn URL**: Mode D (three-stage pipeline)
+5. **If Facebook/Instagram URL**: Try Mode E (standard yt-dlp audio download). If yt-dlp reports "No video formats found" but extracts metadata → Mode F (image/carousel).
+6. **If yt-dlp fails with other errors**: Apply retry logic.
+
+> **Captions-first rationale**: Caption fetches transfer ~10KB of metadata vs ~15MB for audio. When captions exist, this eliminates both the large download AND the 3–5 minute Whisper transcription, reducing per-URL processing from minutes to seconds.
 
 ---
 
-### Mode A — Transcript-only (`TRANSCRIPT_ONLY=true`)
+### Mode A — Captions (default for YouTube, or `TRANSCRIPT_ONLY=true`)
 
 **Progress indicator**: `⏳ Step 1/7: Fetching captions (transcript-only mode)...`
 
@@ -245,7 +305,7 @@ This produces a file such as `/tmp/url-analyzer/<slug>.en.vtt` or `/tmp/url-anal
 
 ---
 
-### Mode B — Audio download (default, or fallback from Mode A)
+### Mode B — Audio download (fallback from Mode A, or `AUDIO_ONLY=true`)
 
 **Progress indicator**: `⏳ Step 1/7: Downloading audio...`
 
@@ -260,7 +320,7 @@ yt-dlp --cookies-from-browser firefox --remote-components ejs:github \
   -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
 ```
 
-Replace `<START>` and `<END>` with the values parsed in Step 0 (e.g. `00:05:00` and `00:15:00`).
+Replace `<START>` and `<END>` with the values parsed in Step 0b (e.g. `00:05:00` and `00:15:00`).
 
 #### Without timestamp range (full audio, default)
 
@@ -336,7 +396,7 @@ fi
 
 ---
 
-#### Stage D-3: Direct DASH manifest URL (user-supplied or already in watch_urls.md)
+#### Stage D-3: Direct DASH manifest URL (user-supplied or already in watch-urls.md)
 
 When a `dms.licdn.com/playlist/vid/dash/` URL is in the pending list (user already extracted it from the Network tab), use ffmpeg directly — no yt-dlp needed.
 
@@ -378,7 +438,7 @@ Manual workaround — extract the DASH manifest URL:
 4. Play the video
 5. Look for a row with Type = "dash" and size ~20–25 KB
 6. Right-click that row → Copy → Copy URL
-7. Replace this URL in watch_urls.md with the copied DASH URL
+7. Replace this URL in watch-urls.md with the copied DASH URL
    (it looks like: https://dms.licdn.com/playlist/vid/dash/...)
 8. Re-run the analyzer — Stage D-3 will handle it automatically
 ```
@@ -465,31 +525,7 @@ curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-<N>.jpg" "<IMA
 
 **If image download succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
 
-**If it fails**: Stop automated download attempts and prompt the user to download the images manually:
-
-```
-⚠️  Could not automatically download carousel images for:
-    <URL>
-
-Instagram carousel images must be downloaded manually. Please:
-
-1. Go to https://snapinsta.app
-2. Paste the following URL into the download box:
-   <URL>
-3. Download all images from the carousel
-4. Save them into a dedicated folder, e.g.:
-   ~/Desktop/MyCarousel/
-5. Add the folder path to watch_urls.md under ## Pending:
-   ~/Desktop/MyCarousel/ [title: <descriptive title>]
-6. Re-run the analyzer — it will process the folder as a local image set
-
-The original URL has been moved to ## Processed with a (pending-manual-download) note.
-```
-
-Then update `watch_urls.md`: move the URL from `## Pending` to `## Processed` with the annotation:
-```
-- <URL> (pending-manual-download YYYY-MM-DD — download carousel from https://snapinsta.app and re-add as local folder)
-```
+**If it fails**: Mark as failed with reason "Could not download images from post".
 
 **Supported URL patterns:**
 - `instagram.com/p/ID` (Instagram posts — may be carousel)
@@ -506,7 +542,7 @@ Then update `watch_urls.md`: move the URL from `## Pending` to `## Processed` wi
 
 When the `[browser-mode]` directive is specified for an Instagram URL, use Playwright browser automation to extract image URLs. This bypasses Instagram's anti-scraping measures that block `yt-dlp`.
 
-**When to use**: Instagram URLs that fail with Mode F due to platform blocks. Add `[browser-mode]` directive to the URL in `watch_urls.md`.
+**When to use**: Instagram URLs that fail with Mode F due to platform blocks. Add `[browser-mode]` directive to the URL in `watch-urls.md`.
 
 **Requirements**:
 - Python3 with playwright package installed (`pip3 install --user --break-system-packages playwright`)
@@ -549,7 +585,7 @@ When `CONTENT_TYPE=local-folder` (detected in Step 0a-local), no download is nee
 # Create working directory
 mkdir -p /tmp/url-analyzer
 
-# Find all images recursively (up to depth 5, already validated in Step 0)
+# Find all images recursively (up to depth 5, already validated in Phase 0)
 readarray -t IMG_FILES < <(find /path/to/folder -maxdepth 5 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.bmp" -o -iname "*.webp" \) | sort)
 
 IMG_COUNT=${#IMG_FILES[@]}
@@ -610,22 +646,41 @@ Report retry attempts as they happen:
 
 If all 3 retries fail, report:
 ```
-❌ Failed: <URL> — rate limited after 3 retries. Marked in watch_urls.md for manual retry.
+❌ Failed: <URL> — rate limited after 3 retries. Marked in watch-urls.md for manual retry.
 ```
 
 ---
 
-### Inter-request delay
+### Inter-request delay (with pipelined transcription)
 
-After each URL's download completes (success or skip) and before starting the **next** URL's download, wait:
+After each URL's download completes (success or skip), **start transcription immediately before entering the delay**:
+
+1. **If `TRANSCRIPT_SOURCE=captions`**: Run VTT-to-text conversion inline (instant, ~1s — see Step 2 Path A). Then enter delay.
+2. **If `TRANSCRIPT_SOURCE=whisper`**: Spawn Whisper as a background process, then enter delay. Whisper runs concurrently during the wait:
 
 ```bash
-sleep $((45 + RANDOM % 31))   # randomized: 45–75 seconds
+whisper /tmp/url-analyzer/<slug>.mp3 --model small --output_format txt --output_dir /tmp/url-analyzer/ &
+WHISPER_PID_<N>=$!
+sleep $((45 + RANDOM % 31))   # randomized: 45–75 seconds — Whisper runs during this wait
 ```
 
-- Apply this delay between every consecutive URL, including after Check B title lookups (see Step 0).
+3. Before starting the next URL's server calls, verify the background Whisper job completed:
+
+```bash
+wait $WHISPER_PID_<N>
+```
+
+If Whisper finishes before the delay ends, the delay still runs to completion (rate-limit protection). If Whisper takes longer than the delay (rare for short videos), the next URL waits for Whisper to finish first.
+
+**Delay rules**:
+- Apply between every consecutive URL, including after Check B title lookups (see Step 0b).
 - Do **not** apply before the very first URL.
 - The randomized jitter prevents a detectable fixed-interval fingerprint.
+- **Reduced delay for caption-only fetches**: When Mode A succeeds (captions found, no audio download needed), the delay can be reduced to **15–30 seconds** since caption fetches are lightweight metadata requests:
+
+```bash
+sleep $((15 + RANDOM % 16))   # randomized: 15–30 seconds for caption-only
+```
 
 **Exception**: Local folder entries (Mode I) do not count toward the inter-request delay or batch cooldown counters, since no server calls are made. Browser automation mode (Mode G) does make network requests and should count toward rate limits.
 
@@ -639,17 +694,31 @@ sleep 300   # 5-minute cooldown after each group of 5
 
 This gives the server-side rate-limit window time to reset before the next batch. The count resets after each cooldown.
 
-**After all downloads complete**: Report `✓ Step 1/7: Downloads complete (X succeeded, Y skipped as duplicates, Z failed)`
+**After all Phase 1 downloads complete**: Report `✓ Phase 1 complete: X downloaded + transcribed, Z failed. Awaiting any background Whisper jobs...`
+
+After reporting, wait for all outstanding background Whisper processes:
+
+```bash
+for pid in "${WHISPER_PIDS[@]}"; do
+  wait $pid
+done
+```
+
+Then report: `✓ All transcripts ready. Entering Phase 2 (analysis)...`
 
 ---
 
-## Step 2: Extract text content (Phase 2 — local)
+## Step 2: Extract text content (pipelined into Phase 1)
 
-No network calls. No delays. Runs entirely on local files produced in Phase 1.
+> **Pipelining note**: For URL entries, Step 2 now runs **during Phase 1** — either inline (captions → instant VTT-to-text) or as a background process (Whisper running during the inter-request delay). By the time Phase 2 starts, transcripts are already available.
+>
+> For **local folder entries** (Path C — OCR + visual analysis), Step 2 runs at the start of Phase 2 as before, since it requires LLM vision capabilities that cannot be backgrounded.
 
-The extraction method depends on the content type from Step 1:
-- **Video/audio content** (`TRANSCRIPT_SOURCE=captions` or `whisper`) → Path A or B below
-- **Image content** (`TRANSCRIPT_SOURCE=ocr`) → Path C below
+No network calls. No delays. Runs entirely on local files.
+
+The extraction method depends on the content type:
+- **Video/audio content** (`TRANSCRIPT_SOURCE=captions` or `whisper`) → Path A or B below (pipelined into Phase 1 delays)
+- **Image content** (`TRANSCRIPT_SOURCE=ocr`) → Path C below (runs in Phase 2)
 
 ---
 
@@ -829,7 +898,7 @@ Source: [subfolder path if from local folder, otherwise "carousel image 2"]
 
 ---
 
-## Step 3: Classify the content (Phase 2 — local)
+## Step 3: Classify the content (Phase 2 — first step of analysis)
 
 **Progress indicator**: `⏳ Step 3/7: Classifying content type...`
 
@@ -921,6 +990,8 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 **Content type**: Medical | General Science
 **Format**: Video | Audio | Image Post | Carousel (N images)
 
+**Share?**: <one sentence recommendation: Yes/No/With caveats — would you share this with a scientifically curious friend who knows nothing about the topic, if your goal is for them to come away with an accurate understanding?>
+
 ## Summary
 <2–3 sentence overview of what the content claims>
 
@@ -939,20 +1010,8 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 ## Verdict
 <One-paragraph plain-language summary of how trustworthy this content is>
 
-## Share with a Friend
-<A 2–4 sentence casual, jargon-free explanation written as if you're texting a friend who sent you the post. Start with the bottom line (trustworthy, partly true, or misleading), then explain what's right and what's wrong in everyday language. No medical or scientific terminology — a 15-year-old should understand it. End with one concrete suggestion for what to do instead, if relevant.>
-
-Example tone: "That migraine remedy reel is mostly wishful thinking. The poppy-seed-in-milk trick sounds legit because poppy seeds *do* contain tiny traces of painkillers, but the amount you'd get from a spoonful is nowhere near enough to actually help a headache — like trying to fill a swimming pool with an eyedropper. If you get migraines often, seeing a neurologist will help way more than any home remedy."
-
-## Broadly Shareable?
-<A one-line verdict on whether the *original post/URL* is safe to forward to friends, family, or group chats, based on the analysis grade:
-
-- **Grade A** → "Yes — this content is backed by strong evidence and is safe to share."
-- **Grade B** → "No — the evidence behind this content is inconsistent or limited. Share this analysis instead so people can see what's supported and what isn't."
-- **Grade C** → "No — this content relies on weak evidence, anecdote, or tradition. Share this analysis instead to help friends see through the claims."
-- **General science (no SORT grade)**: If most claims are "supported" by consensus → treat as shareable. If most claims are "contested" or "refuted" → treat as not shareable, and recommend sharing the analysis instead.
-
-Follow the verdict with 1–2 sentences explaining the key reason. When the original post is not shareable, always suggest sharing this analysis as the alternative so friends get the fact-check rather than the misinformation.>
+## ELI5 — Friend to Friend
+<2–4 sentences explaining the verdict as if you're texting a friend who asked "hey is this legit?" Keep it casual, jargon-free, and honest. Use everyday analogies if they help. No hedging — give a clear thumbs-up, thumbs-down, or "it's complicated.">
 ```
 
 **After saving**: Report `✓ Step 5/7: Analysis saved to ~/Documents/truth-analyses/YYYY-MM-DD-<slug>.md`
@@ -986,7 +1045,7 @@ If the copy fails (e.g., repo directory missing), report a warning but do **not*
 The `extract_audio` command downloads video/audio files and creates working directories in the current working directory. After the analysis is complete, delete all downloaded files and folders to save disk space.
 
 **What to keep:**
-- The original URL (already in watch_urls.md)
+- The original URL (already in watch-urls.md)
 - The truth analysis markdown file in `~/Documents/truth-analyses/`
 
 **What to delete:**
@@ -1007,7 +1066,7 @@ rm -rf <hash-folder-name>
 
 ---
 
-## Step 7: Update watch_urls.md
+## Step 7: Update watch-urls.md
 
 After processing each URL (including cleanup), remove it from `## Pending` and add it to the `## Processed` section with the analysis date.
 
@@ -1108,12 +1167,6 @@ $(git diff --cached --name-only | sed 's/^/  /')"
 
 # 4. Push to remote
 git push origin main
-
-# 5. Get commit SHA and construct GitHub URL
-COMMIT_SHA=$(git rev-parse HEAD)
-COMMIT_SHORT=$(git rev-parse --short HEAD)
-REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//' | sed 's|git@github.com:|https://github.com/|')
-COMMIT_URL="${REPO_URL}/commit/${COMMIT_SHA}"
 ```
 
 ### Error handling
@@ -1134,10 +1187,7 @@ COMMIT_URL="${REPO_URL}/commit/${COMMIT_SHA}"
 ```
 ✅ GitHub sync complete: pushed N new analysis file(s) to AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/
    Commit: <short-hash> — <first line of commit message>
-   View commit: <COMMIT_URL>
 ```
-
-Where `<COMMIT_URL>` is the full GitHub URL to view the commit (e.g., `https://github.com/PratikRJoshi/AI-Lab-Bench/commit/abc1234...`)
 
 **On partial failure** (some files committed but push failed):
 ```

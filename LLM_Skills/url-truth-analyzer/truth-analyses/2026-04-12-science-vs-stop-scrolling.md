@@ -44,3 +44,6 @@ The carousel uses clean, bold typography (green/yellow text on dark red) with mi
 ## Verdict
 
 This is a well-branded, responsibly presented science communication carousel from a reputable podcast (Science Vs, known for citing primary research). The core claims — that forced lockouts reduce screen time but cause frustration — are directionally supported by the literature. The specific 75-minute figure is plausible but unverifiable without the podcast's source list. The carousel's main weakness is inherent to the format: condensing nuanced experimental findings into punchy slides necessarily strips context about sample sizes, populations, and effect variability. Worth sharing as a conversation starter, ideally with a link to the full podcast episode for deeper context.
+
+## ELI5 — Friend to Friend
+Yeah this is legit — it's from the Science Vs podcast which actually does their homework. The gist is: locking yourself out of your phone does cut screen time, but it makes you feel like a prisoner, so gentler nudges work better long-term. The exact "75 minutes" number is hard to pin down, but the direction is right. Share it, but maybe listen to the full episode too — carousel slides can only say so much.

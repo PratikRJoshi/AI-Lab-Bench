@@ -31,3 +31,6 @@ This is a screen recording / demo video showing the app in use. No health claims
 
 ## Verdict
 This is a tech demo, not health content. The AI plank correction app is a creative use of computer vision and LLMs. The exercise form cues are accurate and consistent with standard fitness guidance. No health claims to validate beyond basic plank form. Interesting as a technology demonstration; the open-source availability adds transparency.
+
+## ELI5 — Friend to Friend
+This isn't really a health claim to fact-check — it's a dev who built a cool app that watches you do planks and tells you when your form is off. The exercise tips it gives are legit (don't let your hips sag, keep your core tight). Neat project, code is open-source if you're curious. Thumbs up for creativity.

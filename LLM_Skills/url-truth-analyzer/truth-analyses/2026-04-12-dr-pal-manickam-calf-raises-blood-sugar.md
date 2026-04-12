@@ -58,3 +58,6 @@ Rationale: The Hamilton study is well-conducted but small, unreplicated, and mea
 
 ## Verdict
 Dr. Pal Manickam presents a real study (Hamilton 2022) accurately in some respects — the soleus muscle is genuinely metabolically unique and the 52% figure is in the paper. However, the practical translation is significantly overstated: the study involved continuous soleus activation for hours in a lab, not brief calf raises after a meal. The advice to do slow, controlled calf raises while sitting is harmless and likely provides some metabolic benefit, but expecting a 52% glucose reduction from casual post-meal calf raises is unrealistic. The comparison to walking (30%) is better supported by multiple trials. SORT Grade B: real science, oversimplified application. Best shared with the caveat that the magnitude of benefit in real life will be less dramatic than the headline number suggests.
+
+## ELI5 — Friend to Friend
+It's complicated. There IS a real study showing your calf muscle is weirdly good at burning blood sugar — that part's true. But the "52% reduction" came from people doing calf raises nonstop for HOURS in a lab, not a quick set after dinner. Will calf raises after a meal help? Probably a little. Will they cut your sugar spike in half? Nah. Walking after meals is still the better bet and has way more evidence behind it.

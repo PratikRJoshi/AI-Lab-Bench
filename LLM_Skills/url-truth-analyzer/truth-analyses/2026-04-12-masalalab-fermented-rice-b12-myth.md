@@ -50,3 +50,6 @@ Rationale: The claim being debunked (fermented rice provides B12) has no support
 
 ## Verdict
 This is excellent science communication. Krish Ashok accurately identifies that fermented rice is not a reliable B12 source, correctly distinguishes between the bacteria involved in rice fermentation (lactobacillus) and B12-producing bacteria (primarily soil-dwelling Propionibacterium and certain archaea), and provides actionable advice (get tested, supplement if needed). His call for proper clinical trials over anecdotal testimonials models good critical thinking. The one minor nuance: some specialized Lactobacillus strains CAN produce B12 in lab conditions, but these are not the strains found in traditional fermented rice — so his core message is correct. SORT Grade A for the debunking and the supplementation recommendation.
+
+## ELI5 — Friend to Friend
+Thumbs way up. Krish Ashok is calling BS on those viral "soak rice overnight to get B12" videos, and he's right. The bacteria in fermented rice are not the kind that make B12 — full stop. If you're vegetarian and worried about B12, get a blood test and pop a supplement if needed. Don't rely on some Instagram nuskha that has zero clinical evidence.
