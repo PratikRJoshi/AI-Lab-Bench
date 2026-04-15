@@ -35,6 +35,12 @@ https://youtu.be/VIDEO_ID [transcript-only 00:05:00-00:15:00]
 
 # Browser automation mode for Instagram (when yt-dlp fails)
 https://www.instagram.com/p/DWKE4kJDbfz/ [browser-mode]
+
+# Display-only — output analysis in the conversation, skip all file saves and GitHub sync
+https://youtu.be/VIDEO_ID [display-only]
+
+# Display-only can combine with other directives
+https://youtu.be/VIDEO_ID [display-only transcript-only]
 ```
 
 **Directive rules:**
@@ -46,10 +52,13 @@ https://www.instagram.com/p/DWKE4kJDbfz/ [browser-mode]
 - **`[audio-only]`**: Forces audio download + Whisper transcription, skipping the caption attempt entirely. Use when auto-generated captions are known to be poor quality or in the wrong language.
 - **Local folder paths**: If the entry starts with `/` (absolute path) instead of `http`, it is treated as a local folder containing images. All supported image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`) are treated as a single post. The `[transcript-only]` and timestamp directives are ignored for folder entries. Only flat directory scanning (no recursion into subdirectories).
 - **Browser automation**: The `[browser-mode]` directive forces the use of Playwright browser automation instead of `yt-dlp`. Use this for Instagram URLs that fail with the standard download methods. Requires playwright Python package and chromium browser installed.
+- **`[display-only]`**: Outputs the final analysis directly in the conversation instead of saving to any file. Skips Step 5 (file save), Step 6 (cleanup is still run), Step 7 (`watch-urls.md` update), and post-processing (GitHub sync). Useful for quick one-off checks or when the user provides a URL inline rather than via `watch-urls.md`. Can combine with other directives (e.g. `[display-only transcript-only]`). When a URL is provided directly in the user's message (not from `watch-urls.md`), `display-only` is implied automatically.
 
 ---
 
 ## Workflow overview
+
+**Inline URL auto-detection**: When the user provides a URL directly in their message (not from `watch-urls.md`), treat it as `DISPLAY_ONLY=true` automatically. Skip Phase 0 dedup checks (no `watch-urls.md` to read), run Phase 1 + Phase 2 normally, display the analysis in the conversation, clean up temp files, and stop. No files are written, no `watch-urls.md` is updated, no GitHub sync runs.
 
 Processing happens in **three phases** plus post-processing. Phase 0 is instant and local. Phase 1 pipelines server calls with local transcription. Phase 2 runs analysis sequentially.
 
@@ -87,9 +96,9 @@ For each transcript produced in Phase 1 (plus local folder entries), **one at a 
 
 1. Step 3: Classify content (Medical vs General Science)
 2. Step 4: Analyze (EBM SORT or Claim Validation)
-3. Step 5: Save analysis file
+3. Step 5: Save analysis file — or display in conversation if `DISPLAY_ONLY=true`
 4. Step 6: Cleanup temporary files
-5. Step 7: Update `watch-urls.md`
+5. Step 7: Update `watch-urls.md` — skipped if `DISPLAY_ONLY=true`
 
 ### Post-processing — after all URLs complete
 
@@ -183,6 +192,7 @@ Before anything else, check whether the pending line contains a `[...]` directiv
    - If it matches a timestamp pattern like `00:05:00-00:15:00` or `5:00-15:00` → extract `START` and `END` values and set `TIMESTAMP_RANGE=true`
    - If it contains `browser-mode` → set mode flag `BROWSER_MODE=true`
    - If it contains `audio-only` → set mode flag `AUDIO_ONLY=true`
+   - If it contains `display-only` → set mode flag `DISPLAY_ONLY=true`
    - Multiple directives can be present in the same block, e.g. `[transcript-only 00:05:00-00:15:00]`
 3. Use the **clean URL** (without the directive block) for all subsequent processing.
 
@@ -978,6 +988,16 @@ Format each citation as: `Author(s), Title, Journal, Year — [link]`
 
 ## Step 5: Output format (Phase 2 — local)
 
+### If `DISPLAY_ONLY=true` — display in conversation
+
+**Progress indicator**: `⏳ Step 5/7: Displaying analysis...`
+
+Instead of saving to a file, output the full analysis markdown directly in the conversation as a message to the user. Use the same template below, but render it inline. Then skip the "Sync to AI-Lab-Bench repository" sub-step entirely.
+
+After displaying, report `✓ Step 5/7: Analysis displayed in conversation (display-only mode — no files written).` and proceed to Step 6.
+
+### If `DISPLAY_ONLY=false` (default) — save to file
+
 **Progress indicator**: `⏳ Step 5/7: Saving analysis...`
 
 Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
@@ -1068,6 +1088,12 @@ rm -rf <hash-folder-name>
 
 ## Step 7: Update watch-urls.md
 
+### If `DISPLAY_ONLY=true` — skip this step
+
+Do not update `watch-urls.md`. The URL was a one-off analysis displayed in the conversation. Report `✓ Step 7/7: Skipped watch-urls.md update (display-only mode).` and proceed to the next URL or post-processing.
+
+### If `DISPLAY_ONLY=false` (default)
+
 After processing each URL (including cleanup), remove it from `## Pending` and add it to the `## Processed` section with the analysis date.
 
 **Rules for updating the Processed section:**
@@ -1125,6 +1151,8 @@ Failed entries remain actionable: re-add the URL to `## Pending` on a future run
 **Progress indicator**: `⏳ Post-processing: Syncing new analyses to GitHub...`
 
 This step runs **once** after ALL URLs have been processed (after the last Step 7 completes). It pushes any new analysis files to the AI-Lab-Bench repository.
+
+**If ALL processed URLs had `DISPLAY_ONLY=true`**: Skip this entire section. Report `ℹ️  GitHub sync skipped — all URLs were display-only (no files written).` and end.
 
 ### Pre-flight checks
 
