@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truth Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --green: #16a34a;
+      --red: #dc2626;
+      --step-done: #16a34a;
+      --step-active: #2563eb;
+      --step-waiting: #94a3b8;
+    }
+
+    body { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+    .app-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      border-bottom: 2px solid var(--pico-muted-border-color);
+      padding-bottom: 1rem; margin-bottom: 1.5rem;
+    }
+    .app-header-logo { font-size: 1.8rem; }
+    .app-header h1 { margin: 0; font-size: 1.4rem; }
+    .app-header p { margin: 0; font-size: 0.85rem; color: var(--pico-muted-color); }
+
+    #progress-panel {
+      background: var(--pico-card-background-color);
+      border: 1px solid var(--pico-muted-border-color);
+      border-radius: var(--pico-border-radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    #progress-panel h2 { margin: 0 0 1rem; font-size: 1rem; }
+
+    .step-list { list-style: none; padding: 0; margin: 0; }
+    .step-list li {
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      padding: 0.35rem 0; font-size: 0.9rem; color: var(--step-waiting);
+      transition: color 0.2s;
+    }
+    .step-list li.active { color: var(--step-active); font-weight: 600; }
+    .step-list li.done  { color: var(--step-done); }
+    .step-list li .icon { width: 1.2rem; flex-shrink: 0; text-align: center; }
+
+    .spinner {
+      display: inline-block; width: 1rem; height: 1rem;
+      border: 2px solid var(--accent-light);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #analysis-output { display: none; }
+
+    .verdict-bar {
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem 1rem;
+      background: var(--accent-light);
+      border-radius: 0 var(--pico-border-radius) var(--pico-border-radius) 0;
+      margin-bottom: 1.5rem;
+    }
+    .verdict-bar .share-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--accent); margin-bottom: 0.25rem;
+    }
+    .verdict-bar .share-text { font-weight: 600; margin: 0; }
+
+    .eli5-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: var(--pico-border-radius);
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .eli5-box .eli5-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--green); margin-bottom: 0.5rem;
+    }
+
+    #md-content h1 { font-size: 1.5rem; margin-top: 0; }
+    #md-content h2 { font-size: 1.2rem; border-bottom: 1px solid var(--pico-muted-border-color); padding-bottom: 0.3rem; }
+    #md-content h3 { font-size: 1rem; }
+    #md-content table { font-size: 0.88rem; }
+    #md-content blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--pico-muted-color); }
+    #md-content a { word-break: break-all; }
+
+    .sort-badge {
+      display: inline-block; padding: 0.15rem 0.5rem;
+      border-radius: 9999px; font-size: 0.75rem; font-weight: 700;
+    }
+    .sort-a { background: #dcfce7; color: #15803d; }
+    .sort-b { background: #fef9c3; color: #854d0e; }
+    .sort-c { background: #fee2e2; color: #991b1b; }
+
+    .toolbar {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      margin-top: 2rem; padding-top: 1rem;
+      border-top: 1px solid var(--pico-muted-border-color);
+    }
+
+    #error-panel { display: none; }
+    #error-panel article { border-left: 4px solid var(--red); }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <span class="app-header-logo">🔍</span>
+  <div>
+    <h1>Truth Analyzer</h1>
+    <p id="url-display">Analyzing…</p>
+  </div>
+</div>
+
+<div id="progress-panel">
+  <h2>⏳ Analysis in progress</h2>
+  <ul class="step-list" id="step-list">
+    <li id="step-detect"    ><span class="icon">○</span><span class="label">Detecting content type</span></li>
+    <li id="step-download"  ><span class="icon">○</span><span class="label">Downloading content</span></li>
+    <li id="step-transcribe"><span class="icon">○</span><span class="label">Transcribing / extracting text</span></li>
+    <li id="step-search"    ><span class="icon">○</span><span class="label">Web search for evidence</span></li>
+    <li id="step-analyze"   ><span class="icon">○</span><span class="label">LLM claim analysis</span></li>
+    <li id="step-finish"    ><span class="icon">○</span><span class="label">Complete</span></li>
+  </ul>
+  <div id="live-log" style="margin-top:1rem; font-size:0.8rem; color: var(--pico-muted-color); max-height:120px; overflow-y:auto;"></div>
+</div>
+
+<div id="error-panel">
+  <article>
+    <header><strong>❌ Analysis failed</strong></header>
+    <p id="error-message"></p>
+    <div id="transcript-fallback" style="display:none; margin-top:1rem;">
+      <p style="font-size:0.85rem; color:var(--pico-muted-color);">
+        The transcript was extracted successfully. Copy it and paste into
+        <a href="https://claude.ai" target="_blank">claude.ai</a> for manual analysis.
+      </p>
+      <pre id="transcript-text" style="font-size:0.75rem; max-height:300px; overflow-y:auto;
+           background:var(--pico-card-background-color); padding:1rem;
+           border-radius:var(--pico-border-radius); white-space:pre-wrap;"></pre>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('transcript-text').textContent)"
+              style="margin-top:0.5rem;">📋 Copy transcript</button>
+    </div>
+    <footer><a href="/">← Analyze another URL</a></footer>
+  </article>
+</div>
+
+<div id="analysis-output">
+  <div class="verdict-bar" id="share-bar" style="display:none">
+    <div class="share-label">Share?</div>
+    <p class="share-text" id="share-text"></p>
+  </div>
+
+  <div id="md-content"></div>
+
+  <div class="eli5-box" id="eli5-box" style="display:none">
+    <div class="eli5-label">💬 ELI5 — Friend to Friend</div>
+    <div id="eli5-text"></div>
+  </div>
+
+  <div class="toolbar">
+    <button id="copy-btn">📋 Copy Markdown</button>
+    <button id="save-btn" class="outline">💾 Save to truth-analyses/</button>
+    <a href="/" role="button" class="outline secondary">← Analyze another URL</a>
+  </div>
+</div>
+
+<script>
+  "use strict";
+
+  const JOB_ID = {{ job_id | tojson }};
+  let rawMarkdown = "";
+
+  const STEP_MAP = {
+    "detecting":  "step-detect",
+    "platform":   "step-detect",
+    "download":   "step-download",
+    "downloading":"step-download",
+    "transcrib":  "step-transcribe",
+    "ocr":        "step-transcribe",
+    "extracting": "step-transcribe",
+    "search":     "step-search",
+    "searching":  "step-search",
+    "analyz":     "step-analyze",
+    "llm":        "step-analyze",
+    "claude":     "step-analyze",
+    "calling":    "step-analyze",
+    "complete":   "step-finish",
+  };
+
+  let currentStepId = null;
+
+  function markActive(stepId) {
+    if (currentStepId && currentStepId !== stepId) {
+      markDone(currentStepId);
+    }
+    const el = document.getElementById(stepId);
+    if (el && !el.classList.contains("done")) {
+      el.classList.remove("waiting");
+      el.classList.add("active");
+      const icon = el.querySelector(".icon");
+      const spinner = document.createElement("span");
+      spinner.className = "spinner";
+      icon.replaceChildren(spinner);
+      currentStepId = stepId;
+    }
+  }
+
+  function markDone(stepId) {
+    const el = document.getElementById(stepId);
+    if (el) {
+      el.classList.remove("active", "waiting");
+      el.classList.add("done");
+      el.querySelector(".icon").textContent = "✓";
+    }
+  }
+
+  function guessStep(msg) {
+    const lc = msg.toLowerCase();
+    for (const [kw, sid] of Object.entries(STEP_MAP)) {
+      if (lc.includes(kw)) { markActive(sid); return; }
+    }
+  }
+
+  function allDone() {
+    document.querySelectorAll(".step-list li").forEach(li => {
+      li.classList.remove("active", "waiting");
+      li.classList.add("done");
+      li.querySelector(".icon").textContent = "✓";
+    });
+    document.getElementById("progress-panel").style.display = "none";
+  }
+
+  function appendLog(msg) {
+    const log = document.getElementById("live-log");
+    const line = document.createElement("div");
+    line.textContent = msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function safeSetHtml(el, html) {
+    el.replaceChildren();
+    const fragment = document.createRange().createContextualFragment(
+      DOMPurify.sanitize(html)
+    );
+    el.appendChild(fragment);
+  }
+
+  function addSortBadges(container) {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const replacements = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      if (/Grade [ABC]\b/.test(node.textContent)) {
+        replacements.push(node);
+      }
+    }
+    replacements.forEach(textNode => {
+      const span = document.createElement("span");
+      const clean = DOMPurify.sanitize(
+        textNode.textContent.replace(/Grade (A|B|C)\b/g, (_, g) =>
+          `<span class="sort-badge sort-${g.toLowerCase()}">Grade ${g}</span>`
+        )
+      );
+      const frag = document.createRange().createContextualFragment(clean);
+      span.appendChild(frag);
+      textNode.parentNode.replaceChild(span, textNode);
+    });
+  }
+
+  function renderAnalysis(md) {
+    // Share? line
+    const shareMatch = md.match(/\*\*Share\?\*\*:\s*(.+)/);
+    if (shareMatch) {
+      document.getElementById("share-text").textContent = shareMatch[1].trim();
+      document.getElementById("share-bar").style.display = "block";
+    }
+
+    // ELI5 section
+    const eli5Match = md.match(/## ELI5[^\n]*\n([\s\S]+?)(?:\n##|$)/);
+    if (eli5Match) {
+      const eli5El = document.getElementById("eli5-text");
+      safeSetHtml(eli5El, marked.parse(eli5Match[1].trim()));
+      document.getElementById("eli5-box").style.display = "block";
+    }
+
+    // Full markdown
+    const mdEl = document.getElementById("md-content");
+    safeSetHtml(mdEl, marked.parse(md));
+    addSortBadges(mdEl);
+
+    document.getElementById("analysis-output").style.display = "block";
+  }
+
+  function showError(msg, transcript) {
+    document.getElementById("progress-panel").style.display = "none";
+    document.getElementById("error-message").textContent = msg;
+    if (transcript) {
+      const box = document.getElementById("transcript-fallback");
+      const pre = document.getElementById("transcript-text");
+      pre.textContent = transcript;
+      box.style.display = "block";
+    }
+    document.getElementById("error-panel").style.display = "block";
+  }
+
+  function startSSE() {
+    const es = new EventSource(`/api/status/${encodeURIComponent(JOB_ID)}`);
+
+    es.addEventListener("progress", e => {
+      const msg = JSON.parse(e.data);
+      appendLog(msg);
+      guessStep(msg);
+    });
+
+    es.addEventListener("done", e => {
+      es.close();
+      allDone();
+      rawMarkdown = JSON.parse(e.data);
+      renderAnalysis(rawMarkdown);
+    });
+
+    es.addEventListener("error", e => {
+      es.close();
+      if (!e.data) {
+        showError("Connection to the analysis server was lost. The server may have restarted — try submitting the URL again.");
+        return;
+      }
+      let payload;
+      try { payload = JSON.parse(JSON.parse(e.data)); } catch (_) { payload = null; }
+      if (payload && payload.message) {
+        showError(payload.message, payload.transcript || "");
+      } else {
+        showError(JSON.parse(e.data));
+      }
+    });
+  }
+
+  document.getElementById("copy-btn").addEventListener("click", () => {
+    navigator.clipboard.writeText(rawMarkdown).then(() => {
+      const btn = document.getElementById("copy-btn");
+      btn.textContent = "✅ Copied!";
+      setTimeout(() => { btn.textContent = "📋 Copy Markdown"; }, 2000);
+    });
+  });
+
+  document.getElementById("save-btn").addEventListener("click", () => {
+    fetch(`/api/save/${encodeURIComponent(JOB_ID)}`, { method: "POST" })
+      .then(r => r.json())
+      .then(d => {
+        const btn = document.getElementById("save-btn");
+        btn.textContent = d.path ? `✅ Saved to ${d.path}` : `❌ ${d.error}`;
+      })
+      .catch(() => {
+        document.getElementById("save-btn").textContent = "❌ Save failed";
+      });
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const srcUrl = params.get("url");
+    if (srcUrl) {
+      document.getElementById("url-display").textContent = decodeURIComponent(srcUrl);
+    }
+    startSSE();
+  });
+</script>
+</body>
+</html>

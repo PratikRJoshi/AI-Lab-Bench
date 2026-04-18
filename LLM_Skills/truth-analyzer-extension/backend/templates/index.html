@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truth Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    body { max-width: 600px; margin: 4rem auto; padding: 0 1rem; }
+    h1 { display: flex; align-items: center; gap: 0.5rem; }
+    #error-msg { color: #dc2626; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Truth Analyzer</h1>
+  <p>Paste any social media URL to analyze it for scientific accuracy.</p>
+
+  <form id="analyze-form">
+    <label for="url-input">URL</label>
+    <input type="url" id="url-input" name="url"
+           placeholder="https://www.instagram.com/reel/..."
+           required autofocus>
+    <div id="error-msg"></div>
+    <button type="submit" id="submit-btn">Analyze</button>
+  </form>
+
+  <script>
+    "use strict";
+    document.getElementById("analyze-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const url = document.getElementById("url-input").value.trim();
+      const btn = document.getElementById("submit-btn");
+      const errEl = document.getElementById("error-msg");
+      errEl.style.display = "none";
+      btn.textContent = "Starting…";
+      btn.disabled = true;
+      try {
+        const resp = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await resp.json();
+        if (data.id) {
+          window.location.href = `/results/${encodeURIComponent(data.id)}?url=${encodeURIComponent(url)}`;
+        } else if (resp.status === 409 && data.existing_id) {
+          window.location.href = `/results/${encodeURIComponent(data.existing_id)}`;
+        } else {
+          throw new Error(data.message || data.error || "Unknown error");
+        }
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = "block";
+        btn.textContent = "Analyze";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
