@@ -3,6 +3,12 @@
   "name": "Truth Analyzer",
   "version": "1.0.0",
   "description": "Analyze any social media post for scientific accuracy with one click.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "truth-analyzer@pratikjoshi.local",
+      "strict_min_version": "109.0"
+    }
+  },
   "permissions": [
     "activeTab",
     "contextMenus",

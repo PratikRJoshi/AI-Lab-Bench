@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Refresh AWS credentials and restart the server automatically.
-# Usage:
-#   Interactive (prompts for each value):
-#       ./refresh.sh
+# Refresh AWS credentials and restart the server.
 #
-#   Paste all three at once (export ... format from AWS console):
-#       ./refresh.sh --paste
+# Usage — two equivalent ways:
 #
-#   Pass directly as arguments:
-#       ./refresh.sh ACCESS_KEY_ID SECRET_KEY SESSION_TOKEN
+#   1. Export first, then run (simplest):
+#        export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=...
+#        ./refresh.sh
+#
+#   2. Pass as arguments directly:
+#        ./refresh.sh "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" "$AWS_SESSION_TOKEN"
 
 set -e
 
@@ -18,29 +18,20 @@ cd "$SCRIPT_DIR"
 
 # ── Parse credentials ─────────────────────────────────────────────────────────
 
-if [ "$1" = "--paste" ]; then
-  echo "Paste the three 'export' lines from your AWS console, then press Enter twice:"
-  echo ""
-  PASTE_BLOCK=""
-  while IFS= read -r line; do
-    [ -z "$line" ] && break
-    PASTE_BLOCK="$PASTE_BLOCK $line"
-  done
-
-  KEY_ID=$(echo "$PASTE_BLOCK"    | grep -o 'AWS_ACCESS_KEY_ID=[^ ]*'    | cut -d= -f2)
-  SECRET=$(echo "$PASTE_BLOCK"    | grep -o 'AWS_SECRET_ACCESS_KEY=[^ ]*' | cut -d= -f2)
-  SESSION=$(echo "$PASTE_BLOCK"   | grep -o 'AWS_SESSION_TOKEN=[^ ]*'     | cut -d= -f2)
-
-elif [ $# -eq 3 ]; then
+if [ $# -eq 3 ]; then
   KEY_ID="$1"
   SECRET="$2"
   SESSION="$3"
-
+elif [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ] && [ -n "$AWS_SESSION_TOKEN" ]; then
+  KEY_ID="$AWS_ACCESS_KEY_ID"
+  SECRET="$AWS_SECRET_ACCESS_KEY"
+  SESSION="$AWS_SESSION_TOKEN"
+  echo "Using credentials from current shell environment."
 else
-  echo "Enter your AWS credentials (values only, not the export lines):"
-  read -rp "AWS_ACCESS_KEY_ID:     " KEY_ID
-  read -rsp "AWS_SECRET_ACCESS_KEY: " SECRET; echo ""
-  read -rp "AWS_SESSION_TOKEN:     " SESSION
+  echo "No credentials found. Export them first:"
+  echo "  export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=..."
+  echo "  ./refresh.sh"
+  exit 1
 fi
 
 # ── Validate ──────────────────────────────────────────────────────────────────
@@ -50,13 +41,14 @@ if [ -z "$KEY_ID" ] || [ -z "$SECRET" ] || [ -z "$SESSION" ]; then
   exit 1
 fi
 
-# ── Write to .env (update existing or append) ─────────────────────────────────
+# ── Write to .env ─────────────────────────────────────────────────────────────
 
 update_or_append() {
   local key="$1" val="$2"
+  # Use grep/sed pattern that handles = inside values (session tokens contain =)
   if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
-    # Use awk to safely replace value (handles special chars in session token)
-    awk -v k="$key" -v v="$val" 'BEGIN{FS=OFS="="} $1==k{$2=v} 1' "$ENV_FILE" > "$ENV_FILE.tmp"
+    grep -v "^${key}=" "$ENV_FILE" > "$ENV_FILE.tmp"
+    echo "${key}=${val}" >> "$ENV_FILE.tmp"
     mv "$ENV_FILE.tmp" "$ENV_FILE"
   else
     echo "${key}=${val}" >> "$ENV_FILE"

@@ -9,8 +9,8 @@ echo "Creating virtual environment..."
 python3 -m venv .venv
 
 echo "Installing dependencies..."
-.venv/bin/pip install --upgrade pip -q
-.venv/bin/pip install -r requirements.txt boto3 -q
+truth-analyzer-env/bin/pip install --upgrade pip
+truth-analyzer-env/bin/pip install -r requirements.txt boto3
 
 echo ""
 echo "Setup complete."

@@ -212,7 +212,18 @@ def _download_images(url: str, work: Path, slug: str):
     try:
         meta = json.loads(meta_result.stdout)
     except json.JSONDecodeError:
-        raise RuntimeError("Image download failed and metadata unavailable")
+        # Metadata unavailable — fall through to browser automation below
+        meta = None
+
+    if meta is None:
+        browser_result = _download_images_browser(url, work, slug)
+        if browser_result:
+            return browser_result
+        raise RuntimeError(
+            "Could not download content from this post. "
+            "It may be a static image post — try opening the post in Firefox first "
+            "so your session is active, then retry."
+        )
 
     raw_entries = meta.get("entries") or [meta]
     # Filter out None placeholders yt-dlp sometimes inserts for unavailable items
@@ -258,8 +269,11 @@ def _download_images_browser(url: str, work: Path, slug: str):
         return None
 
     try:
+        # Use venv python if available so playwright is found
+        venv_python = Path(__file__).parent / "truth-analyzer-env" / "bin" / "python3"
+        python_bin = str(venv_python) if venv_python.exists() else "python3"
         result = subprocess.run(
-            ["python3", str(scraper), url],
+            [python_bin, str(scraper), url],
             capture_output=True, text=True, timeout=60,
         )
         data = json.loads(result.stdout)

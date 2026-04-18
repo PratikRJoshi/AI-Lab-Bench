@@ -5,7 +5,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-if [ ! -d ".venv" ]; then
+if [ ! -d "truth-analyzer-env" ]; then
   echo "Virtual environment not found. Run ./setup.sh first."
   exit 1
 fi
@@ -16,7 +16,7 @@ sleep 1
 
 echo "Starting Truth Analyzer backend on http://localhost:5757"
 echo "Logs: tail -f /tmp/truth-analyzer.log"
-nohup .venv/bin/python server.py > /tmp/truth-analyzer.log 2>&1 &
+nohup truth-analyzer-env/bin/python server.py > /tmp/truth-analyzer.log 2>&1 &
 echo $! > /tmp/truth-analyzer.pid
 
 sleep 2
