@@ -12,6 +12,7 @@ Usage:
     python3 chase_offers_clicker.py
 """
 
+import os
 import random
 import sys
 import time
@@ -22,6 +23,10 @@ except ImportError:
     print("ERROR: playwright is not installed.")
     print("Run: pip install playwright && playwright install firefox")
     sys.exit(1)
+
+FF_PROFILE = os.path.expanduser(
+    "~/Library/Application Support/Firefox/Profiles/chase-automation"
+)
 
 BACK_HOST_SEL  = "mds-navigation-bar"
 BACK_INNER_SEL = "#back-button"
@@ -49,11 +54,43 @@ _SHADOW_FIND_ALL_JS = """
 
 # Candidates in priority order — we pick the first one that finds elements
 SELECTOR_CANDIDATES = [
-    'mds-icon[type="ico_add_circle"]',   # validated in Selenium gist
-    '.r9jbijb',                           # timkpaine's JS gist fallback
+    'mds-icon[type="ico_add_circle"]',
     '[aria-label="Add to card"]',
+    '[aria-label*="Add offer"]',
+    '[aria-label*="add"]',
     'button[data-testid*="add"]',
+    'mds-button[data-testid*="add"]',
+    '.r9jbijb',
 ]
+
+# JS that walks shadow DOM and returns info on all candidate "add" buttons
+_DIAGNOSE_JS = """
+() => {
+    const results = [];
+    function walk(root, depth) {
+        if (depth > 10) return;
+        root.querySelectorAll('*').forEach(el => {
+            const tag = el.tagName?.toLowerCase() || '';
+            const aria = el.getAttribute('aria-label') || '';
+            const type = el.getAttribute('type') || '';
+            const testid = el.getAttribute('data-testid') || '';
+            const cls = el.className || '';
+            const role = el.getAttribute('role') || '';
+            if (
+                aria.toLowerCase().includes('add') ||
+                testid.toLowerCase().includes('add') ||
+                type === 'ico_add_circle' ||
+                (tag === 'button' && role !== 'menuitem')
+            ) {
+                results.push({tag, aria, type, testid, cls: cls.toString().slice(0,60), role});
+            }
+            if (el.shadowRoot) walk(el.shadowRoot, depth + 1);
+        });
+    }
+    walk(document, 0);
+    return results.slice(0, 30);
+}
+"""
 
 
 def human_pause():
@@ -68,15 +105,24 @@ def probe_and_pick_selector(page):
     """
     print("  Trying selectors:")
     for sel in SELECTOR_CANDIDATES:
-        # Playwright locator — pierces shadow DOM automatically
         pw_count = page.locator(sel).count()
-        # Recursive JS walker — handles unlimited nesting
         js_count = len(page.evaluate(_SHADOW_FIND_ALL_JS, sel))
         print(f"    '{sel}'  =>  locator: {pw_count},  shadow-walk: {js_count}")
         if pw_count > 0:
-            return sel, pw_count, False   # prefer locator click
+            return sel, pw_count, False
         if js_count > 0:
-            return sel, js_count, True    # fall back to JS click
+            return sel, js_count, True
+
+    print("\n  No selector matched. Running DOM diagnostic to find add buttons...")
+    hits = page.evaluate(_DIAGNOSE_JS)
+    if hits:
+        print(f"  Found {len(hits)} candidate element(s) in shadow DOM:")
+        for h in hits:
+            print(f"    tag={h['tag']}  aria='{h['aria']}'  type='{h['type']}'  "
+                  f"testid='{h['testid']}'  class='{h['cls']}'  role='{h['role']}'")
+    else:
+        print("  Diagnostic found nothing — page may not be on the Offers list view.")
+
     return None, 0, False
 
 
@@ -131,22 +177,18 @@ STEALTH_SCRIPT = """
 
 def main():
     with sync_playwright() as p:
-        print("Launching Firefox (stealth mode)...")
-        browser = p.firefox.launch(
+        print("Launching Firefox (chase-automation profile)...")
+        context = p.firefox.launch_persistent_context(
+            user_data_dir=FF_PROFILE,
             headless=False,
             firefox_user_prefs={
                 "dom.webdriver.enabled": False,
                 "useAutomationExtension": False,
             },
-        )
-        context = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:137.0) "
-                "Gecko/20100101 Firefox/137.0"
-            ),
+            args=["--no-remote"],
         )
         context.add_init_script(STEALTH_SCRIPT)
-        page = context.new_page()
+        page = context.pages[0] if context.pages else context.new_page()
 
         print("\nNavigating to Chase login page...")
         page.goto("https://secure.chase.com", timeout=30_000)
@@ -263,7 +305,7 @@ def main():
         print("=" * 60)
 
         input("\nPress Enter to close the browser... ")
-        browser.close()
+        context.close()
 
 
 if __name__ == "__main__":
