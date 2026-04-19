@@ -154,6 +154,25 @@ git push origin master
 
 **Do this automatically** after Phase 4, before suggesting the next problem in Phase 5.
 
+### Patterns Grouping Tracker (Additional)
+
+In addition to the difficulty-ordered tracker above, also maintain `~/PracticeCode/Leetcode/leetcode-patterns-grouping.md`:
+
+1. After every correctly and optimally solved problem, flip `- [ ]` to `- [x]` for the problem in **all sections it appears** in the grouping file.
+2. Commit and push this update to remote immediately (can be combined with the difficulty tracker commit).
+3. Commit message example: `Solve LC 739 Daily Temperatures (monotonic stack)`.
+4. If a problem is marked done without being actively solved (e.g., user says "solved yesterday"), flip the checkbox but do not push until the next actually-solved problem's commit.
+
+## Problem Sourcing Rules
+
+1. **Default source:** Pick the next problem from `~/PracticeCode/Leetcode/leetcode-patterns-grouping.md`. Prefer an unsolved problem in the same pattern category as the one just completed (for continuity). If that category is exhausted, pick from a related category that shares the same core technique.
+2. **Outside-tracker sourcing:** Only pull problems not in the grouping file once ALL problems in the file are marked done (`[x]`).
+3. **Periodic diversity check:** Roughly every 5–8 problems solved, ask the user: "Want to try a problem outside the tracker list for variety?"
+   - If **yes**: propose a well-known problem related to the current pattern (from the Progression Ladder, NeetCode 150, or LeetCode Top Interview 150 lists). State the source explicitly. After completing it, add it to the appropriate pattern section of the grouping file as `- [x] {num}. {Title}` so the tracker remains the source of truth.
+   - If **no**: continue with the next unsolved problem from the grouping file.
+4. **Never force diversity.** If the user is on a streak within a single pattern and asks to keep going, skip the periodic check until they plateau or ask for a change.
+5. **Always state the source** when suggesting a new problem ("From the tracker" or "Outside the tracker — NeetCode 150") so the user can make an informed choice.
+
 ## Progression Ladder
 
 | Technique | Starter | Follow-up | Challenge |
