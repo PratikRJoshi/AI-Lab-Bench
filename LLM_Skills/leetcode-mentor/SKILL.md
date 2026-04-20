@@ -163,6 +163,15 @@ In addition to the difficulty-ordered tracker above, also maintain `~/PracticeCo
 3. Commit message example: `Solve LC 739 Daily Temperatures (monotonic stack)`.
 4. If a problem is marked done without being actively solved (e.g., user says "solved yesterday"), flip the checkbox but do not push until the next actually-solved problem's commit.
 
+### Current Session Marker (for device handoff)
+
+The top of `leetcode-patterns-grouping.md` contains a `## Current Session` section. Keep it updated so the user can resume on another device:
+
+- Update after the user moves off a problem OR at natural session breakpoints (end of a pattern section, user explicitly pausing, etc.)
+- Fields to maintain: `Last updated` (date), `Current problem` (LeetCode # + title + link + category), `Status` (which phase we're in + last hint given), `Section in progress` (what's done in the current section, what's next).
+- Push this marker to remote whenever it changes so other devices can pull the latest state.
+- On resume (user starts a new session), read this section first to restore context before asking what to work on next.
+
 ## Problem Sourcing Rules
 
 1. **Default source:** Pick the next problem from `~/PracticeCode/Leetcode/leetcode-patterns-grouping.md`. Prefer an unsolved problem in the same pattern category as the one just completed (for continuity). If that category is exhausted, pick from a related category that shares the same core technique.
