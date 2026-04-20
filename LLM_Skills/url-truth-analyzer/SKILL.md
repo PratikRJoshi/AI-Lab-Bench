@@ -986,6 +986,37 @@ Format each citation as: `Author(s), Title, Journal, Year — [link]`
 
 ---
 
+## Step 4c: Channel / handle reputation (Phase 2 — runs for all URL content)
+
+**Progress indicator**: `⏳ Step 4c/7: Assessing channel / handle reputation...`
+
+Independent of the per-claim analysis in Step 4a/4b, briefly characterize the source channel, handle, or author that posted this content. This helps the reader weight the analysis against the creator's track record.
+
+1. Identify the source:
+   - For URL entries: extract the uploader/channel/handle from the platform. Use `yt-dlp --print "%(uploader)s|%(uploader_id)s|%(channel)s|%(channel_url)s" '<URL>'` or inspect the `uploader`, `uploader_id`, and `channel` fields in `yt-dlp -J '<URL>'`. For Instagram/Facebook reels, `uploader_id` gives the handle. For LinkedIn, use the author name from the post URL slug.
+   - For local folder entries: there is no channel. Record `Source channel: N/A (local folder)` and skip the reputation paragraph.
+
+2. Research the handle (1 web search, max 2 if the first is ambiguous):
+   - Search for the handle/channel name plus terms like `fact check`, `controversy`, `misinformation`, `credentials`, `retraction`, `debunked`, or `reputation`.
+   - Prefer signals from fact-checker coverage (Health Feedback, Snopes, FactCheck.org, Full Fact, AltNews, BOOM Live), mainstream journalism, academic or professional credentials on verified profiles, platform verification badges, and prior analyses of the same handle in `~/Documents/truth-analyses/`.
+   - If the handle is obscure and produces no credible signal, say so explicitly — do not fabricate a reputation.
+
+3. Write 2–4 sentences covering, where substantiated:
+   - Typical content style (explainer, opinion/commentary, news aggregation, motivational, product promotion, satire, call-out, etc.).
+   - Track record on truthfulness (prior fact-checks, retractions, misinformation flags — or, conversely, a clean peer-reviewed / institutional record).
+   - Verified credentials or platform status (blue check, institutional affiliation, medical license, PhD) — only if substantiated.
+   - Known conflicts of interest (product lines, sponsorships, political alignment) that materially affect how the content should be read.
+
+4. Calibration rules:
+   - Documented misinformation history → state it plainly with a specific example or citation.
+   - Broadly reputable → state it plainly.
+   - No credible signal either way → write: `No notable public record on this handle's truthfulness was found; evaluate this post on its own merits.`
+   - Never infer reputation purely from follower count, aesthetics, or confidence of delivery.
+
+This paragraph feeds the `## Channel Reputation` section of the Step 5 template.
+
+---
+
 ## Step 5: Output format (Phase 2 — local)
 
 ### If `DISPLAY_ONLY=true` — display in conversation
@@ -1014,6 +1045,10 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 
 ## Summary
 <2–3 sentence overview of what the content claims>
+
+## Channel Reputation
+**Source channel / handle**: <uploader / uploader_id / channel name, or "N/A (local folder)">
+<2–4 sentences on the channel's typical content style, track record on truthfulness (prior fact-checks, retractions, or clean record), verified credentials, and any conflicts of interest. If no credible public record exists, state: "No notable public record on this handle's truthfulness was found; evaluate this post on its own merits.">
 
 ## Analysis
 
