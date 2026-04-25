@@ -8,6 +8,7 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 ## Pending
 
 ## Processed
+- https://www.instagram.com/p/DXPbxO_gcHG/ (analyzed 2026-04-25 → truth-analyses/2026-04-25-naturethecure-carousel.md)
 - https://www.instagram.com/p/CrH0vRmIb2C/?img_index=1 (analyzed 2026-04-10 → truth-analyses/2026-04-10-dandruff-coconut-oil-rice-water-beauty-tips-zaykakatadka.md)
 - https://www.instagram.com/p/DWQ9qgNjN9V/ (analyzed 2026-04-10 → truth-analyses/2026-04-10-from-painkillers-to-no-period-pain-yogawithkamya.md)
 - https://www.instagram.com/p/C2unE5OyYFK/ (analyzed 2026-04-10 → truth-analyses/2026-04-10-migraine-remedy-almonds-walnuts-poppy-seeds-nuttyovernutritionn.md)
