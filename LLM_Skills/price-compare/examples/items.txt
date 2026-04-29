@@ -1,0 +1,7 @@
+# Example shopping list for price-compare.
+# One item per line. Blank lines and lines starting with `#` are ignored.
+# Include size / brand / style hints in the line itself when you care about them.
+
+organic bananas
+whole milk, half gallon
+sourdough bread

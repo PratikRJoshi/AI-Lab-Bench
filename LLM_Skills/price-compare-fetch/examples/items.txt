@@ -1,0 +1,6 @@
+# Sample input for price-compare-fetch.
+# One item per line. Blank lines and # comments are ignored.
+
+organic bananas
+whole milk half gallon
+sourdough bread
