@@ -60,7 +60,11 @@ https://youtu.be/VIDEO_ID [display-only transcript-only]
 
 **Inline URL auto-detection**: When the user provides a URL directly in their message (not from `watch-urls.md`), treat it as `DISPLAY_ONLY=true` automatically. Skip Phase 0 dedup checks (no `watch-urls.md` to read), run Phase 1 + Phase 2 normally, display the analysis in the conversation, clean up temp files, and stop. No files are written, no `watch-urls.md` is updated, no GitHub sync runs.
 
-Processing happens in **three phases** plus post-processing. Phase 0 is instant and local. Phase 1 pipelines server calls with local transcription **and dispatches sub-agents for analysis as each transcript becomes ready**. Phase 2 runs in parallel across sub-agents.
+Processing happens in **four phases** plus post-processing. Phase -1 (housekeeping) archives old data. Phase 0 is instant and local. Phase 1 pipelines server calls with local transcription **and dispatches sub-agents for analysis as each transcript becomes ready**. Phase 2 runs in parallel across sub-agents.
+
+### Phase -1 — Housekeeping (automatic, runs before Phase 0)
+
+Runs at the start of every `process watch-urls.md` invocation. Archives processed entries and analysis files older than 30 days. Skipped entirely for inline URL auto-detection (no `watch-urls.md` involved).
 
 ### Phase 0 — Batch triage (instant, local)
 
@@ -134,6 +138,61 @@ Update progress after each major step within each phase.
 
 ---
 
+## Phase -1: Housekeeping (automatic, before Phase 0)
+
+**Progress indicator**: `🧹 Housekeeping: Archiving entries older than 30 days...`
+
+Runs once at the start of every `process watch-urls.md` invocation. Skipped for inline URL auto-detection.
+
+### Step 1: Archive old processed entries from watch-urls.md
+
+1. Parse every entry under `## Processed` in `watch-urls.md`.
+2. Extract the date from each entry (the `YYYY-MM-DD` in `analyzed YYYY-MM-DD` or `failed YYYY-MM-DD` or `duplicate of`).
+   - For duplicate entries without an explicit date, use the date from the original analysis file path (e.g. `2026-03-10` from `truth-analyses/2026-03-10-*.md`).
+3. Compare each date to today minus 30 days.
+4. For each entry older than 30 days:
+   a. Append it to `LLM_Skills/url-truth-analyzer/watch_urls_archive.md` under the appropriate `## YYYY-MM` month header.
+   b. Remove it from `watch-urls.md`.
+5. The archive file is append-only. If it does not exist, create it with:
+   ```markdown
+   # Watch URLs Archive
+   
+   Processed entries archived from watch-urls.md (older than 30 days).
+   
+   ---
+   ```
+6. Month headers (`## YYYY-MM`) are created in chronological order. New entries append under the matching header. If the header does not exist yet, create it at the correct chronological position.
+
+### Step 2: Archive old analysis files
+
+1. Scan `~/Documents/truth-analyses/` for files matching `YYYY-MM-DD-*.md` where the date is older than 30 days.
+2. For each old file:
+   a. Create `~/Documents/truth-analyses/archive/YYYY-MM/` if it does not exist.
+   b. Move the file into the month subdirectory.
+3. Repeat for `~/AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/`:
+   a. Create `truth-analyses/archive/YYYY-MM/` if it does not exist.
+   b. Use `git mv` to move files (preserves git history).
+
+### Step 3: Commit housekeeping changes
+
+If any files were moved or entries archived:
+1. Stage all changes: `git add -A LLM_Skills/url-truth-analyzer/truth-analyses/ LLM_Skills/url-truth-analyzer/watch_urls_archive.md LLM_Skills/watch_urls.md`
+2. Commit: `Housekeeping: archive analyses older than 30 days`
+3. Do **not** push yet — the post-processing GitHub sync will push this commit along with any new analyses.
+
+If nothing is older than 30 days, report `🧹 Housekeeping: Nothing to archive.` and skip to Phase 0.
+
+### Reporting
+
+```
+🧹 Housekeeping complete:
+   📦 Archived N processed entries from watch-urls.md
+   📦 Moved M analysis files to archive/
+   📦 Oldest archived: YYYY-MM-DD
+```
+
+---
+
 ## Phase 0: Batch triage (instant, local)
 
 **Progress indicator**: `📋 Phase 0: Triaging N URLs...`
@@ -161,9 +220,9 @@ Extract the video ID from each pending URL using these rules:
 | `fb.watch/ID` | path segment after `fb.watch/` |
 | Other platforms | no video ID — goes to `NEEDS_PROCESSING` for Check B |
 
-Then parse every processed entry in `## Processed` in `watch-urls.md` and extract the video ID from each processed URL using the same rules.
+Then parse every processed entry in `## Processed` in `watch-urls.md` **and** in `LLM_Skills/url-truth-analyzer/watch_urls_archive.md` (if it exists) and extract the video ID from each processed URL using the same rules. This ensures dedup works even after old entries have been archived by Phase -1.
 
-For each pending URL whose video ID matches any processed URL's video ID → add to `DUPLICATES[]` with the matching processed entry (URL + analysis file path).
+For each pending URL whose video ID matches any processed URL's video ID (from either file) → add to `DUPLICATES[]` with the matching processed entry (URL + analysis file path).
 
 ### Step 3: Partition entries
 
