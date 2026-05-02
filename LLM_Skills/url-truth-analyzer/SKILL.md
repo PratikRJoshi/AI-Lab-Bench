@@ -52,7 +52,7 @@ https://youtu.be/VIDEO_ID [display-only transcript-only]
 - **`[audio-only]`**: Forces audio download + Whisper transcription, skipping the caption attempt entirely. Use when auto-generated captions are known to be poor quality or in the wrong language.
 - **Local folder paths**: If the entry starts with `/` (absolute path) instead of `http`, it is treated as a local folder containing images. All supported image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`) are treated as a single post. The `[transcript-only]` and timestamp directives are ignored for folder entries. Only flat directory scanning (no recursion into subdirectories).
 - **Browser automation**: The `[browser-mode]` directive forces the use of Playwright browser automation instead of `yt-dlp`. Use this for Instagram URLs that fail with the standard download methods. Requires playwright Python package and chromium browser installed.
-- **`[display-only]`**: Outputs the final analysis directly in the conversation instead of saving to any file. Skips Step 5 (file save), Step 6 (cleanup is still run), Step 7 (`watch-urls.md` update), and post-processing (GitHub sync). Useful for quick one-off checks or when the user provides a URL inline rather than via `watch-urls.md`. Can combine with other directives (e.g. `[display-only transcript-only]`). When a URL is provided directly in the user's message (not from `watch-urls.md`), `display-only` is implied automatically.
+- **`[display-only]`**: The sub-agent returns the analysis text instead of saving to a file; the parent displays it in the conversation. Skips Step 5 file save (analysis is returned in the sub-agent result instead), Step 6 cleanup still runs, Step 7 `watch-urls.md` update is skipped for this URL, and GitHub sync skips this URL. Useful for quick one-off checks or when the user provides a URL inline rather than via `watch-urls.md`. Can combine with other directives (e.g. `[display-only transcript-only]`). When a URL is provided directly in the user's message (not from `watch-urls.md`), `display-only` is implied automatically.
 
 ---
 
@@ -60,7 +60,7 @@ https://youtu.be/VIDEO_ID [display-only transcript-only]
 
 **Inline URL auto-detection**: When the user provides a URL directly in their message (not from `watch-urls.md`), treat it as `DISPLAY_ONLY=true` automatically. Skip Phase 0 dedup checks (no `watch-urls.md` to read), run Phase 1 + Phase 2 normally, display the analysis in the conversation, clean up temp files, and stop. No files are written, no `watch-urls.md` is updated, no GitHub sync runs.
 
-Processing happens in **three phases** plus post-processing. Phase 0 is instant and local. Phase 1 pipelines server calls with local transcription. Phase 2 runs analysis sequentially.
+Processing happens in **three phases** plus post-processing. Phase 0 is instant and local. Phase 1 pipelines server calls with local transcription **and dispatches sub-agents for analysis as each transcript becomes ready**. Phase 2 runs in parallel across sub-agents.
 
 ### Phase 0 — Batch triage (instant, local)
 
@@ -69,13 +69,13 @@ Before any server calls, run a single pass over ALL pending URLs:
 1. Parse directives for every entry
 2. Run Check A (video ID match) for every entry against the `## Processed` list
 3. Partition into three lists:
-   - `DUPLICATES[]` — Check A matched; write Step 7 entries immediately, no further processing
+   - `DUPLICATES[]` — Check A matched; record for batch `watch-urls.md` update, no further processing
    - `NEEDS_PROCESSING[]` — URL entries requiring download + analysis
-   - `LOCAL_FOLDERS[]` — local folder entries (skip Phase 1, go directly to Phase 2)
+   - `LOCAL_FOLDERS[]` — local folder entries (skip Phase 1 downloads, dispatch sub-agents directly)
 
 Phase 0 makes zero server calls. Duplicates are resolved instantly.
 
-### Phase 1 — Download + transcribe (rate-limited, pipelined)
+### Phase 1 — Download + transcribe + dispatch (rate-limited, pipelined)
 
 For each URL in `NEEDS_PROCESSING`, **one at a time, in order**:
 
@@ -84,23 +84,33 @@ For each URL in `NEEDS_PROCESSING`, **one at a time, in order**:
 3. Step 2 (pipelined): Immediately after download, start transcription:
    - If captions were fetched → convert VTT to plain text inline (instant, ~1s)
    - If audio was downloaded → spawn Whisper as a **background process** so it runs during the mandatory inter-request delay
-4. Inter-request delay (45–75s randomized) — Whisper runs concurrently during this wait
+4. **Sub-agent dispatch**: Once the transcript `.txt` is ready, immediately spawn a `generalPurpose` sub-agent for Phase 2 analysis (Steps 3–6). The parent does **not** wait for the sub-agent — it continues to the next download.
+5. Inter-request delay (45–75s randomized) — Whisper runs concurrently during this wait; analysis sub-agents also run concurrently.
 
-Phase 1 produces a transcript `.txt` file per URL. Whisper jobs that outlast the delay are awaited before analysis begins.
+Phase 1 produces a transcript `.txt` file per URL and dispatches an analysis sub-agent per URL. No concurrency cap on sub-agents — all are spawned immediately.
 
-**Local folder entries** skip Phase 1 entirely (no server calls). They proceed directly to Phase 2 starting at Step 2 (Path C). Step 0b runs a local-only dedup variant (slug match against `~/Documents/truth-analyses/` filenames).
+**Local folder entries** skip Phase 1 downloads (no server calls). Their images are staged into `/tmp/url-analyzer/` and a sub-agent is dispatched immediately for OCR + analysis (Steps 2C, 3–6). Step 0b runs a local-only dedup variant (slug match against `~/Documents/truth-analyses/` filenames).
 
-### Phase 2 — Analyze + save (local, sequential)
+### Phase 2 — Analyze + save (parallel via sub-agents)
 
-For each transcript produced in Phase 1 (plus local folder entries), **one at a time, in order** — no delays needed:
+Each sub-agent runs Steps 3–6 independently and concurrently:
 
 1. Step 3: Classify content (Medical vs General Science)
-2. Step 4: Analyze (EBM SORT or Claim Validation)
-3. Step 5: Save analysis file — or display in conversation if `DISPLAY_ONLY=true`
-4. Step 6: Cleanup temporary files
-5. Step 7: Update `watch-urls.md` — skipped if `DISPLAY_ONLY=true`
+2. Step 4: Analyze (EBM SORT or Claim Validation) + channel reputation
+3. Step 5: Save analysis file — or return analysis text if `DISPLAY_ONLY=true`
+4. Step 6: Cleanup temporary files for this URL only
 
-### Post-processing — after all URLs complete
+Sub-agents do **not** run Step 7. Each sub-agent writes its own unique analysis file (no conflicts). On completion, each sub-agent returns a structured result to the parent.
+
+### Result collection + batch update (parent, after all sub-agents complete)
+
+After all Phase 1 downloads finish and all sub-agents return:
+
+1. Collect results from all sub-agents (success/failure status, analysis file paths)
+2. **Step 7 (batch)**: Update `watch-urls.md` once — remove all processed URLs from `## Pending`, append all entries to `## Processed` in a single edit. This avoids race conditions on the shared file.
+3. For `DISPLAY_ONLY` sub-agents: display their returned analysis text in the conversation.
+
+### Post-processing — after result collection
 
 1. Sync to GitHub: commit and push new analysis files from `~/AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/` to the remote repository
 
@@ -111,10 +121,12 @@ For each transcript produced in Phase 1 (plus local folder entries), **one at a 
 📋 Phase 0: Triaging N URLs... (X duplicates, Y to download, Z local folders)
 🔄 Phase 1 [1/Y]: Downloading + transcribing <URL> (captions-first)
    ⏳ Whisper running in background during inter-request delay...
+   🚀 Sub-agent dispatched for analysis of <URL>
 🔄 Phase 1 [2/Y]: Downloading + transcribing <URL>
-✓ Phase 1 complete: Y downloaded, X transcripts ready
-🔬 Phase 2 [1/M]: Analyzing <URL>
-🔬 Phase 2 [2/M]: Analyzing <URL>
+   🚀 Sub-agent dispatched for analysis of <URL>
+✓ Phase 1 complete: Y downloaded, Y sub-agents running
+⏳ Awaiting N sub-agents... (M completed, K in progress)
+📋 All sub-agents complete. Batch-updating watch-urls.md...
 ✅ All URLs processed. Syncing to GitHub...
 ```
 
@@ -161,19 +173,16 @@ Classify each pending entry into one of three lists:
 - **`LOCAL_FOLDERS[]`** — Entry starts with `/` and is not an `http` URL. These skip Phase 1 entirely.
 - **`NEEDS_PROCESSING[]`** — Everything else. These enter Phase 1 for Check B + download + transcription.
 
-### Step 4: Resolve duplicates immediately
+### Step 4: Record duplicates for batch update
 
-For each entry in `DUPLICATES[]`, update `watch-urls.md` now (Step 7 duplicate format):
-```
-- <URL> (duplicate of <original-URL> → see truth-analyses/<existing-file>.md)
-```
+For each entry in `DUPLICATES[]`, add to the `RESULTS[]` collection with status `duplicate` and the matching processed entry details. These are written to `watch-urls.md` later in the parent's batch Step 7, not immediately.
 
 Report:
 ```
 📋 Phase 0 complete: N total URLs triaged
    ⚠️  X duplicate(s) resolved instantly (Check A video ID match)
-   📥 Y URL(s) queued for Phase 1 (download + transcribe)
-   📁 Z local folder(s) queued for Phase 2 (OCR + analysis)
+   📥 Y URL(s) queued for Phase 1 (download + transcribe + dispatch)
+   📁 Z local folder(s) queued for sub-agent dispatch (OCR + analysis)
 ```
 
 ---
@@ -208,7 +217,7 @@ After parsing directives, check if the clean entry (after stripping any `[...]` 
 
 1. Set `CONTENT_TYPE=local-folder` and `TRANSCRIPT_SOURCE=ocr`.
 2. Validate the path:
-   - If the path does not exist OR is not a directory → mark as failed: `(failed YYYY-MM-DD — path does not exist or is not a directory)` and skip to Step 7.
+   - If the path does not exist OR is not a directory → mark as failed in `RESULTS[]`: `(failed YYYY-MM-DD — path does not exist or is not a directory)` and skip this entry (no sub-agent dispatch).
 3. **Check folder depth** (NEW):
    - Recursively scan the folder tree to find the maximum nesting depth
    - Use this bash command to check depth:
@@ -217,7 +226,7 @@ After parsing directives, check if the clean entry (after stripping any `[...]` 
      BASE_DEPTH=$(echo "/path/to/folder" | tr -cd '/' | wc -c)
      RELATIVE_DEPTH=$((MAX_DEPTH - BASE_DEPTH))
      ```
-   - If `RELATIVE_DEPTH > 5` → mark as failed: `(failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)` and skip to Step 7.
+   - If `RELATIVE_DEPTH > 5` → mark as failed in `RESULTS[]`: `(failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)` and skip this entry (no sub-agent dispatch).
    - Report depth in progress indicator: `⏳ Step 0b: Local folder detected (depth: N levels), checking for duplicates...`
 4. **Scan for supported image files recursively**:
    - Look for files with extensions: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp` (case-insensitive)
@@ -225,7 +234,7 @@ After parsing directives, check if the clean entry (after stripping any `[...]` 
      ```bash
      find /path/to/folder -maxdepth 5 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.bmp" -o -iname "*.webp" \)
      ```
-   - If no supported image files found → mark as failed: `(failed YYYY-MM-DD — no supported image files found in folder tree)` and skip to Step 7.
+   - If no supported image files found → mark as failed in `RESULTS[]`: `(failed YYYY-MM-DD — no supported image files found in folder tree)` and skip this entry (no sub-agent dispatch).
    - Report image count and distribution: `✓ Found N images across M subfolders`
 5. Extract slug:
    - If `[title: ...]` directive is present, slugify the title text
@@ -256,7 +265,7 @@ Then check whether any file in `~/Documents/truth-analyses/` has a filename cont
 ls ~/Documents/truth-analyses/ | grep -i "<slug>"
 ```
 
-If a matching file exists → **duplicate detected**. Note the matched filename and skip to Step 7.
+If a matching file exists → **duplicate detected**. Note the matched filename and add a `duplicate` entry to `RESULTS[]`. Do not dispatch a sub-agent.
 
 ### If duplicate detected
 
@@ -267,7 +276,7 @@ Report:
     Skipping transcription — will link to existing analysis.
 ```
 
-Then go directly to **Step 7** (skip Steps 1–6). In Step 7, use the special duplicate entry format (see Step 7).
+Add a `duplicate` entry to `RESULTS[]` with the matched file info. Do not dispatch a sub-agent — skip directly to the next URL's download.
 
 ### If no duplicate found
 
@@ -376,7 +385,7 @@ yt-dlp --cookies-from-browser firefox \
   -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
 ```
 
-**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to Phase 2.
+**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to transcription + sub-agent dispatch.
 
 **If it fails** (unsupported URL pattern, auth error, or yt-dlp error): move to Stage D-2.
 
@@ -400,7 +409,7 @@ if [ -n "$STREAM_URL" ]; then
 fi
 ```
 
-**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to Phase 2.
+**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to transcription + sub-agent dispatch.
 
 **If it fails** (no URL returned, or ffmpeg error): move to Stage D-3.
 
@@ -430,7 +439,7 @@ ffmpeg -y \
 
 **If the user provides a local `.mp4` file** (already downloaded from a DASH URL) instead of a manifest URL, the file may have the same corrupt `mdat` issue. In that case, re-download audio fresh from the original DASH URL using the command above rather than trying to extract from the local file.
 
-**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to Phase 2.
+**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to transcription + sub-agent dispatch.
 
 ---
 
@@ -453,7 +462,7 @@ Manual workaround — extract the DASH manifest URL:
 8. Re-run the analyzer — Stage D-3 will handle it automatically
 ```
 
-Then mark as failed: `(failed YYYY-MM-DD — all automated LinkedIn stages failed; replace with DASH manifest URL from Network tab)`
+Then add a `failed` entry to `RESULTS[]`: `(failed YYYY-MM-DD — all automated LinkedIn stages failed; replace with DASH manifest URL from Network tab)`. Do not dispatch a sub-agent.
 
 ---
 
@@ -480,7 +489,7 @@ yt-dlp --cookies-from-browser firefox \
 - `fb.watch/ID` (Facebook short links)
 - `instagram.com/reel/ID` (Instagram Reels)
 
-**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to Phase 2.
+**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to transcription + sub-agent dispatch.
 
 **If it fails**: Apply the retry logic from the next section. Facebook videos may require being logged into Firefox for private or region-restricted content.
 
@@ -533,9 +542,9 @@ Download each image URL with curl:
 curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-<N>.jpg" "<IMAGE_URL>"
 ```
 
-**If image download succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
+**If image download succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, dispatch a sub-agent for OCR + analysis.
 
-**If it fails**: Mark as failed with reason "Could not download images from post".
+**If it fails**: Add a `failed` entry to `RESULTS[]` with reason "Could not download images from post". Do not dispatch a sub-agent.
 
 **Supported URL patterns:**
 - `instagram.com/p/ID` (Instagram posts — may be carousel)
@@ -577,9 +586,9 @@ for img_url in "${IMAGE_URLS[@]}"; do
 done
 ```
 
-**If browser mode succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
+**If browser mode succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, dispatch a sub-agent for OCR + analysis.
 
-**If it fails**: Report error and mark as failed with the scraper's error message.
+**If it fails**: Report error and add a `failed` entry to `RESULTS[]` with the scraper's error message. Do not dispatch a sub-agent.
 
 **Note**: Browser automation is slower (10-15 seconds vs 2-5 seconds) but more reliable for Instagram. The scraper extracts the top 10 largest images from the page, filtering out profile pics and thumbnails.
 
@@ -630,7 +639,7 @@ This copy step ensures:
 **No retry logic** applies.
 **Does not count toward batch cooldown.**
 
-Set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, proceed to Phase 2.
+Set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, dispatch a sub-agent for OCR + analysis.
 
 Report: `✓ Step 1/7: N local images staged for analysis (from M subfolders, no download needed).`
 
@@ -645,9 +654,9 @@ If `yt-dlp` fails and the output contains any of: `Sign in to confirm`, `HTTP Er
 | 1st retry | 90 seconds |
 | 2nd retry | 180 seconds |
 | 3rd retry | 360 seconds |
-| After 3rd failure | Mark as failed, continue to next URL |
+| After 3rd failure | Add `failed` entry to `RESULTS[]`, continue to next URL |
 
-For any other error (private video, bad URL, **LinkedIn extraction failure**, etc.) — do not retry. Mark as failed immediately and continue.
+For any other error (private video, bad URL, **LinkedIn extraction failure**, etc.) — do not retry. Add a `failed` entry to `RESULTS[]` immediately and continue to the next URL.
 
 Report retry attempts as they happen:
 ```
@@ -656,16 +665,16 @@ Report retry attempts as they happen:
 
 If all 3 retries fail, report:
 ```
-❌ Failed: <URL> — rate limited after 3 retries. Marked in watch-urls.md for manual retry.
+❌ Failed: <URL> — rate limited after 3 retries. Will be marked in watch-urls.md during batch update.
 ```
 
 ---
 
-### Inter-request delay (with pipelined transcription)
+### Inter-request delay (with pipelined transcription + sub-agent dispatch)
 
-After each URL's download completes (success or skip), **start transcription immediately before entering the delay**:
+After each URL's download completes (success or skip), **start transcription immediately, dispatch a sub-agent when ready, then enter the delay**:
 
-1. **If `TRANSCRIPT_SOURCE=captions`**: Run VTT-to-text conversion inline (instant, ~1s — see Step 2 Path A). Then enter delay.
+1. **If `TRANSCRIPT_SOURCE=captions`**: Run VTT-to-text conversion inline (instant, ~1s — see Step 2 Path A). Then **dispatch a sub-agent** for this URL's analysis. Then enter delay.
 2. **If `TRANSCRIPT_SOURCE=whisper`**: Spawn Whisper as a background process, then enter delay. Whisper runs concurrently during the wait:
 
 ```bash
@@ -680,7 +689,9 @@ sleep $((45 + RANDOM % 31))   # randomized: 45–75 seconds — Whisper runs dur
 wait $WHISPER_PID_<N>
 ```
 
-If Whisper finishes before the delay ends, the delay still runs to completion (rate-limit protection). If Whisper takes longer than the delay (rare for short videos), the next URL waits for Whisper to finish first.
+4. **After Whisper completes**: Dispatch a sub-agent for this URL's analysis (see Sub-agent dispatch protocol). The sub-agent runs concurrently with the remaining downloads.
+
+If Whisper finishes before the delay ends, the sub-agent is dispatched immediately and the delay still runs to completion (rate-limit protection). If Whisper takes longer than the delay (rare for short videos), the next URL waits for Whisper to finish first, then the sub-agent is dispatched.
 
 **Delay rules**:
 - Apply between every consecutive URL, including after Check B title lookups (see Step 0b).
@@ -704,9 +715,9 @@ sleep 300   # 5-minute cooldown after each group of 5
 
 This gives the server-side rate-limit window time to reset before the next batch. The count resets after each cooldown.
 
-**After all Phase 1 downloads complete**: Report `✓ Phase 1 complete: X downloaded + transcribed, Z failed. Awaiting any background Whisper jobs...`
+**After all Phase 1 downloads complete**: Report `✓ Phase 1 complete: X downloaded, Z failed. Y sub-agents dispatched and running.`
 
-After reporting, wait for all outstanding background Whisper processes:
+After reporting, wait for all outstanding background Whisper processes (any that haven't triggered sub-agent dispatch yet):
 
 ```bash
 for pid in "${WHISPER_PIDS[@]}"; do
@@ -714,15 +725,148 @@ for pid in "${WHISPER_PIDS[@]}"; do
 done
 ```
 
-Then report: `✓ All transcripts ready. Entering Phase 2 (analysis)...`
+Then dispatch sub-agents for any remaining transcripts that completed after their download's delay ended. Finally, proceed to **Result collection** (see below).
+
+---
+
+## Sub-agent dispatch protocol
+
+### When to dispatch
+
+A sub-agent is dispatched **as soon as a URL's transcript `.txt` file is ready** — either:
+- Immediately after VTT-to-text conversion (captions, ~1s), or
+- After the background Whisper process completes (awaited before the next download starts)
+
+For **local folder entries**: dispatch a sub-agent immediately after images are staged into `/tmp/url-analyzer/` (Mode I copy step).
+
+For **failed downloads**: do not dispatch a sub-agent. Add a `failed` entry to `RESULTS[]` directly.
+
+For **duplicates** (detected in Phase 0 or Step 0b): do not dispatch a sub-agent. Add a `duplicate` entry to `RESULTS[]` directly.
+
+### How to dispatch
+
+Use the Task tool with `subagent_type="generalPurpose"` and `run_in_background=true`. Each sub-agent runs independently with no concurrency cap — all are spawned immediately as transcripts become ready.
+
+Collect all returned agent IDs in a `PENDING_AGENTS[]` list for later polling.
+
+### Sub-agent prompt template
+
+Each sub-agent receives a self-contained prompt with everything it needs. The parent constructs the prompt from the URL's metadata:
+
+```
+You are analyzing content for truth claims. Run Steps 2 (if needed), 3, 4, 5, and 6 from the analysis workflow below.
+
+## Context
+- URL: <clean_url>
+- Slug: <slug>
+- Video/post title: <title>
+- Content type: <video|audio|image>
+- Transcript source: <captions|whisper|ocr>
+- Transcript file: /tmp/url-analyzer/<slug>.txt
+- Directives: <parsed directives or "none">
+- Display only: <true|false>
+- Date: <YYYY-MM-DD>
+
+## For image content (TRANSCRIPT_SOURCE=ocr)
+Run Step 2 Path C first: use Tesseract OCR on images at /tmp/url-analyzer/<slug>*.jpg
+and Read tool for visual analysis, then save combined output to /tmp/url-analyzer/<slug>.txt.
+
+## Step 3: Classify content
+Read the transcript and classify as Medical or General Science.
+<include Step 3 instructions verbatim>
+
+## Step 4: Analyze
+If Medical: perform EBM SORT analysis using the rubric below.
+If General Science: extract and validate each claim.
+Then assess channel/handle reputation.
+<include Step 4a/4b/4c instructions verbatim>
+
+## EBM Reference (for medical content only)
+<include full contents of ebm-reference.md>
+
+## Step 5: Save analysis
+If DISPLAY_ONLY=false: save to ~/Documents/truth-analyses/<date>-<slug>.md
+and copy to ~/AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/
+If DISPLAY_ONLY=true: return the full analysis text in your final response.
+<include Step 5 template verbatim>
+
+## Step 6: Cleanup
+Delete temp files for this URL only: /tmp/url-analyzer/<slug>*
+Never delete the analysis file or original source folders.
+
+## Required response format
+End your response with exactly this block so the parent can parse your result:
+
+---RESULT---
+status: success|failed
+slug: <slug>
+analysis_path: <path to saved .md file, or "none" if display-only>
+content_type: Medical|General Science
+title: <video/post title>
+url: <clean_url>
+display_analysis: <full analysis markdown if display-only, otherwise "none">
+error: <error message if failed, otherwise "none">
+---END RESULT---
+```
+
+The parent reads `ebm-reference.md` once and injects its contents into every sub-agent prompt that might need it (all of them, since classification happens inside the sub-agent).
+
+### Result collection
+
+After all Phase 1 downloads are complete and all sub-agents have been dispatched:
+
+1. Poll each sub-agent using `AwaitShell` or by reading its output file, waiting for all to complete.
+2. Parse the `---RESULT---` block from each sub-agent's final response.
+3. Collect all results into `RESULTS[]`:
+   - Successful analyses (with file paths)
+   - Failed analyses (with error reasons)
+   - Display-only analyses (with returned markdown text)
+   - Duplicates (recorded earlier in Phase 0 / Step 0b)
+4. For display-only results: output the `display_analysis` text to the user in the conversation.
+
+Report:
+```
+⏳ Awaiting N sub-agents... (M completed, K in progress)
+✓ All sub-agents complete: X succeeded, Y failed, Z display-only
+```
+
+Then proceed to **Step 7 (batch)**.
+
+### Edge cases
+
+**Display-only URLs** (`DISPLAY_ONLY=true`):
+- The sub-agent runs Steps 3–4 normally but skips Step 5 file save. Instead, it returns the full analysis markdown in the `display_analysis` field of its result.
+- The parent displays the returned analysis text in the conversation after collecting all results.
+- These URLs are not added to `## Processed` in the batch Step 7 update.
+
+**Sub-agent failure**:
+- If a sub-agent crashes, times out, or returns `status: failed`, the parent records the error.
+- The URL is added to `## Processed` as a failed entry with the error reason from the sub-agent's result.
+- Other sub-agents are not affected — each is fully independent.
+
+**Local folder entries**:
+- Dispatched as sub-agents after image staging (Mode I copy step) during Phase 0/1.
+- The sub-agent runs Step 2 Path C (OCR + visual analysis) first, then Steps 3–6.
+- No inter-request delay is consumed, so these sub-agents are dispatched immediately.
+
+**Partial completion** (e.g., user interrupts mid-run):
+- Any sub-agents that already completed will have saved their analysis files locally — these are safe.
+- Any sub-agents still running will be interrupted — their temp files may remain in `/tmp/url-analyzer/`.
+- `watch-urls.md` will NOT have been updated (batch Step 7 hasn't run yet), so all URLs remain in `## Pending` for a clean re-run.
+- Re-running the skill will re-triage all pending URLs. Previously saved analysis files will be detected as duplicates via Check B slug match, so no redundant work occurs.
+
+**Inline URL auto-detection** (URL provided directly in the user's message):
+- `DISPLAY_ONLY=true` is set automatically. Only one URL to process.
+- Sub-agent dispatch still applies: a single sub-agent is spawned for the analysis.
+- The parent displays the result in the conversation. No `watch-urls.md` update or git sync.
 
 ---
 
 ## Step 2: Extract text content (pipelined into Phase 1)
 
-> **Pipelining note**: For URL entries, Step 2 now runs **during Phase 1** — either inline (captions → instant VTT-to-text) or as a background process (Whisper running during the inter-request delay). By the time Phase 2 starts, transcripts are already available.
+> **Pipelining note**: For URL entries, Step 2 now runs **during Phase 1** — either inline (captions → instant VTT-to-text) or as a background process (Whisper running during the inter-request delay). By the time the sub-agent starts, the transcript is already available.
 >
-> For **local folder entries** (Path C — OCR + visual analysis), Step 2 runs at the start of Phase 2 as before, since it requires LLM vision capabilities that cannot be backgrounded.
+> For **local folder entries** (Path C — OCR + visual analysis), Step 2 runs inside the sub-agent, since it requires LLM vision capabilities that cannot be backgrounded.
 
 No network calls. No delays. Runs entirely on local files.
 
@@ -908,7 +1052,7 @@ Source: [subfolder path if from local folder, otherwise "carousel image 2"]
 
 ---
 
-## Step 3: Classify the content (Phase 2 — first step of analysis)
+## Step 3: Classify the content (Phase 2 — runs inside sub-agent)
 
 **Progress indicator**: `⏳ Step 3/7: Classifying content type...`
 
@@ -929,7 +1073,7 @@ If genuinely ambiguous, classify as **General science** and note the ambiguity.
 
 ---
 
-## Step 4a: Medical content — EBM SORT Analysis (Phase 2 — local)
+## Step 4a: Medical content — EBM SORT Analysis (Phase 2 — runs inside sub-agent)
 
 **Progress indicator**: `⏳ Step 4/7: Performing EBM SORT analysis...`
 
@@ -965,7 +1109,7 @@ Format each citation as: `Author(s), Title, Journal, Year — [link]`
 
 ---
 
-## Step 4b: General science — Claim validation (Phase 2 — local)
+## Step 4b: General science — Claim validation (Phase 2 — runs inside sub-agent)
 
 **Progress indicator**: `⏳ Step 4/7: Validating science claims...`
 
@@ -986,7 +1130,7 @@ Format each citation as: `Author(s), Title, Journal, Year — [link]`
 
 ---
 
-## Step 4c: Channel / handle reputation (Phase 2 — runs for all URL content)
+## Step 4c: Channel / handle reputation (Phase 2 — runs inside sub-agent, for all URL content)
 
 **Progress indicator**: `⏳ Step 4c/7: Assessing channel / handle reputation...`
 
@@ -1017,15 +1161,15 @@ This paragraph feeds the `## Channel Reputation` section of the Step 5 template.
 
 ---
 
-## Step 5: Output format (Phase 2 — local)
+## Step 5: Output format (Phase 2 — runs inside sub-agent)
 
-### If `DISPLAY_ONLY=true` — display in conversation
+### If `DISPLAY_ONLY=true` — return analysis in sub-agent result
 
-**Progress indicator**: `⏳ Step 5/7: Displaying analysis...`
+**Progress indicator**: `⏳ Step 5/7: Preparing analysis for display...`
 
-Instead of saving to a file, output the full analysis markdown directly in the conversation as a message to the user. Use the same template below, but render it inline. Then skip the "Sync to AI-Lab-Bench repository" sub-step entirely.
+Instead of saving to a file, include the full analysis markdown in the `display_analysis` field of the sub-agent's `---RESULT---` block. Use the same template below to generate the content. Skip the "Sync to AI-Lab-Bench repository" sub-step entirely. The parent agent will display this text in the conversation after collecting all results.
 
-After displaying, report `✓ Step 5/7: Analysis displayed in conversation (display-only mode — no files written).` and proceed to Step 6.
+After preparing, report `✓ Step 5/7: Analysis prepared for display (display-only mode — no files written).` and proceed to Step 6.
 
 ### If `DISPLAY_ONLY=false` (default) — save to file
 
@@ -1093,7 +1237,7 @@ If the copy fails (e.g., repo directory missing), report a warning but do **not*
 
 ---
 
-## Step 6: Cleanup downloaded files (Phase 2 — local)
+## Step 6: Cleanup downloaded files (Phase 2 — runs inside sub-agent)
 
 **Progress indicator**: `⏳ Step 6/7: Cleaning up temporary files...`
 
@@ -1103,42 +1247,54 @@ The `extract_audio` command downloads video/audio files and creates working dire
 - The original URL (already in watch-urls.md)
 - The truth analysis markdown file in `~/Documents/truth-analyses/`
 
-**What to delete:**
+**What to delete** (only files belonging to this sub-agent's slug):
+- `/tmp/url-analyzer/<slug>.*` — all temp files for this URL (`.mp3`, `.mp4`, `.wav`, `.vtt`, `.srt`, `.jpg`, `.png`, `.txt`, `_transcription.txt`)
+- `/tmp/url-analyzer/<slug>-*.jpg` — carousel/folder images for this slug
+- `/tmp/url-analyzer/<slug>-paths.txt` — subfolder mapping file if present
 - Any folders created by `extract_audio` (typically long hash-named directories)
-- Any `.mp4`, `.mp3`, `.wav`, `.vtt`, `.srt`, `.jpg`, `.png`, or `_transcription.txt` files in `/tmp/url-analyzer/`
-- Any temporary files created during processing
 
 **Local folder entries**: Delete only copies in `/tmp/url-analyzer/` and intermediary files. **Never delete the original source folder or its contents.** The original folder path is user-managed data.
 
 **How to clean up:**
 ```bash
-# Find and delete folders created by extract_audio (they have long hash-like names)
-# Look in the current working directory for recently created folders
-rm -rf <hash-folder-name>
+rm -f /tmp/url-analyzer/<slug>.*
+rm -f /tmp/url-analyzer/<slug>-*.jpg
+rm -f /tmp/url-analyzer/<slug>-paths.txt
 ```
+
+Do **not** delete files belonging to other slugs — other sub-agents may still be using them.
 
 **After cleanup**: Report `✓ Step 6/7: Cleanup complete. Kept: analysis file. Removed: N MB of temporary files.`
 
 ---
 
-## Step 7: Update watch-urls.md
+## Step 7: Batch-update watch-urls.md (runs in parent, after all sub-agents complete)
 
-### If `DISPLAY_ONLY=true` — skip this step
+**Progress indicator**: `📋 Step 7: Batch-updating watch-urls.md with N results...`
 
-Do not update `watch-urls.md`. The URL was a one-off analysis displayed in the conversation. Report `✓ Step 7/7: Skipped watch-urls.md update (display-only mode).` and proceed to the next URL or post-processing.
+> **Why batch?** Sub-agents run concurrently. If each sub-agent updated `watch-urls.md` independently, concurrent file writes would cause race conditions and data loss. Instead, sub-agents skip Step 7 entirely. The parent collects all results and performs a single atomic update.
 
-### If `DISPLAY_ONLY=false` (default)
+### If ALL URLs had `DISPLAY_ONLY=true` — skip this step
 
-After processing each URL (including cleanup), remove it from `## Pending` and add it to the `## Processed` section with the analysis date.
+Do not update `watch-urls.md`. All URLs were one-off analyses displayed in the conversation. Report `✓ Step 7: Skipped watch-urls.md update (all URLs were display-only).` and proceed to post-processing.
+
+### Batch update procedure
+
+After collecting results from all sub-agents (plus duplicates and failures recorded by the parent):
+
+1. Read the current `watch-urls.md` file.
+2. Remove **all processed URLs** from `## Pending` in a single edit.
+3. Append **all new entries** to `## Processed` in a single edit, directly below the `## Processed` heading (before any existing processed entries).
 
 **Rules for updating the Processed section:**
-- If `## Processed` already exists in the file, append the new entry directly below the `## Processed` heading (before any existing processed entries), preserving everything else in the file unchanged.
+- If `## Processed` already exists in the file, append all new entries directly below the heading, preserving everything else unchanged.
 - If `## Processed` does not exist, create it as a new section at the end of the file.
 - Never create a duplicate `## Processed` heading.
+- Process entries in the same order they appeared in `## Pending` (preserves the user's original ordering).
 
-The entry format depends on the outcome:
+### Entry formats (same as before, now written in batch)
 
-**Normal entry** (full analysis was run):
+**Normal entry** (sub-agent returned `status: success`):
 ```
 - <URL> (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 ```
@@ -1150,18 +1306,18 @@ If a directive was used, append it in parentheses for traceability:
 - <URL> [transcript-only 00:05:00-00:15:00] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 ```
 
-**Local folder entry** (full analysis was run):
+**Local folder entry** (sub-agent returned `status: success`):
 ```
 - /path/to/folder (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 - /path/to/folder [title: My Title] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 ```
 
-**Duplicate entry** (content already analyzed under a different URL):
+**Duplicate entry** (detected by parent in Phase 0 or Step 0b):
 ```
 - <URL> (duplicate of <original-URL> → see truth-analyses/<existing-file>.md)
 ```
 
-**Failed entry** (download failed after all retries due to rate limiting or other error):
+**Failed entry** (download failed in parent, or sub-agent returned `status: failed`):
 ```
 - <URL> (failed YYYY-MM-DD — rate limited after 3 retries, retry manually)
 - <URL> (failed YYYY-MM-DD — all automated LinkedIn stages failed; replace with DASH manifest URL from Network tab)
@@ -1175,9 +1331,12 @@ If a directive was used, append it in parentheses for traceability:
 - /path/to/folder (failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)
 ```
 
+**Display-only entry** (sub-agent returned `status: success` with `DISPLAY_ONLY=true`):
+Do not add to `## Processed`. These are one-off analyses not tracked in `watch-urls.md`.
+
 Failed entries remain actionable: re-add the URL to `## Pending` on a future run to retry it, or for LinkedIn post URLs, replace the entry with the DASH manifest URL (from the Network tab) and re-run.
 
-**Final status**: Report `✅ Completed: <URL>`
+**After batch update**: Report `✅ Step 7: watch-urls.md updated — N entries moved from Pending to Processed.`
 
 ---
 
@@ -1185,7 +1344,7 @@ Failed entries remain actionable: re-add the URL to `## Pending` on a future run
 
 **Progress indicator**: `⏳ Post-processing: Syncing new analyses to GitHub...`
 
-This step runs **once** after ALL URLs have been processed (after the last Step 7 completes). It pushes any new analysis files to the AI-Lab-Bench repository.
+This step runs **once** after the batch Step 7 update completes. It pushes any new analysis files to the AI-Lab-Bench repository.
 
 **If ALL processed URLs had `DISPLAY_ONLY=true`**: Skip this entire section. Report `ℹ️  GitHub sync skipped — all URLs were display-only (no files written).` and end.
 
