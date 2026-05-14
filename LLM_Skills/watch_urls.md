@@ -6,18 +6,18 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 ---
 
 ## Pending
-https://www.instagram.com/p/Cgm8lUNlQzkxrGqMFM_Vngec0KjQenrT7rht880/
-https://www.instagram.com/p/Cbc-15olAWkM8dHfR3T5JFH8kbbotfr9v6hEvg0/
-https://www.instagram.com/p/CrZI3ZnvH7-nhyWB5xSxzeboGJksvwxzEa8_2I0/
-https://www.instagram.com/p/CqqxPYjPELRzjrJk81d20-7TQrFZrYlmfBhM_k0/
-https://www.instagram.com/p/Cp0p89cAwS7GJog37nUMoLykDUdtcXuIHP5WA00/
-https://www.instagram.com/p/CpswRLrNM-29FxS0uosbM-d83jVr5U30yJUrvg0/
-https://www.instagram.com/p/Co8Gqx9O-uy2U8BrMeCOSuF0sg6SpnMOGxs9Pc0/
-https://www.instagram.com/p/CoSgKcIM95KjDHsEXWAYWVrPDDT5Y-hNlSGfcQ0/
-https://www.instagram.com/p/CokkyDvPX0KYdf5aJc2jvBo5Nhl3IK2KZgPWWc0/
-https://www.instagram.com/p/Cn2zqGUA7nMj1hz10v2jjH0gue80FebF_XCLw80/
-https://www.instagram.com/p/CnDJADroambY1XE3tYOMm84k-Z6BYHee0NxF4c0/
-https://www.instagram.com/p/CmxHuYjomAxvhxuT5wbbLhhTLQLwkq1Q45Tv940/
+https://www.instagram.com/p/Cgm8lUNlQzk/ [browser-mode]
+https://www.instagram.com/p/Cbc-15olAWk/ [browser-mode]
+https://www.instagram.com/p/CrZI3ZnvH7-/ [browser-mode]
+https://www.instagram.com/p/CqqxPYjPELR/ [browser-mode]
+https://www.instagram.com/p/Cp0p89cAwS7/ [browser-mode]
+https://www.instagram.com/p/CpswRLrNM-2/ [browser-mode]
+https://www.instagram.com/p/Co8Gqx9O-uy/ [browser-mode]
+https://www.instagram.com/p/CoSgKcIM95K/ [browser-mode]
+https://www.instagram.com/p/CokkyDvPX0K/ [browser-mode]
+https://www.instagram.com/p/Cn2zqGUA7nM/ [browser-mode]
+https://www.instagram.com/p/CnDJADroamb/ [browser-mode]
+https://www.instagram.com/p/CmxHuYjomAx/ [browser-mode]
 
 ## Processed
 - https://youtu.be/4i9y0tRlkV0?si=NtBxrjgkjommnG3v (analyzed 2026-05-02 → truth-analyses/2026-05-02-farmer-exposes-putting-this-in-your-eggs.md)
