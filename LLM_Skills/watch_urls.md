@@ -6,20 +6,20 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 ---
 
 ## Pending
-https://www.instagram.com/p/Cgm8lUNlQzkxrGqMFM_Vngec0KjQenrT7rht880/
-https://www.instagram.com/p/Cbc-15olAWkM8dHfR3T5JFH8kbbotfr9v6hEvg0/
-https://www.instagram.com/p/CrZI3ZnvH7-nhyWB5xSxzeboGJksvwxzEa8_2I0/
-https://www.instagram.com/p/CqqxPYjPELRzjrJk81d20-7TQrFZrYlmfBhM_k0/
-https://www.instagram.com/p/Cp0p89cAwS7GJog37nUMoLykDUdtcXuIHP5WA00/
-https://www.instagram.com/p/CpswRLrNM-29FxS0uosbM-d83jVr5U30yJUrvg0/
-https://www.instagram.com/p/Co8Gqx9O-uy2U8BrMeCOSuF0sg6SpnMOGxs9Pc0/
-https://www.instagram.com/p/CoSgKcIM95KjDHsEXWAYWVrPDDT5Y-hNlSGfcQ0/
-https://www.instagram.com/p/CokkyDvPX0KYdf5aJc2jvBo5Nhl3IK2KZgPWWc0/
-https://www.instagram.com/p/Cn2zqGUA7nMj1hz10v2jjH0gue80FebF_XCLw80/
-https://www.instagram.com/p/CnDJADroambY1XE3tYOMm84k-Z6BYHee0NxF4c0/
-https://www.instagram.com/p/CmxHuYjomAxvhxuT5wbbLhhTLQLwkq1Q45Tv940/
 
 ## Processed
+- https://www.instagram.com/p/Cgm8lUNlQzkxrGqMFM_Vngec0KjQenrT7rht880/ [browser-mode] (analyzed 2026-05-13 → truth-analyses/2026-05-13-coleandmarmalade-cat-mom-day-carousel.md) [partial: scraper returned only sidebar thumbnails — file analyzes a sidebar image, NOT the actual target post; URL slug ~40 chars exceeds standard 11-char IG shortcode]
+- https://www.instagram.com/p/Cbc-15olAWkM8dHfR3T5JFH8kbbotfr9v6hEvg0/ [browser-mode] (analyzed 2026-05-13 → truth-analyses/2026-05-13-instagram-cbc15ol.md) [partial: 0 target-coherent slides; scraper returned only Explore/sidebar thumbnails — post likely deleted/private/expired]
+- https://www.instagram.com/p/CrZI3ZnvH7-nhyWB5xSxzeboGJksvwxzEa8_2I0/ [browser-mode] (analyzed 2026-05-13 → truth-analyses/2026-05-13-instagram-crzi3zn.md) [partial: 0 target-coherent slides; scraper returned only Explore/sidebar thumbnails — post likely deleted/private/expired]
+- https://www.instagram.com/p/CqqxPYjPELRzjrJk81d20-7TQrFZrYlmfBhM_k0/ [browser-mode] (analyzed 2026-05-13 → truth-analyses/2026-05-13-instagram-cqqxpyj.md) [partial: 0 target-coherent slides; scraper returned only Explore/sidebar thumbnails — post likely deleted/private/expired]
+- https://www.instagram.com/p/Cp0p89cAwS7GJog37nUMoLykDUdtcXuIHP5WA00/ [browser-mode] (analyzed 2026-05-13 → truth-analyses/2026-05-13-instagram-cp0p89c.md) [partial: 0 target-coherent slides; scraper returned only Explore/sidebar thumbnails — post likely deleted/private/expired]
+- https://www.instagram.com/p/CpswRLrNM-29FxS0uosbM-d83jVr5U30yJUrvg0/ [browser-mode] (failed 2026-05-13 — pipeline stopped after 4+ consecutive scraper-sidebar-only failures; URL slug ~40 chars exceeds standard 11-char IG shortcode, post likely malformed/deleted/private — not attempted)
+- https://www.instagram.com/p/Co8Gqx9O-uy2U8BrMeCOSuF0sg6SpnMOGxs9Pc0/ [browser-mode] (failed 2026-05-13 — pipeline stopped after 4+ consecutive scraper-sidebar-only failures; URL slug ~40 chars exceeds standard 11-char IG shortcode, post likely malformed/deleted/private — not attempted)
+- https://www.instagram.com/p/CoSgKcIM95KjDHsEXWAYWVrPDDT5Y-hNlSGfcQ0/ [browser-mode] (failed 2026-05-13 — pipeline stopped after 4+ consecutive scraper-sidebar-only failures; URL slug ~40 chars exceeds standard 11-char IG shortcode, post likely malformed/deleted/private — not attempted)
+- https://www.instagram.com/p/CokkyDvPX0KYdf5aJc2jvBo5Nhl3IK2KZgPWWc0/ [browser-mode] (failed 2026-05-13 — pipeline stopped after 4+ consecutive scraper-sidebar-only failures; URL slug ~40 chars exceeds standard 11-char IG shortcode, post likely malformed/deleted/private — not attempted)
+- https://www.instagram.com/p/Cn2zqGUA7nMj1hz10v2jjH0gue80FebF_XCLw80/ [browser-mode] (failed 2026-05-13 — pipeline stopped after 4+ consecutive scraper-sidebar-only failures; URL slug ~40 chars exceeds standard 11-char IG shortcode, post likely malformed/deleted/private — not attempted)
+- https://www.instagram.com/p/CnDJADroambY1XE3tYOMm84k-Z6BYHee0NxF4c0/ [browser-mode] (failed 2026-05-13 — pipeline stopped after 4+ consecutive scraper-sidebar-only failures; URL slug ~40 chars exceeds standard 11-char IG shortcode, post likely malformed/deleted/private — not attempted)
+- https://www.instagram.com/p/CmxHuYjomAxvhxuT5wbbLhhTLQLwkq1Q45Tv940/ [browser-mode] (failed 2026-05-13 — pipeline stopped after 4+ consecutive scraper-sidebar-only failures; URL slug ~40 chars exceeds standard 11-char IG shortcode, post likely malformed/deleted/private — not attempted)
 - https://youtu.be/4i9y0tRlkV0?si=NtBxrjgkjommnG3v (analyzed 2026-05-02 → truth-analyses/2026-05-02-farmer-exposes-putting-this-in-your-eggs.md)
 - https://youtu.be/dRKYfF77fFk?si=0rbwryahO1nR3-hu (duplicate of https://youtu.be/dRKYfF77fFk?si=Ao4TrhfCKJnpDmEP → see truth-analyses/2026-05-02-eat-10-breakfast-foods-get-rid-belly-fat.md)
 - https://youtu.be/In3-8QgLOeI?si=aGlI9L-3AEK6V4Us (analyzed 2026-05-02 → truth-analyses/2026-05-02-9-organic-bread-brands-to-avoid.md)
