@@ -40,3 +40,25 @@ Done. Global settings updated: /Users/yourname/.claude/settings.json
 
 - `jq` — install via `brew install jq`
 - `zsh`
+
+## CLAUDE.md
+
+A reference `CLAUDE.md` for `~/.claude/CLAUDE.md` that configures Claude Code's thinking style, coding standards, and — most notably — **output formatting with visual anchors** for long-running tasks.
+
+The output formatting section structures Claude's responses with scannable `━━━` dividers so you can:
+
+- **Track progress in real-time** — a `[→]` marker shows which step is active
+- **Resume reading easily** — timestamped headers let you find where you left off
+- **Scan quickly** — each section header describes what happened, no need to re-read content between them
+
+Includes workflow-specific templates for feature work, debugging, and multi-file refactoring.
+
+### Setup
+
+Copy to your home directory:
+
+```zsh
+cp CLAUDE.md ~/.claude/CLAUDE.md
+```
+
+Or merge the sections you want into your existing `~/.claude/CLAUDE.md`.
