@@ -1,6 +1,6 @@
 ---
 name: url-truth-analyzer
-description: Analyzes video/audio/image content from URLs and performs truth-claim validation. Supports YouTube, Facebook/Instagram (reels and image posts), Twitter/X, and LinkedIn videos. For video/audio: transcribes with Whisper or captions. For images: downloads and extracts text via OCR, analyzes visual content. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting content. Supports transcript-only mode (YouTube captions) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, analyzing social media images, or asks to process the watch-urls.md file.
+description: Analyzes video/audio/image/article/plain-text content from URLs or local files and performs truth-claim validation. Supports YouTube, Facebook/Instagram (reels and image posts), Twitter/X, LinkedIn videos, news/blog articles (via `[article]` directive), and local plain-text files (via `[plain-text]` directive). For video/audio: transcribes with Whisper or captions. For images: downloads and extracts text via OCR, analyzes visual content. For articles: fetches and extracts the readable body. For plain text: reads the file directly. For medical content, applies EBM SORT analysis with peer-reviewed citations. For general science, validates claims and finds credible supporting or refuting content. Supports transcript-only mode (YouTube captions) and timestamp-range extraction. Use when the user mentions analyzing URLs, truth claims, transcribing videos, checking medical claims, analyzing social media images, analyzing articles, fact-checking a plain-text paragraph, or asks to process the watch-urls.md file.
 ---
 
 # URL Truth Analyzer
@@ -33,14 +33,23 @@ https://youtu.be/VIDEO_ID [transcript-only 00:05:00-00:15:00]
 # Local folder with optional title (used for slug and analysis heading)
 /Users/pratik.joshi/Downloads/my-carousel-screenshots [title: Sugar Myths Carousel]
 
-# Browser automation mode for Instagram (when yt-dlp fails)
-https://www.instagram.com/p/DWKE4kJDbfz/ [browser-mode]
-
 # Display-only — output analysis in the conversation, skip all file saves and GitHub sync
 https://youtu.be/VIDEO_ID [display-only]
 
 # Display-only can combine with other directives
 https://youtu.be/VIDEO_ID [display-only transcript-only]
+
+# Article URL — fetch HTML, extract the readable body, skip yt-dlp entirely
+https://www.nytimes.com/2026/05/01/health/some-article.html [article]
+
+# Article URL with optional title override (used for slug and analysis heading)
+https://example.com/post [article title: My Article Title]
+
+# Plain-text file — read a local .txt file directly, no fetch, no transcription
+/Users/pratik.joshi/Downloads/claims-paragraph.txt [plain-text]
+
+# Plain-text file with optional title
+/Users/pratik.joshi/Downloads/claims.txt [plain-text title: Sugar Claims Snippet]
 ```
 
 **Directive rules:**
@@ -51,14 +60,19 @@ https://youtu.be/VIDEO_ID [display-only transcript-only]
 - If no directive is present, YouTube URLs default to **captions-first**: attempt to fetch captions, then fall back to audio download + Whisper if no captions are available. Non-YouTube platforms always use audio download (no captions available).
 - **`[audio-only]`**: Forces audio download + Whisper transcription, skipping the caption attempt entirely. Use when auto-generated captions are known to be poor quality or in the wrong language.
 - **Local folder paths**: If the entry starts with `/` (absolute path) instead of `http`, it is treated as a local folder containing images. All supported image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`) are treated as a single post. The `[transcript-only]` and timestamp directives are ignored for folder entries. Only flat directory scanning (no recursion into subdirectories).
-- **Browser automation**: The `[browser-mode]` directive forces the use of Playwright browser automation instead of `yt-dlp`. Use this for Instagram URLs that fail with the standard download methods. Requires playwright Python package and chromium browser installed.
 - **`[display-only]`**: The sub-agent returns the analysis text instead of saving to a file; the parent displays it in the conversation. Skips Step 5 file save (analysis is returned in the sub-agent result instead), Step 6 cleanup still runs, Step 7 `watch-urls.md` update is skipped for this URL, and GitHub sync skips this URL. Useful for quick one-off checks or when the user provides a URL inline rather than via `watch-urls.md`. Can combine with other directives (e.g. `[display-only transcript-only]`). When a URL is provided directly in the user's message (not from `watch-urls.md`), `display-only` is implied automatically.
+- **`[article]`**: Treats the URL as an HTML article/blog/news page rather than a video. The skill fetches the page with `curl` (or `WebFetch`) and extracts the readable body using `trafilatura` (preferred) or `pandoc -f html -t plain` (fallback). Skips yt-dlp, captions, audio download, and Whisper entirely. The extracted text becomes the transcript at `/tmp/url-analyzer/<slug>.txt`. The slug is derived from the article's `<title>` tag (or `[article title: ...]` if provided). Dedup uses Check B (slug match) only — Check A is skipped for article URLs. Inter-request delay still applies (the fetch is a server call). `[transcript-only]`, `[audio-only]`, and `[timestamp-range]` are silently ignored for articles.
+- **`[plain-text]`**: Treats the entry as a path to a local `.txt` file containing the content to analyze. No network call. The file's contents are copied into `/tmp/url-analyzer/<slug>.txt` and the sub-agent runs Steps 3–6 directly. The slug is derived from the filename basename (without extension) or `[plain-text title: ...]` if provided. Both Check A and the `yt-dlp` part of Check B are skipped — dedup uses local slug match against `~/Documents/truth-analyses/` only. No inter-request delay, no batch cooldown, no retry logic (no server contacted). The path must end in `.txt` and the file must exist; otherwise the entry is marked failed. Other directives are ignored.
 
 ---
 
 ## Workflow overview
 
 **Inline URL auto-detection**: When the user provides a URL directly in their message (not from `watch-urls.md`), treat it as `DISPLAY_ONLY=true` automatically. Skip Phase 0 dedup checks (no `watch-urls.md` to read), run Phase 1 + Phase 2 normally, display the analysis in the conversation, clean up temp files, and stop. No files are written, no `watch-urls.md` is updated, no GitHub sync runs.
+
+**Inline plain-text auto-detection**: When the user pastes a block of plain text in their message (not a URL, not a path) and asks for truth analysis, treat it as `CONTENT_TYPE=plain-text` with `DISPLAY_ONLY=true` automatically. Write the pasted text to `/tmp/url-analyzer/inline-<timestamp>.txt`, dispatch a single sub-agent for Steps 3–6, display the analysis in the conversation, then clean up. No `watch-urls.md` entry is created. The slug for the temp file is `inline-<YYYYMMDD-HHMMSS>`. If the user provides an explicit title in their message, use that for the slug instead.
+
+**Inline article URL auto-detection**: When an inline URL is clearly an article (e.g. domains like nytimes.com, medium.com, substack.com, wordpress.com, blog hosts) and not a known video/social platform, treat it as if `[article]` were specified. If ambiguous, ask the user once whether to treat it as an article or attempt video extraction.
 
 Processing happens in **four phases** plus post-processing. Phase -1 (housekeeping) archives old data. Phase 0 is instant and local. Phase 1 pipelines server calls with local transcription **and dispatches sub-agents for analysis as each transcript becomes ready**. Phase 2 runs in parallel across sub-agents.
 
@@ -71,11 +85,13 @@ Runs at the start of every `process watch-urls.md` invocation. Archives processe
 Before any server calls, run a single pass over ALL pending URLs:
 
 1. Parse directives for every entry
-2. Run Check A (video ID match) for every entry against the `## Processed` list
-3. Partition into three lists:
+2. Run Check A (video ID match) for every URL entry that doesn't have the `[article]` or `[plain-text]` directive, against the `## Processed` list. For `[article]` entries, Check A is an exact URL string match against processed URLs. For `[plain-text]` entries, Check A is skipped entirely.
+3. Partition into five lists:
    - `DUPLICATES[]` — Check A matched; record for batch `watch-urls.md` update, no further processing
-   - `NEEDS_PROCESSING[]` — URL entries requiring download + analysis
+   - `NEEDS_PROCESSING[]` — video/audio/image URL entries requiring download + analysis
    - `LOCAL_FOLDERS[]` — local folder entries (skip Phase 1 downloads, dispatch sub-agents directly)
+   - `ARTICLES[]` — entries with `[article]` directive (fetch HTML in Phase 1, then dispatch sub-agent)
+   - `PLAIN_TEXT[]` — entries with `[plain-text]` directive (no fetch, dispatch sub-agent directly)
 
 Phase 0 makes zero server calls. Duplicates are resolved instantly.
 
@@ -94,6 +110,10 @@ For each URL in `NEEDS_PROCESSING`, **one at a time, in order**:
 Phase 1 produces a transcript `.txt` file per URL and dispatches an analysis sub-agent per URL. No concurrency cap on sub-agents — all are spawned immediately.
 
 **Local folder entries** skip Phase 1 downloads (no server calls). Their images are staged into `/tmp/url-analyzer/` and a sub-agent is dispatched immediately for OCR + analysis (Steps 2C, 3–6). Step 0b runs a local-only dedup variant (slug match against `~/Documents/truth-analyses/` filenames).
+
+**Article entries** run Step 0b normally (slug from `<title>` tag), then Mode H in Phase 1 (HTML fetch + readable-body extraction → `/tmp/url-analyzer/<slug>.txt`). Inter-request delay applies. Sub-agent dispatched after extraction.
+
+**Plain-text entries** skip Phase 1 entirely (no fetch). The file is copied to `/tmp/url-analyzer/<slug>.txt` via Mode K, and a sub-agent is dispatched immediately for Steps 3–6. Step 0b runs a local-only dedup variant (slug match against `~/Documents/truth-analyses/` filenames). No rate-limit counters consumed.
 
 ### Phase 2 — Analyze + save (parallel via sub-agents)
 
@@ -226,11 +246,15 @@ For each pending URL whose video ID matches any processed URL's video ID (from e
 
 ### Step 3: Partition entries
 
-Classify each pending entry into one of three lists:
+Classify each pending entry into one of five lists:
 
 - **`DUPLICATES[]`** — Check A matched a processed entry. These are done — write their Step 7 entries immediately (duplicate format).
-- **`LOCAL_FOLDERS[]`** — Entry starts with `/` and is not an `http` URL. These skip Phase 1 entirely.
-- **`NEEDS_PROCESSING[]`** — Everything else. These enter Phase 1 for Check B + download + transcription.
+- **`PLAIN_TEXT[]`** — Entry has `[plain-text]` directive. Skips Phase 1 fetching entirely; sub-agent dispatched after Mode K copy.
+- **`ARTICLES[]`** — Entry has `[article]` directive. Skips yt-dlp; Phase 1 runs Mode H (HTML fetch + body extraction), then sub-agent.
+- **`LOCAL_FOLDERS[]`** — Entry starts with `/` and is not an `http` URL (and has no `[plain-text]` directive). These skip Phase 1 entirely.
+- **`NEEDS_PROCESSING[]`** — Everything else (video/audio/image URLs). These enter Phase 1 for Check B + download + transcription.
+
+**Routing priority** when multiple conditions could match: `[plain-text]` > `[article]` > absolute-path local folder > URL processing. A `.txt` file path without `[plain-text]` is treated as a (likely empty) folder and will fail validation — this is intentional, since the user opted not to auto-route.
 
 ### Step 4: Record duplicates for batch update
 
@@ -238,10 +262,12 @@ For each entry in `DUPLICATES[]`, add to the `RESULTS[]` collection with status 
 
 Report:
 ```
-📋 Phase 0 complete: N total URLs triaged
+📋 Phase 0 complete: N total entries triaged
    ⚠️  X duplicate(s) resolved instantly (Check A video ID match)
    📥 Y URL(s) queued for Phase 1 (download + transcribe + dispatch)
    📁 Z local folder(s) queued for sub-agent dispatch (OCR + analysis)
+   📰 A article(s) queued for Phase 1 (HTML fetch + body extraction)
+   📝 B plain-text file(s) queued for sub-agent dispatch (no fetch)
 ```
 
 ---
@@ -258,7 +284,6 @@ Before anything else, check whether the pending line contains a `[...]` directiv
 2. Parse the directive string (case-insensitive):
    - If it contains `transcript-only` → set mode flag `TRANSCRIPT_ONLY=true`
    - If it matches a timestamp pattern like `00:05:00-00:15:00` or `5:00-15:00` → extract `START` and `END` values and set `TIMESTAMP_RANGE=true`
-   - If it contains `browser-mode` → set mode flag `BROWSER_MODE=true`
    - If it contains `audio-only` → set mode flag `AUDIO_ONLY=true`
    - If it contains `display-only` → set mode flag `DISPLAY_ONLY=true`
    - Multiple directives can be present in the same block, e.g. `[transcript-only 00:05:00-00:15:00]`
@@ -269,6 +294,36 @@ Report the parsed mode at the start of the URL:
 🔄 Processing URL N of N: <clean URL>
    Mode: [transcript-only] [00:05:00–00:15:00]   ← only shown when directives are present
 ```
+
+### Sub-step 0a-article: Detect article entry
+
+After parsing directives, if the entry has the `[article]` directive:
+
+1. Set `CONTENT_TYPE=article` and `TRANSCRIPT_SOURCE=html`.
+2. Skip Check A (no video ID).
+3. Slug source: if `[article title: ...]` is in the directive block, slugify that. Otherwise, defer slug derivation to Phase 1 Mode H (which fetches the `<title>` tag from the HTML).
+4. Run Check B (local slug match against `~/Documents/truth-analyses/`) only after the slug is known (in Phase 1, just before fetching the body).
+5. Continue to Phase 1 Mode H — do NOT fall through to the local-folder check below.
+
+Progress indicator: `⏳ Step 0b: Article URL detected, will fetch + extract body in Phase 1...`
+
+### Sub-step 0a-plaintext: Detect plain-text file entry
+
+After parsing directives, if the entry has the `[plain-text]` directive:
+
+1. Set `CONTENT_TYPE=plain-text` and `TRANSCRIPT_SOURCE=plain-text`.
+2. Validate the path:
+   - If it does not start with `/` → mark as failed: `(failed YYYY-MM-DD — plain-text entry must be an absolute path)`.
+   - If the path does not exist OR is not a regular file → mark as failed: `(failed YYYY-MM-DD — file does not exist or is not a regular file)`.
+   - If the path does not end in `.txt` (case-insensitive) → mark as failed: `(failed YYYY-MM-DD — plain-text entry must be a .txt file)`.
+   - If the file is empty (zero bytes) → mark as failed: `(failed YYYY-MM-DD — plain-text file is empty)`.
+3. Extract slug:
+   - If `[plain-text title: ...]` is present, slugify the title.
+   - Otherwise, slugify the filename basename without extension (e.g., `/path/claims-paragraph.txt` → `claims-paragraph`).
+4. Skip Check A entirely. Run Check B (local slug match against `~/Documents/truth-analyses/`).
+5. Continue to Phase 1 Mode K — do NOT fall through to the local-folder check below.
+
+Progress indicator: `⏳ Step 0b: Plain-text file detected, checking for duplicates...`
 
 ### Sub-step 0a-local: Detect local folder entry
 
@@ -349,12 +404,13 @@ All server calls in this step are subject to the inter-request delay and exponen
 
 **Content type detection and download strategy**:
 
-1. **If `BROWSER_MODE=true`**: Skip yt-dlp entirely → Mode G (browser automation)
-2. **If YouTube URL and NOT `AUDIO_ONLY=true`**: Try captions first (Mode A). If captions found → set `TRANSCRIPT_SOURCE=captions`, done. If no captions → fall back to Mode B (audio download + Whisper).
-3. **If `AUDIO_ONLY=true`**: Skip caption attempt → Mode B (audio download + Whisper) directly.
-4. **If LinkedIn URL**: Mode D (three-stage pipeline)
-5. **If Facebook/Instagram URL**: Try Mode E (standard yt-dlp audio download). If yt-dlp reports "No video formats found" but extracts metadata → Mode F (image/carousel).
-6. **If yt-dlp fails with other errors**: Apply retry logic.
+1. **If `CONTENT_TYPE=plain-text`**: Skip Phase 1 fetching → Mode K (copy local `.txt` into `/tmp/url-analyzer/`). No server call.
+2. **If `CONTENT_TYPE=article`** (`[article]` directive): Skip yt-dlp entirely → Mode H (HTML fetch + readable-body extraction).
+3. **If YouTube URL and NOT `AUDIO_ONLY=true`**: Try captions first (Mode A). If captions found → set `TRANSCRIPT_SOURCE=captions`, done. If no captions → fall back to Mode B (audio download + Whisper).
+4. **If `AUDIO_ONLY=true`**: Skip caption attempt → Mode B (audio download + Whisper) directly.
+5. **If LinkedIn URL**: Mode D (three-stage pipeline)
+6. **If Facebook/Instagram URL**: Mode E (yt-dlp audio + thumbnail; both saved). If yt-dlp reports "No video formats found" but extracts metadata → Mode F (image/carousel).
+7. **If yt-dlp fails with other errors**: Apply retry logic.
 
 > **Captions-first rationale**: Caption fetches transfer ~10KB of metadata vs ~15MB for audio. When captions exist, this eliminates both the large download AND the 3–5 minute Whisper transcription, reducing per-URL processing from minutes to seconds.
 
@@ -529,17 +585,53 @@ Then add a `failed` entry to `RESULTS[]`: `(failed YYYY-MM-DD — all automated 
 
 ---
 
-### Mode E — Facebook/Instagram URLs (standard yt-dlp download)
+### Mode E — Facebook/Instagram URLs (yt-dlp audio + thumbnail)
 
-**Progress indicator**: `⏳ Step 1/7: Downloading audio from Facebook...`
+**Progress indicator**: `⏳ Step 1/7: Downloading audio + thumbnail from Facebook/Instagram...`
 
-Facebook reels, videos, and Instagram content are supported via yt-dlp's built-in extractors. Use the standard Mode B audio download command with cookies for authentication:
+Facebook reels, videos, and Instagram content are supported via yt-dlp's built-in extractors. Use authenticated Firefox cookies. **Always grab the thumbnail in addition to the audio** — Instagram reels routinely have music-only audio or background-noise audio where Whisper produces hallucinated song lyrics or single words ("You", "Hehehee", "ДИНАМИЧНАЯ МУЗЫКА"). The actual claims are in the on-screen text overlay, which the thumbnail captures.
+
+#### Step E-1: Probe metadata first (decide audio vs silent-video)
 
 ```bash
-yt-dlp --cookies-from-browser firefox \
+yt-dlp --cookies-from-browser firefox --no-warnings \
+  --print "%(uploader_id)s|%(uploader)s|%(title)s|%(duration)s|%(acodec)s|%(_type)s" \
+  '<URL>'
+```
+
+Capture: `HANDLE`, `UPLOADER`, `TITLE`, `DURATION`, `ACODEC`, `TYPE`.
+
+**Routing decision:**
+- If `DURATION` is non-empty AND `ACODEC` is `none`/`NA`/`null` → **silent-video** path (skip audio download, fetch thumbnail only).
+- If `DURATION` is non-empty AND `ACODEC` is a real codec (e.g. `mp4a.40.5`) → **video-audio** path (audio + thumbnail).
+- If `DURATION` is empty AND `TYPE` is `playlist` → fall through to Mode F (image carousel).
+- If `DURATION` is empty AND `TYPE` is not playlist → single-image post; fall through to Mode F.
+
+#### Step E-2a: video-audio path
+
+```bash
+# Audio
+yt-dlp --cookies-from-browser firefox --no-warnings \
   -x --audio-format mp3 \
   -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
+
+# Thumbnail (separate call; some yt-dlp versions don't write both in one shot when -x is set)
+yt-dlp --cookies-from-browser firefox --no-warnings \
+  --skip-download --write-thumbnail --convert-thumbnails jpg \
+  -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
 ```
+
+Set `TRANSCRIPT_SOURCE=whisper`, `THUMBNAIL_AVAILABLE=true`. Whisper transcribes `<slug>.mp3` in the background (see Step 2 Path B). Sub-agent will inspect BOTH the transcript AND the thumbnail.
+
+#### Step E-2b: silent-video path
+
+```bash
+yt-dlp --cookies-from-browser firefox --no-warnings \
+  --skip-download --write-thumbnail --convert-thumbnails jpg \
+  -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
+```
+
+Set `TRANSCRIPT_SOURCE=ocr`, `CONTENT_TYPE=silent-video`. No Whisper. Sub-agent works from thumbnail only.
 
 **Supported URL patterns:**
 - `facebook.com/reel/ID` (Facebook Reels)
@@ -547,12 +639,13 @@ yt-dlp --cookies-from-browser firefox \
 - `facebook.com/<username>/videos/ID` (Profile videos)
 - `fb.watch/ID` (Facebook short links)
 - `instagram.com/reel/ID` (Instagram Reels)
+- `instagram.com/p/ID` (Instagram posts that are reels-as-posts)
 
-**If it succeeds**: set `TRANSCRIPT_SOURCE=whisper`, proceed to transcription + sub-agent dispatch.
+**If audio or thumbnail fetch succeeds**: proceed to Step 2 + sub-agent dispatch.
 
-**If it fails**: Apply the retry logic from the next section. Facebook videos may require being logged into Firefox for private or region-restricted content.
+**If both fail**: Apply the retry logic from the next section. Facebook videos may require being logged into Firefox for private or region-restricted content.
 
-**Note**: `[transcript-only]` is not supported for Facebook/Instagram — there are no caption tracks available. The directive is silently ignored; audio + Whisper is always used.
+**Note**: `[transcript-only]` is not supported for Facebook/Instagram — there are no caption tracks available. The directive is silently ignored; audio + Whisper is always used (with thumbnail as fallback).
 
 ---
 
@@ -614,45 +707,6 @@ curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-<N>.jpg" "<IMA
 
 ---
 
-### Mode G — Browser automation for Instagram (when [browser-mode] directive is used)
-
-**Progress indicator**: `⏳ Step 1/7: Downloading images via browser automation...`
-
-When the `[browser-mode]` directive is specified for an Instagram URL, use Playwright browser automation to extract image URLs. This bypasses Instagram's anti-scraping measures that block `yt-dlp`.
-
-**When to use**: Instagram URLs that fail with Mode F due to platform blocks. Add `[browser-mode]` directive to the URL in `watch-urls.md`.
-
-**Requirements**:
-- Python3 with playwright package installed (`pip3 install --user --break-system-packages playwright`)
-- Chromium browser installed (`playwright install chromium`)
-
-**Process**:
-1. Run the Instagram scraper script:
-
-```bash
-python3 ~/.cursor/skills/url-truth-analyzer/instagram_scraper.py '<URL>' 2>/dev/null
-```
-
-2. Parse the JSON output to extract image URLs
-3. Download each image using curl:
-
-```bash
-# For each image URL from the scraper output
-N=1
-for img_url in "${IMAGE_URLS[@]}"; do
-  curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-${N}.jpg" "$img_url"
-  N=$((N + 1))
-done
-```
-
-**If browser mode succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, dispatch a sub-agent for OCR + analysis.
-
-**If it fails**: Report error and add a `failed` entry to `RESULTS[]` with the scraper's error message. Do not dispatch a sub-agent.
-
-**Note**: Browser automation is slower (10-15 seconds vs 2-5 seconds) but more reliable for Instagram. The scraper extracts the top 10 largest images from the page, filtering out profile pics and thumbnails.
-
----
-
 ### Mode I — Local Folder of Images (no download needed)
 
 **Progress indicator**: `⏳ Step 1/7: Copying local images to working directory...`
@@ -701,6 +755,118 @@ This copy step ensures:
 Set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, dispatch a sub-agent for OCR + analysis.
 
 Report: `✓ Step 1/7: N local images staged for analysis (from M subfolders, no download needed).`
+
+---
+
+### Mode H — Article URL (HTML fetch + readable-body extraction)
+
+**Progress indicator**: `⏳ Step 1/7: Fetching article HTML and extracting readable body...`
+
+When `CONTENT_TYPE=article` (set by `[article]` directive), skip yt-dlp entirely. Fetch the page and extract just the readable article body — strip nav, ads, footers, comments, related-content widgets.
+
+#### Step H-1: Fetch and extract with trafilatura (preferred)
+
+```bash
+mkdir -p /tmp/url-analyzer
+
+python3 - <<'EOF' > /tmp/url-analyzer/<slug>.txt
+import sys
+try:
+    import trafilatura
+except ImportError:
+    sys.stderr.write("MISSING_TRAFILATURA\n")
+    sys.exit(2)
+
+url = '<URL>'
+downloaded = trafilatura.fetch_url(url)
+if not downloaded:
+    sys.stderr.write("FETCH_FAILED\n")
+    sys.exit(3)
+
+# Extract title separately for slug derivation
+metadata = trafilatura.extract_metadata(downloaded)
+title = (metadata.title if metadata and metadata.title else '').strip()
+sys.stderr.write(f"TITLE::{title}\n")
+
+text = trafilatura.extract(
+    downloaded,
+    include_comments=False,
+    include_tables=False,
+    favor_recall=True,
+)
+if not text:
+    sys.stderr.write("EXTRACT_FAILED\n")
+    sys.exit(4)
+
+print(text)
+EOF
+```
+
+The script prints the article body to stdout (redirected to `<slug>.txt`) and emits `TITLE::<title>` on stderr so the parent can read the page's `<title>` to derive the slug if `[article title: ...]` was not supplied.
+
+If `trafilatura` is not installed, install it once:
+
+```bash
+pip3 install --user --break-system-packages trafilatura
+```
+
+#### Step H-2: Fallback — curl + pandoc
+
+If `trafilatura` cannot be installed (sandboxed environment) or the extraction fails, fall back to:
+
+```bash
+curl -sL -A "Mozilla/5.0" '<URL>' \
+  | pandoc -f html -t plain --wrap=none \
+  > /tmp/url-analyzer/<slug>.txt
+
+# Derive title from <title> tag
+TITLE=$(curl -sL -A "Mozilla/5.0" '<URL>' \
+  | python3 -c "import sys,re; m=re.search(r'<title[^>]*>(.*?)</title>', sys.stdin.read(), re.I|re.S); print((m.group(1) if m else '').strip())")
+```
+
+The pandoc fallback is noisier (may include nav/footer text) but always works if pandoc and curl are present.
+
+#### Step H-3: Slug + dedup
+
+1. If `[article title: ...]` was supplied in the directive block, use that title (already slugified in Step 0a-article).
+2. Otherwise, slugify the title captured from Step H-1 or H-2.
+3. Now run Check B (local slug match against `~/Documents/truth-analyses/` filenames). If a match is found, mark this entry as a duplicate, delete the temp `<slug>.txt`, and skip sub-agent dispatch.
+4. If no duplicate, validate the extracted text:
+   - If the file is empty or under 200 characters → mark as failed: `(failed YYYY-MM-DD — article body extraction produced too little text; site may be paywalled or JS-rendered)`. Skip sub-agent dispatch.
+5. Otherwise: set `TRANSCRIPT_SOURCE=html`, dispatch a sub-agent for Steps 3–6. Apply the standard inter-request delay (this was a server call).
+
+**Notes**:
+- `[transcript-only]`, `[audio-only]`, and `[timestamp-range]` are silently ignored for `[article]` entries.
+- Paywalled articles often produce empty or stub extractions. The 200-character minimum catches these — user can manually paste the article text into a `.txt` file and re-add with `[plain-text]` if needed.
+- Channel reputation (Step 4c) uses the URL's hostname/publication as the "source channel".
+
+**After Mode H success**: Report `✓ Step 1/7: Article body extracted (N words) — sub-agent dispatched.`
+
+---
+
+### Mode K — Plain-text file (no fetch, local read)
+
+**Progress indicator**: `⏳ Step 1/7: Copying plain-text file to working directory...`
+
+When `CONTENT_TYPE=plain-text` (set by `[plain-text]` directive in Step 0a-plaintext), no fetch is required. Copy the file's contents into `/tmp/url-analyzer/<slug>.txt`:
+
+```bash
+mkdir -p /tmp/url-analyzer
+cp '<absolute-path-to-.txt>' '/tmp/url-analyzer/<slug>.txt'
+```
+
+Validate:
+- If the copy fails for any reason → mark as failed: `(failed YYYY-MM-DD — could not read plain-text file: <error>)`.
+
+This step makes **no server calls**. No inter-request delay. No retry logic. Does not count toward batch cooldown.
+
+Set `CONTENT_TYPE=plain-text` and `TRANSCRIPT_SOURCE=plain-text`. Dispatch a sub-agent for Steps 3–6 immediately.
+
+For Step 4c (channel reputation), there is no channel — the sub-agent records `Source channel: N/A (plain-text file)` and skips the reputation paragraph.
+
+**Original file safety**: Never modify or delete the user's source `.txt` file. Step 6 cleanup deletes only the copy at `/tmp/url-analyzer/<slug>.txt`.
+
+**After Mode K**: Report `✓ Step 1/7: Plain-text file staged (N words, no download needed).`
 
 ---
 
@@ -762,7 +928,7 @@ If Whisper finishes before the delay ends, the sub-agent is dispatched immediate
 sleep $((15 + RANDOM % 16))   # randomized: 15–30 seconds for caption-only
 ```
 
-**Exception**: Local folder entries (Mode I) do not count toward the inter-request delay or batch cooldown counters, since no server calls are made. Browser automation mode (Mode G) does make network requests and should count toward rate limits.
+**Exception**: Local folder entries (Mode I) and plain-text file entries (Mode K) do not count toward the inter-request delay or batch cooldown counters, since no server calls are made. Article fetches (Mode H) DO make network requests and should count toward rate limits.
 
 ### Batch cooldown
 
@@ -816,19 +982,37 @@ Each sub-agent receives a self-contained prompt with everything it needs. The pa
 You are analyzing content for truth claims. Run Steps 2 (if needed), 3, 4, 5, and 6 from the analysis workflow below.
 
 ## Context
-- URL: <clean_url>
+- URL or path: <clean_url_or_path>
 - Slug: <slug>
-- Video/post title: <title>
-- Content type: <video|audio|image>
-- Transcript source: <captions|whisper|ocr>
+- Title: <title>
+- Handle / uploader: <uploader_id> / <uploader>
+- Content type: <video|audio|image|article|plain-text|silent-video>
+- Transcript source: <captions|whisper|ocr|html|plain-text>
 - Transcript file: /tmp/url-analyzer/<slug>.txt
+- Thumbnail file: /tmp/url-analyzer/<slug>.jpg  ← present for Instagram/Facebook reels (Mode E) and silent-video
+- Transcript degenerate: <true|false>  ← true when Whisper produced <30 words / music-only / hallucinated lyrics
 - Directives: <parsed directives or "none">
 - Display only: <true|false>
 - Date: <YYYY-MM-DD>
 
-## For image content (TRANSCRIPT_SOURCE=ocr)
+## For Instagram/Facebook reels (Mode E) — dual-input pattern
+EVERY Instagram/Facebook reel has BOTH a transcript and a thumbnail. You MUST inspect both:
+1. Read /tmp/url-analyzer/<slug>.txt.
+2. Run Tesseract on /tmp/url-analyzer/<slug>.jpg: `tesseract /tmp/url-analyzer/<slug>.jpg stdout --dpi 300`.
+3. Use the Read tool to view the thumbnail visually (text overlay, brand, charts, gestures).
+4. If `Transcript degenerate=true` (or transcript reads as song lyrics / music description / single word), treat the THUMBNAIL TEXT OVERLAY as authoritative for claim extraction. Reels lead with the hook on-screen.
+5. If both transcript and thumbnail are uninformative, return Grade C / "no claims extractable" rather than fabricating.
+
+## For silent-video content (TRANSCRIPT_SOURCE=ocr, no transcript file)
+There is only a thumbnail. Run Tesseract + Read tool on /tmp/url-analyzer/<slug>.jpg. Write combined OCR + visual analysis to /tmp/url-analyzer/<slug>.txt before proceeding to Step 3.
+
+## For image-carousel content (TRANSCRIPT_SOURCE=ocr, multiple .jpg files)
 Run Step 2 Path C first: use Tesseract OCR on images at /tmp/url-analyzer/<slug>*.jpg
 and Read tool for visual analysis, then save combined output to /tmp/url-analyzer/<slug>.txt.
+
+## For article content (TRANSCRIPT_SOURCE=html) or plain-text content (TRANSCRIPT_SOURCE=plain-text)
+Step 2 is a no-op — the transcript file at /tmp/url-analyzer/<slug>.txt was already produced
+by Mode H or Mode K in Phase 1. Read it directly and proceed to Step 3.
 
 ## Step 3: Classify content
 Read the transcript and classify as Medical or General Science.
@@ -932,6 +1116,8 @@ No network calls. No delays. Runs entirely on local files.
 The extraction method depends on the content type:
 - **Video/audio content** (`TRANSCRIPT_SOURCE=captions` or `whisper`) → Path A or B below (pipelined into Phase 1 delays)
 - **Image content** (`TRANSCRIPT_SOURCE=ocr`) → Path C below (runs in Phase 2)
+- **Article content** (`TRANSCRIPT_SOURCE=html`) → No-op. The transcript was already produced by Mode H in Phase 1.
+- **Plain-text content** (`TRANSCRIPT_SOURCE=plain-text`) → No-op. The transcript was already produced by Mode K in Phase 1.
 
 ---
 
@@ -1041,7 +1227,31 @@ Whisper already segments by timestamp internally; no post-processing is needed f
 
 Capture the output `.txt` file as the transcript.
 
-**After transcription completes**: Report `✓ Step 2/7: Transcription complete via Whisper (N words)`
+#### Music / hallucination detection (Instagram & Facebook only)
+
+Whisper on a music-only or near-silent Instagram reel routinely emits one of these patterns:
+- Empty file (0 bytes)
+- A single token: `You`, `Hehehee`, `Yeah`
+- Foreign-language music description: `ДИНАМИЧНАЯ МУЗЫКА`, `музыка`, `MUSIC`
+- A few song-lyric fragments unrelated to the post (e.g., `She hit the floor, low low low`)
+
+After Whisper finishes, run this check:
+
+```bash
+WORDS=$(wc -w < /tmp/url-analyzer/<slug>.txt)
+if [ "$WORDS" -lt 30 ]; then
+  TRANSCRIPT_QUALITY=low
+fi
+```
+
+When `TRANSCRIPT_QUALITY=low`, mark the URL with `TRANSCRIPT_DEGENERATE=true` so the sub-agent prompt explicitly tells the sub-agent:
+1. Treat the transcript as zero-information / noise.
+2. Extract claims primarily from the thumbnail's text overlay via OCR + visual analysis (the thumbnail was already downloaded in Mode E).
+3. If neither transcript nor thumbnail provides extractable content, return Grade C / "no claims extractable" rather than fabricating.
+
+**Do not gate on language**: Russian "ДИНАМИЧНАЯ МУЗЫКА" is a music description, not a Russian post. The word-count check catches this without requiring per-language logic.
+
+**After transcription completes**: Report `✓ Step 2/7: Transcription complete via Whisper (N words; degenerate=<true|false>)`
 
 ---
 
@@ -1196,8 +1406,10 @@ Format each citation as: `Author(s), Title, Journal, Year — [link]`
 Independent of the per-claim analysis in Step 4a/4b, briefly characterize the source channel, handle, or author that posted this content. This helps the reader weight the analysis against the creator's track record.
 
 1. Identify the source:
-   - For URL entries: extract the uploader/channel/handle from the platform. Use `yt-dlp --print "%(uploader)s|%(uploader_id)s|%(channel)s|%(channel_url)s" '<URL>'` or inspect the `uploader`, `uploader_id`, and `channel` fields in `yt-dlp -J '<URL>'`. For Instagram/Facebook reels, `uploader_id` gives the handle. For LinkedIn, use the author name from the post URL slug.
-   - For local folder entries: there is no channel. Record `Source channel: N/A (local folder)` and skip the reputation paragraph.
+   - For URL entries (video/audio/image): extract the uploader/channel/handle from the platform. Use `yt-dlp --print "%(uploader)s|%(uploader_id)s|%(channel)s|%(channel_url)s" '<URL>'` or inspect the `uploader`, `uploader_id`, and `channel` fields in `yt-dlp -J '<URL>'`. For Instagram/Facebook reels, `uploader_id` gives the handle. For LinkedIn, use the author name from the post URL slug.
+   - For **article entries** (`CONTENT_TYPE=article`): the "source channel" is the publication. Use the URL's registrable domain (e.g. `nytimes.com`, `substack.com/@author`) and, if available, the article byline parsed from the HTML metadata (`<meta name="author">` or trafilatura's `metadata.author`). Research the publication and the byline author separately if both are present.
+   - For **local folder entries**: there is no channel. Record `Source channel: N/A (local folder)` and skip the reputation paragraph.
+   - For **plain-text entries** (`CONTENT_TYPE=plain-text`): there is no channel. Record `Source channel: N/A (plain-text file)` and skip the reputation paragraph.
 
 2. Research the handle (1 web search, max 2 if the first is ambiguous):
    - Search for the handle/channel name plus terms like `fact check`, `controversy`, `misinformation`, `credentials`, `retraction`, `debunked`, or `reputation`.
@@ -1238,11 +1450,12 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 
 ```markdown
 # Truth Analysis: <Post Title or Video Title>
-**Source URL**: <URL>                          ← for URL entries
+**Source URL**: <URL>                                  ← for URL entries (video/audio/image/article)
 **Source**: Local folder: /path/to/folder (N images)   ← for local folder entries
+**Source**: Plain-text file: /path/to/file.txt         ← for plain-text entries
 **Analyzed**: YYYY-MM-DD
 **Content type**: Medical | General Science
-**Format**: Video | Audio | Image Post | Carousel (N images)
+**Format**: Video | Audio | Image Post | Carousel (N images) | Article | Plain Text
 
 **Share?**: <one sentence recommendation: Yes/No/With caveats — would you share this with a scientifically curious friend who knows nothing about the topic, if your goal is for them to come away with an accurate understanding?>
 
@@ -1314,6 +1527,10 @@ The `extract_audio` command downloads video/audio files and creates working dire
 
 **Local folder entries**: Delete only copies in `/tmp/url-analyzer/` and intermediary files. **Never delete the original source folder or its contents.** The original folder path is user-managed data.
 
+**Plain-text entries**: Delete only the copy at `/tmp/url-analyzer/<slug>.txt`. **Never delete the user's original `.txt` source file.**
+
+**Article entries**: Delete the extracted body at `/tmp/url-analyzer/<slug>.txt`. There is no other state to remove.
+
 **How to clean up:**
 ```bash
 rm -f /tmp/url-analyzer/<slug>.*
@@ -1371,6 +1588,18 @@ If a directive was used, append it in parentheses for traceability:
 - /path/to/folder [title: My Title] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 ```
 
+**Article entry** (sub-agent returned `status: success`):
+```
+- <URL> [article] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- <URL> [article title: My Title] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+```
+
+**Plain-text entry** (sub-agent returned `status: success`):
+```
+- /path/to/file.txt [plain-text] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- /path/to/file.txt [plain-text title: My Title] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+```
+
 **Duplicate entry** (detected by parent in Phase 0 or Step 0b):
 ```
 - <URL> (duplicate of <original-URL> → see truth-analyses/<existing-file>.md)
@@ -1388,6 +1617,19 @@ If a directive was used, append it in parentheses for traceability:
 - /path/to/folder (failed YYYY-MM-DD — path does not exist or is not a directory)
 - /path/to/folder (failed YYYY-MM-DD — no supported image files found in folder tree)
 - /path/to/folder (failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)
+```
+
+**Failed article entry**:
+```
+- <URL> [article] (failed YYYY-MM-DD — article body extraction produced too little text; site may be paywalled or JS-rendered)
+- <URL> [article] (failed YYYY-MM-DD — fetch failed: <HTTP status or curl error>)
+```
+
+**Failed plain-text entry**:
+```
+- /path/to/file.txt [plain-text] (failed YYYY-MM-DD — file does not exist or is not a regular file)
+- /path/to/file.txt [plain-text] (failed YYYY-MM-DD — plain-text entry must be a .txt file)
+- /path/to/file.txt [plain-text] (failed YYYY-MM-DD — plain-text file is empty)
 ```
 
 **Display-only entry** (sub-agent returned `status: success` with `DISPLAY_ONLY=true`):

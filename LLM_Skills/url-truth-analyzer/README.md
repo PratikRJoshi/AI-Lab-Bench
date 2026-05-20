@@ -30,10 +30,13 @@ Given a URL or a local folder of screenshots, the skill:
 
 | Mode | Trigger | What happens |
 |------|---------|--------------|
-| **Full audio** (default) | Any video URL | Downloads audio → Whisper transcription |
+| **Full audio** (default) | Any YouTube/LinkedIn URL | Downloads audio → Whisper transcription |
+| **Audio + thumbnail** (default, Instagram/Facebook reels) | Instagram or Facebook reel URL | Downloads both audio AND post thumbnail; Whisper transcribes audio while sub-agent OCRs thumbnail. Music-only / hallucinated transcripts auto-fallback to thumbnail text overlay. |
+| **Silent-video / thumbnail-only** | Instagram/Facebook reel with no audio codec | Downloads thumbnail only; sub-agent extracts claims via Tesseract OCR + vision |
 | **Transcript-only** | `[transcript-only]` directive | Fetches YouTube captions only (no audio download) |
 | **Timestamp range** | `[00:05:00-00:15:00]` directive | Downloads/transcribes only the specified segment |
-| **Browser automation** | `[browser-mode]` directive | Uses Playwright for Instagram posts that block yt-dlp |
+| **Article** | `[article]` directive | curl + trafilatura body extraction |
+| **Plain-text** | `[plain-text]` directive on a local .txt | Local read, no network |
 | **Image/OCR** | Image posts or local folders | OCR + Claude vision analysis |
 
 ## How to use
@@ -111,12 +114,12 @@ Each analysis follows a consistent structure:
 
 ## Dependencies
 
-- **yt-dlp** — media downloading from social platforms
+- **yt-dlp** — media downloading from social platforms (with `--cookies-from-browser firefox` for authenticated access)
 - **ffmpeg** — audio extraction and format conversion
 - **OpenAI Whisper** (`whisper` CLI, `small` model) — speech-to-text transcription
-- **Tesseract OCR** — text extraction from images
-- **Firefox** — cookie source for authenticated downloads
-- **Playwright** (optional) — browser automation for Instagram when yt-dlp is blocked
+- **Tesseract OCR** — text extraction from images and thumbnails
+- **Firefox** — cookie source for authenticated downloads (must be logged in to the social platforms you want to scrape from)
+- **trafilatura** (optional) — preferred article-body extractor for `[article]` URLs (`pandoc` is the fallback)
 
 ## File structure
 
@@ -129,10 +132,12 @@ url-truth-analyzer/
 ├── IMAGE_SUPPORT.md              # Image/carousel processing documentation
 ├── RECURSIVE_FOLDER_UPDATE.md    # Local folder recursive scanning docs
 ├── FOLDER_DEPTH_EXAMPLES.md      # Folder depth validation examples
-└── truth-analyses/               # All generated analysis files (synced to GitHub)
-    ├── 2026-03-02-*.md
-    ├── ...
-    └── 2026-03-29-*.md
+├── watch_urls_archive.md         # Processed entries older than 30 days
+└── truth-analyses/               # Generated analysis files (current 30d; older move to archive/YYYY-MM/)
+    ├── archive/
+    │   ├── 2026-03/
+    │   └── 2026-04/
+    └── YYYY-MM-DD-*.md
 ```
 
 ## License
