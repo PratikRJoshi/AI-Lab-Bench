@@ -242,7 +242,9 @@ Extract the video ID from each pending URL using these rules:
 
 Then parse every processed entry in `## Processed` in `watch-urls.md` **and** in `LLM_Skills/url-truth-analyzer/watch_urls_archive.md` (if it exists) and extract the video ID from each processed URL using the same rules. This ensures dedup works even after old entries have been archived by Phase -1.
 
-For each pending URL whose video ID matches any processed URL's video ID (from either file) → add to `DUPLICATES[]` with the matching processed entry (URL + analysis file path).
+**Skip processed entries marked `failed`** when building the dedup index. A failed entry means the user is allowed (and likely intends) to retry the same URL on a subsequent run; treating it as a duplicate silently drops the retry. Only `analyzed YYYY-MM-DD` and `duplicate of` entries count for dedup.
+
+For each pending URL whose video ID matches any non-failed processed URL's video ID (from either file) → add to `DUPLICATES[]` with the matching processed entry (URL + analysis file path).
 
 ### Step 3: Partition entries
 
@@ -402,7 +404,22 @@ Report `✓ Step 0b: No duplicate found — proceeding with download.` and conti
 
 All server calls in this step are subject to the inter-request delay and exponential backoff rules described at the end of this section.
 
-**Content type detection and download strategy**:
+### Phase 1 prerequisite — export Firefox cookies (one-time per batch)
+
+If any Instagram URL is in the batch, export the user's Firefox Instagram cookies once before the per-URL loop. The cookies file is used by both `yt-dlp` (via `--cookies-from-browser firefox` natively) AND the authenticated Playwright scraper in Mode F (which loads the Netscape-format file directly).
+
+```bash
+mkdir -p /tmp/url-analyzer
+yt-dlp --cookies-from-browser firefox --cookies /tmp/url-analyzer/ig-cookies.txt \
+  --no-warnings --skip-download --ignore-no-formats-error \
+  --print "ignored" 'https://www.instagram.com/' 2>/dev/null
+# /tmp/url-analyzer/ig-cookies.txt now holds all instagram.com cookies in Netscape format
+# (sessionid, csrftoken, ds_user_id, ig_did, etc.)
+```
+
+This call is a single light HTTP fetch and counts as one server visit (apply the normal delay after it).
+
+### Content type detection and download strategy
 
 1. **If `CONTENT_TYPE=plain-text`**: Skip Phase 1 fetching → Mode K (copy local `.txt` into `/tmp/url-analyzer/`). No server call.
 2. **If `CONTENT_TYPE=article`** (`[article]` directive): Skip yt-dlp entirely → Mode H (HTML fetch + readable-body extraction).
@@ -591,21 +608,23 @@ Then add a `failed` entry to `RESULTS[]`: `(failed YYYY-MM-DD — all automated 
 
 Facebook reels, videos, and Instagram content are supported via yt-dlp's built-in extractors. Use authenticated Firefox cookies. **Always grab the thumbnail in addition to the audio** — Instagram reels routinely have music-only audio or background-noise audio where Whisper produces hallucinated song lyrics or single words ("You", "Hehehee", "ДИНАМИЧНАЯ МУЗЫКА"). The actual claims are in the on-screen text overlay, which the thumbnail captures.
 
-#### Step E-1: Probe metadata first (decide audio vs silent-video)
+#### Step E-1: Probe metadata first (decide audio vs silent-video vs carousel)
+
+**Always pass `--ignore-no-formats-error`** — without it, carousel posts return non-zero and look like a probe failure, when in fact they're successful image-only posts that should route to Mode F. The `head -1` is also important: carousels emit one `--print` line per slide.
 
 ```bash
-yt-dlp --cookies-from-browser firefox --no-warnings \
-  --print "%(uploader_id)s|%(uploader)s|%(title)s|%(duration)s|%(acodec)s|%(_type)s" \
-  '<URL>'
+yt-dlp --cookies-from-browser firefox --no-warnings --ignore-no-formats-error \
+  --print "%(uploader_id)s|%(uploader)s|%(title)s|%(duration)s|%(acodec)s|%(_type)s|%(playlist_count)s" \
+  '<URL>' | head -1
 ```
 
-Capture: `HANDLE`, `UPLOADER`, `TITLE`, `DURATION`, `ACODEC`, `TYPE`.
+Capture: `HANDLE`, `UPLOADER`, `TITLE`, `DURATION`, `ACODEC`, `TYPE`, `PLAYLIST_COUNT`.
 
 **Routing decision:**
 - If `DURATION` is non-empty AND `ACODEC` is `none`/`NA`/`null` → **silent-video** path (skip audio download, fetch thumbnail only).
 - If `DURATION` is non-empty AND `ACODEC` is a real codec (e.g. `mp4a.40.5`) → **video-audio** path (audio + thumbnail).
-- If `DURATION` is empty AND `TYPE` is `playlist` → fall through to Mode F (image carousel).
-- If `DURATION` is empty AND `TYPE` is not playlist → single-image post; fall through to Mode F.
+- If `DURATION` is empty (or `NA`) AND `PLAYLIST_COUNT > 0` → fall through to **Mode F** (image carousel, authenticated Playwright scraper).
+- If `DURATION` is empty AND no `PLAYLIST_COUNT` → single-image post; fall through to Mode F.
 
 #### Step E-2a: video-audio path
 
@@ -651,59 +670,92 @@ Set `TRANSCRIPT_SOURCE=ocr`, `CONTENT_TYPE=silent-video`. No Whisper. Sub-agent 
 
 ### Mode F — Image/Carousel Posts (Instagram, Facebook, Twitter/X)
 
-**Progress indicator**: `⏳ Step 1/7: Downloading images...`
+**Progress indicator**: `⏳ Step 1/7: Downloading carousel images via authenticated Playwright...`
 
-Social media platforms support image-only posts (single images or carousels). When yt-dlp reports "No video formats found" but successfully extracts post metadata, the content is an image post.
+Social media platforms support image-only posts (single images or carousels). yt-dlp identifies these posts (it can pull `uploader_id`, `playlist_count`, `title`) but **cannot extract the actual image URLs** — its JSON output has empty `thumbnails` and `formats` arrays for image-only carousels. Calling `--write-thumbnail` produces "There are no video thumbnails to download" because the IG extractor only writes thumbnails for video formats.
 
-**Detection**: yt-dlp output contains:
-- `ERROR: [Instagram] <ID>: No video formats found!` or
-- `ERROR: [Facebook] <ID>: No video formats found!` or
-- `ERROR: [Twitter] <ID>: No video formats found!`
-- BUT the extractor successfully retrieved title/description/metadata (playlist info shows items)
+**Detection** (with `--ignore-no-formats-error`):
+- yt-dlp prints "No video formats found" warning but still emits metadata
+- `playlist_count > 0` and `_type=playlist` → carousel
+- `playlist_count = 1` or absent + no duration → single image post
 
-**Download images**:
-
-```bash
-yt-dlp --cookies-from-browser firefox \
-  --skip-download \
-  --write-thumbnail \
-  --convert-thumbnails jpg \
-  -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>'
-```
-
-For carousel posts (multiple images), yt-dlp downloads each image as `<slug>.1.jpg`, `<slug>.2.jpg`, etc.
-
-If thumbnail extraction fails, try direct image download:
+#### Step F-1: Confirm carousel via metadata probe
 
 ```bash
-yt-dlp --cookies-from-browser firefox \
-  -o "/tmp/url-analyzer/<slug>.%(ext)s" '<URL>' 2>&1
+META=$(timeout 30 yt-dlp --cookies-from-browser firefox --no-warnings --ignore-no-formats-error --skip-download \
+  --print "%(uploader_id)s|%(uploader)s|%(title)s|%(playlist_count)s" \
+  '<URL>' | head -1)
+# META = "1234|Display Name|Video by handle|7" for a 7-slide carousel
 ```
 
-Then extract image URLs from the JSON metadata:
+#### Step F-2: Export Firefox cookies to Netscape format (once per batch)
+
+The Playwright scraper needs the same Instagram session that Firefox holds. Export cookies once at the start of Phase 1:
 
 ```bash
-yt-dlp --cookies-from-browser firefox -J '<URL>' | \
-  python3 -c "import sys, json; d=json.load(sys.stdin); \
-  print('\n'.join([img.get('url') for ent in (d.get('entries') or [d]) for img in (ent.get('thumbnails') or []) if img.get('url')]))"
+yt-dlp --cookies-from-browser firefox --cookies /tmp/url-analyzer/ig-cookies.txt \
+  --no-warnings --skip-download --ignore-no-formats-error \
+  --print "ignored" 'https://www.instagram.com/' 2>/dev/null
+# This populates /tmp/url-analyzer/ig-cookies.txt with all instagram.com cookies in Netscape format.
 ```
 
-Download each image URL with curl:
+#### Step F-3: Scrape carousel images via Playwright (authenticated)
+
+Run `ig_carousel_scraper.py` (lives next to this SKILL.md):
 
 ```bash
-curl -L -H "User-Agent: Mozilla/5.0" -o "/tmp/url-analyzer/<slug>-<N>.jpg" "<IMAGE_URL>"
+python3 ~/.claude/skills/url-truth-analyzer/ig_carousel_scraper.py \
+  '<URL>' /tmp/url-analyzer/ig-cookies.txt > /tmp/url-analyzer/<slug>-scrape.json
 ```
 
-**If image download succeeds**: set `CONTENT_TYPE=image` and `TRANSCRIPT_SOURCE=ocr`, dispatch a sub-agent for OCR + analysis.
+The scraper:
+1. Loads Instagram cookies from the Netscape file into a fresh Chromium context.
+2. Navigates to the post URL.
+3. Filters DOM `img` elements: keeps only those whose alt starts with `Photo by ` or `Video by ` AND whose natural dimensions are ≥ 600px (this excludes the 150×150 profile picture, comment avatars, and Instagram UI icons).
+4. Clicks the "Next" button up to 14 times to walk through all carousel slides, harvesting newly-loaded images after each click.
+5. Outputs JSON with the list of image URLs and per-image metadata.
 
-**If it fails**: Add a `failed` entry to `RESULTS[]` with reason "Could not download images from post". Do not dispatch a sub-agent.
+Then download each image with curl:
 
-**Supported URL patterns:**
-- `instagram.com/p/ID` (Instagram posts — may be carousel)
-- `instagram.com/reel/ID` (Instagram Reels — may have no video if post type changed)
-- `facebook.com/<user>/posts/ID` (Facebook posts)
-- `facebook.com/photo/?fbid=ID` (Facebook photos)
-- `twitter.com/<user>/status/ID` or `x.com/<user>/status/ID` (Twitter/X posts with images)
+```bash
+N=1
+python3 -c "import json; print('\n'.join(json.load(open('/tmp/url-analyzer/<slug>-scrape.json')).get('images', [])))" | \
+while IFS= read -r IMG_URL; do
+  curl -s -L --max-time 20 -H "User-Agent: Mozilla/5.0" \
+    -o "/tmp/url-analyzer/<slug>-${N}.jpg" "$IMG_URL"
+  # Reject empty/tiny files (failed downloads)
+  [ "$(stat -f%z "/tmp/url-analyzer/<slug>-${N}.jpg" 2>/dev/null || echo 0)" -lt 1000 ] && \
+    rm -f "/tmp/url-analyzer/<slug>-${N}.jpg"
+  N=$((N+1))
+done
+```
+
+#### Step F-4: Set flags + dispatch
+
+If at least one image landed:
+- Set `CONTENT_TYPE=image-carousel`, `TRANSCRIPT_SOURCE=ocr`
+- Dispatch a sub-agent (Mode F dispatch instructions tell the sub-agent to expect multiple `<slug>-N.jpg` files and to deduplicate visually — the scraper may collect more image elements than there are unique slides because Instagram serves multiple aspect ratios per slide).
+
+If zero images landed: add a `failed` entry: `(failed YYYY-MM-DD — Playwright scraper returned no images; check cookies / IG login status)`.
+
+**Why this approach**:
+- yt-dlp's Instagram extractor has no support for image-only carousels (it can list the playlist but emits no `url` or `thumbnails` per entry).
+- Direct curl scraping fails because Instagram's web app is JS-rendered — the HTML returned by curl is a 600KB+ shell with zero post image URLs.
+- The previous browser-mode scraper was wrong because it ran logged out and pulled explore-panel decoys. Loading the user's real Firefox cookies fixes that.
+
+**Supported URL patterns** (Mode F):
+- `instagram.com/p/ID` and `instagram.com/p/ID?img_index=N` (carousel posts; `img_index` is the slide the user shared but the scraper walks all slides anyway)
+- `instagram.com/reel/ID` only if the post was converted to image (rare; usually yt-dlp succeeds on reels via Mode E)
+- For Facebook/Twitter image posts, the scraper currently targets the Instagram DOM only — extend it for other platforms when needed.
+
+**Dependencies**:
+- `playwright` Python package (`pip3 install --user --break-system-packages playwright`)
+- Chromium browser (`playwright install chromium`)
+- User must be logged into Instagram in Firefox so `--cookies-from-browser firefox` returns a valid session.
+
+**Rate limiting**:
+- Each scraper run is a server visit; apply the standard 45–75s inter-request delay.
+- A scrape takes ~10–15s (Chromium launch + DOM walk + carousel clicks); be aware that this consumes part of the delay window.
 
 ---
 
@@ -963,6 +1015,8 @@ A sub-agent is dispatched **as soon as a URL's transcript `.txt` file is ready**
 - After the background Whisper process completes (awaited before the next download starts)
 
 For **local folder entries**: dispatch a sub-agent immediately after images are staged into `/tmp/url-analyzer/` (Mode I copy step).
+
+For **image-carousel entries (Mode F)**: dispatch a sub-agent immediately after the Playwright scraper output is converted to `<slug>-N.jpg` files via curl (Step F-3). The sub-agent reads all `/tmp/url-analyzer/<slug>-*.jpg` files; the parent does not run OCR.
 
 For **failed downloads**: do not dispatch a sub-agent. Add a `failed` entry to `RESULTS[]` directly.
 

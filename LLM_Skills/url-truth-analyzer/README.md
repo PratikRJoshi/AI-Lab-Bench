@@ -31,8 +31,9 @@ Given a URL or a local folder of screenshots, the skill:
 | Mode | Trigger | What happens |
 |------|---------|--------------|
 | **Full audio** (default) | Any YouTube/LinkedIn URL | Downloads audio → Whisper transcription |
-| **Audio + thumbnail** (default, Instagram/Facebook reels) | Instagram or Facebook reel URL | Downloads both audio AND post thumbnail; Whisper transcribes audio while sub-agent OCRs thumbnail. Music-only / hallucinated transcripts auto-fallback to thumbnail text overlay. |
+| **Audio + thumbnail** (Instagram/Facebook reels) | Instagram or Facebook reel URL with audio codec | Downloads both audio AND post thumbnail; Whisper transcribes audio while sub-agent OCRs thumbnail. Music-only / hallucinated transcripts auto-fallback to thumbnail text overlay. |
 | **Silent-video / thumbnail-only** | Instagram/Facebook reel with no audio codec | Downloads thumbnail only; sub-agent extracts claims via Tesseract OCR + vision |
+| **Image carousel** (authenticated Playwright) | Instagram image-only post (`/p/...?img_index=N`) | yt-dlp identifies the playlist but cannot extract image URLs; `ig_carousel_scraper.py` loads Firefox cookies into Chromium, walks the carousel via the "Next" button, and outputs per-slide image URLs which are then curl'd. |
 | **Transcript-only** | `[transcript-only]` directive | Fetches YouTube captions only (no audio download) |
 | **Timestamp range** | `[00:05:00-00:15:00]` directive | Downloads/transcribes only the specified segment |
 | **Article** | `[article]` directive | curl + trafilatura body extraction |
@@ -119,6 +120,7 @@ Each analysis follows a consistent structure:
 - **OpenAI Whisper** (`whisper` CLI, `small` model) — speech-to-text transcription
 - **Tesseract OCR** — text extraction from images and thumbnails
 - **Firefox** — cookie source for authenticated downloads (must be logged in to the social platforms you want to scrape from)
+- **Playwright + Chromium** — required for Instagram image carousels (yt-dlp can't extract image URLs from image-only carousels even with auth). Install once: `pip3 install --user --break-system-packages playwright && playwright install chromium`
 - **trafilatura** (optional) — preferred article-body extractor for `[article]` URLs (`pandoc` is the fallback)
 
 ## File structure
@@ -132,6 +134,7 @@ url-truth-analyzer/
 ├── IMAGE_SUPPORT.md              # Image/carousel processing documentation
 ├── RECURSIVE_FOLDER_UPDATE.md    # Local folder recursive scanning docs
 ├── FOLDER_DEPTH_EXAMPLES.md      # Folder depth validation examples
+├── ig_carousel_scraper.py        # Authenticated Playwright scraper for Instagram image carousels
 ├── watch_urls_archive.md         # Processed entries older than 30 days
 └── truth-analyses/               # Generated analysis files (current 30d; older move to archive/YYYY-MM/)
     ├── archive/
