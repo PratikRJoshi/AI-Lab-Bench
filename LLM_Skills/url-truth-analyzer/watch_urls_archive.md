@@ -4,6 +4,10 @@ Processed entries archived from watch-urls.md (older than 30 days).
 
 ---
 
+## 2026-04
+
+- https://www.instagram.com/p/DW-r5RECCBj/ [browser-mode] (analyzed 2026-04-10 → truth-analyses/2026-04-10-fittr-health-claims-carousel.md)
+
 ## 2026-03
 - https://youtu.be/qb-ZkK3s0Sc?si=Igxipo0oMstlgm2u (duplicate of https://youtu.be/qb-ZkK3s0Sc?si=h0S_BxZi4QqvSmvc → see truth-analyses/2026-03-10-protein-protein-protein-the-great-social-media-illusion.md)
 - ~/Desktop/meal/ (analyzed 2026-03-31 → truth-analyses/2026-03-31-meal-timing-dinner-glucose-insulin-gastroenterologist.md)
