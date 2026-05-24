@@ -129,6 +129,11 @@ Validate `whisper-model` value against the whitelist above; on miss, warn and fa
 
 ## Workflow overview
 
+**Terminology:**
+- **Mode** = routing variant in Phase 1 Step 1 (download/fetch strategy). Modes are lettered A, B, C, D, E, F, H, I, K, L, M, N, O (G was retired in commit `16a3050`).
+- **Path** = extraction variant in Phase 1 Step 2 / Phase 2 (transcript-source-specific processing). Paths are A (captions VTT), B (Whisper), C (OCR + visual), D (chunked Whisper for long podcasts).
+- **Phase** = a workflow stage (-1 Housekeeping, 0 Triage, 1 Download/Transcribe/Dispatch, 2 Analyze).
+
 **Inline URL auto-detection**: When the user provides a URL directly in their message (not from `watch-urls.md`), treat it as `DISPLAY_ONLY=true` automatically. Skip Phase 0 dedup checks (no `watch-urls.md` to read), run Phase 1 + Phase 2 normally, display the analysis in the conversation, clean up temp files, and stop. No files are written, no `watch-urls.md` is updated, no GitHub sync runs.
 
 **Inline plain-text auto-detection**: When the user pastes a block of plain text in their message (not a URL, not a path) and asks for truth analysis, treat it as `CONTENT_TYPE=plain-text` with `DISPLAY_ONLY=true` automatically. Write the pasted text to `/tmp/url-analyzer/inline-<timestamp>.txt`, dispatch a single sub-agent for Steps 3–6, display the analysis in the conversation, then clean up. No `watch-urls.md` entry is created. The slug for the temp file is `inline-<YYYYMMDD-HHMMSS>`. If the user provides an explicit title in their message, use that for the slug instead.
@@ -162,7 +167,7 @@ Phase 0 makes zero server calls. Duplicates are resolved instantly.
 
 For each URL in `NEEDS_PROCESSING`, **one at a time, in order**:
 
-1. Step 0b: Check B title/slug match (server call — `yt-dlp --get-title`)
+1. Step 0b: Check B title/slug match (server call — `yt-dlp --get-title`). **Skipped automatically** for URLs whose video ID was already extracted by Check A in Phase 0 (Instagram post IDs, Facebook reel IDs, YouTube video IDs, etc.) — Check B only runs when Check A could not produce a stable identifier (e.g. an unknown platform).
 2. Step 1: Download content — captions-first for YouTube (lightweight), fall back to audio if no captions found. Other platforms use audio download directly.
 3. Step 2 (pipelined): Immediately after download, start transcription:
    - If captions were fetched → convert VTT to plain text inline (instant, ~1s)
@@ -284,11 +289,11 @@ If nothing is older than 30 days, report `🧹 Housekeeping: Nothing to archive.
 
 Before any server calls, run a single pass over ALL pending entries in `## Pending`:
 
-### Step 1: Parse all directives
+### Phase 0 Step 1: Parse all directives
 
 For every pending entry, run Sub-step 0a (directive parsing — see below) to extract the clean URL and any mode flags.
 
-### Step 2: Run Check A for all URLs
+### Phase 0 Step 2: Run Check A for all URLs
 
 Extract the video ID from each pending URL using these rules:
 
@@ -316,7 +321,7 @@ Then parse every processed entry in `## Processed` in `watch-urls.md` **and** in
 
 For each pending URL whose video ID matches any non-failed processed URL's video ID (from either file) → add to `DUPLICATES[]` with the matching processed entry (URL + analysis file path).
 
-### Step 3: Partition entries
+### Phase 0 Step 3: Partition entries
 
 Classify each pending entry into one of five lists:
 
@@ -343,7 +348,7 @@ Two-stage dedup against already-processed entries (Step 2 above) AND against oth
   If two pending entries share the same stable ID, keep only the first occurrence; emit a `(duplicate of <first-sibling-URL> earlier in this batch)` Step 7 entry for the others.
 - **Stage B (post-resolution, just before enclosure download)** — applied only to RSS entries: dedup on the resolved episode title slug. If Mode N resolves two distinct feed URLs to the same episode (rare but possible for cross-posted shows), the second is dropped before enclosure download.
 
-### Step 4: Record duplicates for batch update
+### Phase 0 Step 4: Record duplicates for batch update
 
 For each entry in `DUPLICATES[]`, add to the `RESULTS[]` collection with status `duplicate` and the matching processed entry details. These are written to `watch-urls.md` later in the parent's batch Step 7, not immediately.
 
@@ -522,7 +527,7 @@ Report `✓ Step 0b: No duplicate found — proceeding with download.` and conti
 
 ---
 
-## Step 1: Download content (Phase 1 — rate-limited, pipelined with Step 2)
+## Phase 1 Step 1: Download content (rate-limited, pipelined with Phase 1 Step 2)
 
 All server calls in this step are subject to the inter-request delay and exponential backoff rules described at the end of this section.
 
@@ -572,9 +577,14 @@ If any Instagram URL is in the batch, export the user's Firefox Instagram cookie
 
 ```bash
 mkdir -p /tmp/url-analyzer
+# Use ANY known-good IG post URL from your current batch as the cookie-export trigger.
+# (yt-dlp's --cookies side effect runs even though we discard the metadata print.)
+# DO NOT hard-code a specific post ID — that post could be deleted, made private, or
+# coincidentally collide with a batch slug. Pull from the first IG URL in the batch.
+ANY_IG_POST_URL="${1:-https://www.instagram.com/}"   # caller passes the first IG URL; bare homepage works as a fallback but yt-dlp will print "Unsupported URL" — that's harmless, cookies still export
 yt-dlp --cookies-from-browser firefox --cookies /tmp/url-analyzer/ig-cookies.txt \
   --no-warnings --skip-download --ignore-no-formats-error \
-  --print "ignored" 'https://www.instagram.com/' 2>/dev/null
+  --print "ignored" "$ANY_IG_POST_URL" 2>/dev/null
 # /tmp/url-analyzer/ig-cookies.txt now holds all instagram.com cookies in Netscape format
 # (sessionid, csrftoken, ds_user_id, ig_did, etc.)
 ```
@@ -831,11 +841,11 @@ Set `TRANSCRIPT_SOURCE=ocr`, `CONTENT_TYPE=silent-video`. No Whisper. Sub-agent 
 
 ---
 
-### Mode F — Image/Carousel Posts (Instagram, Facebook, Twitter/X)
+### Mode F — Image/Carousel Posts (Instagram only; Facebook/Twitter image posts not yet supported)
 
 **Progress indicator**: `⏳ Step 1/7: Downloading carousel images via authenticated Playwright...`
 
-Social media platforms support image-only posts (single images or carousels). yt-dlp identifies these posts (it can pull `uploader_id`, `playlist_count`, `title`) but **cannot extract the actual image URLs** — its JSON output has empty `thumbnails` and `formats` arrays for image-only carousels. Calling `--write-thumbnail` produces "There are no video thumbnails to download" because the IG extractor only writes thumbnails for video formats.
+Social media platforms support image-only posts (single images or carousels). yt-dlp identifies these posts (it can pull `uploader_id`, `playlist_count`, `title`) but **cannot extract the actual image URLs** — its JSON output has empty `thumbnails` and `formats` arrays for image-only carousels, and `--write-thumbnail` produces "There are no video thumbnails to download". Mode F therefore bypasses yt-dlp entirely for image extraction and uses an authenticated Playwright scraper.
 
 **Detection** (with `--ignore-no-formats-error`):
 - yt-dlp prints "No video formats found" warning but still emits metadata
@@ -851,16 +861,9 @@ META=$(timeout 30 yt-dlp --cookies-from-browser firefox --no-warnings --ignore-n
 # META = "1234|Display Name|Video by handle|7" for a 7-slide carousel
 ```
 
-#### Step F-2: Export Firefox cookies to Netscape format (once per batch)
+#### Step F-2: Reuse cookies exported in the Phase 1 prerequisite
 
-The Playwright scraper needs the same Instagram session that Firefox holds. Export cookies once at the start of Phase 1:
-
-```bash
-yt-dlp --cookies-from-browser firefox --cookies /tmp/url-analyzer/ig-cookies.txt \
-  --no-warnings --skip-download --ignore-no-formats-error \
-  --print "ignored" 'https://www.instagram.com/' 2>/dev/null
-# This populates /tmp/url-analyzer/ig-cookies.txt with all instagram.com cookies in Netscape format.
-```
+The Netscape-format cookies file at `/tmp/url-analyzer/ig-cookies.txt` was already exported once at the start of Phase 1 (see "Phase 1 prerequisite — export Firefox cookies (one-time per batch)" above). The Playwright scraper loads this same file directly — no re-export needed. If the file is missing (e.g., the user re-ran starting at Phase 1 mid-batch and the prerequisite block was skipped), re-run that prerequisite block before continuing here.
 
 #### Step F-3: Scrape carousel images via Playwright (authenticated)
 
@@ -904,7 +907,7 @@ If zero images landed: add a `failed` entry: `(failed YYYY-MM-DD — Playwright 
 **Why this approach**:
 - yt-dlp's Instagram extractor has no support for image-only carousels (it can list the playlist but emits no `url` or `thumbnails` per entry).
 - Direct curl scraping fails because Instagram's web app is JS-rendered — the HTML returned by curl is a 600KB+ shell with zero post image URLs.
-- The previous browser-mode scraper was wrong because it ran logged out and pulled explore-panel decoys. Loading the user's real Firefox cookies fixes that.
+- Authenticated Chromium + Firefox cookies is the only currently-supported scraping path for IG image-only carousels.
 
 **Supported URL patterns** (Mode F):
 - `instagram.com/p/ID` and `instagram.com/p/ID?img_index=N` (carousel posts; `img_index` is the slide the user shared but the scraper walks all slides anyway)
@@ -1615,6 +1618,20 @@ You are analyzing content for truth claims. Run Steps 2 (if needed), 3, 4, 5, an
 - Display only: <true|false>
 - Date: <YYYY-MM-DD>
 
+## For standard video/audio with usable transcript (YouTube captions/Whisper, LinkedIn Whisper, FB video-audio with non-degenerate transcript, short podcasts)
+Read /tmp/url-analyzer/<slug>.txt as the authoritative content. No thumbnail file is expected. Proceed to Step 3.
+
+## For local-folder content (TRANSCRIPT_SOURCE=ocr, multiple .jpg files + paths-mapping)
+Files: /tmp/url-analyzer/<slug>-1.jpg through <slug>-N.jpg (copied from the user's source folder tree).
+Also: /tmp/url-analyzer/<slug>-paths.txt — a one-per-line mapping of `<index>: <relative subfolder path>` preserved from the original folder structure.
+
+When OCR-ing, read `<slug>-paths.txt` first to give each image its original subfolder context (e.g., `before-photos/`, `week-1/`, `control-group/`). The subfolder names often carry semantic meaning the OCR can't infer. Proceed to Step 3 after writing the combined OCR+visual analysis to `/tmp/url-analyzer/<slug>.txt`.
+
+## For single-image content (TRANSCRIPT_SOURCE=ocr, exactly one .jpg)
+File: /tmp/url-analyzer/<slug>-1.jpg only.
+
+The Playwright scraper produced a single image for a single-image post (PLAYLIST_COUNT was empty/1 in the Mode F probe). Treat as a degenerate image-carousel with N=1; no visual deduplication needed. Note that the scraper may also have collected explore-panel decoys (other posts on the page) — these were filtered out by the parent before dispatch and you should only see the target image.
+
 ## For Instagram/Facebook reels (Mode E) — dual-input pattern
 EVERY Instagram/Facebook reel has BOTH a transcript and a thumbnail. You MUST inspect both:
 1. Read /tmp/url-analyzer/<slug>.txt.
@@ -1750,7 +1767,7 @@ Then proceed to **Step 7 (batch)**.
 
 ---
 
-## Step 2: Extract text content (pipelined into Phase 1)
+## Phase 1 Step 2: Extract text content (pipelined into Phase 1 Step 1)
 
 > **Pipelining note**: For URL entries, Step 2 now runs **during Phase 1** — either inline (captions → instant VTT-to-text) or as a background process (Whisper running during the inter-request delay). By the time the sub-agent starts, the transcript is already available.
 >
