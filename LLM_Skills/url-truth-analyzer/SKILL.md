@@ -526,6 +526,46 @@ Report `✓ Step 0b: No duplicate found — proceeding with download.` and conti
 
 All server calls in this step are subject to the inter-request delay and exponential backoff rules described at the end of this section.
 
+### Phase 1 prerequisite — process-singleton guard (mandatory)
+
+Before ANY writes (including the `> $MANIFEST` truncation that orchestrators like `phase1-v3.sh` perform at startup), the orchestrator MUST acquire a lock and refuse to start if another Phase 1 instance is already running. The 2026-05-23 batch run had three concurrent `phase1-v3.sh` processes interleaving writes to `manifest.tsv`, producing torn rows and double-dispatched sub-agents.
+
+Use an atomic `mkdir` lockdir + PID-liveness check (the `flock(1)` command-line utility is not installed on macOS by default, so we cannot rely on it):
+
+```bash
+LOCKDIR=/tmp/url-analyzer/phase1.lockdir
+
+acquire_lock() {
+  if mkdir "$LOCKDIR" 2>/dev/null; then
+    echo $$ > "$LOCKDIR/pid"
+    trap 'rm -rf "$LOCKDIR"' EXIT
+    return 0
+  fi
+  return 1
+}
+
+if ! acquire_lock; then
+  HOLDER=$(cat "$LOCKDIR/pid" 2>/dev/null)
+  if [ -n "$HOLDER" ] && kill -0 "$HOLDER" 2>/dev/null; then
+    echo "❌ Another Phase 1 run is in progress (PID $HOLDER, lock: $LOCKDIR). Refusing to start." >&2
+    exit 2
+  else
+    # Stale lock from a dead/killed process — clean up and retry once
+    echo "⚠️  Stale lock from dead PID $HOLDER; removing and acquiring." >&2
+    rm -rf "$LOCKDIR"
+    acquire_lock || { echo "❌ Could not acquire lock after stale-lock cleanup." >&2; exit 2; }
+  fi
+fi
+
+# Lock held. From this point on, all per-URL work — including the initial
+#   > $MANIFEST
+# truncation — is safe against concurrent writers.
+```
+
+This pattern works on macOS, Linux, and any POSIX system without external dependencies. The lock is released on clean exit, `kill <signal>`, or even `kill -9` (the EXIT trap doesn't fire on -9, but the next invocation's PID-liveness check detects the stale lock and recovers automatically).
+
+If using a Python wrapper instead of bash, the equivalent guard is `fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)` held for the lifetime of the wrapper process — POSIX `fcntl.flock` IS available on macOS even though the `flock(1)` command-line utility is not.
+
 ### Phase 1 prerequisite — export Firefox cookies (one-time per batch)
 
 If any Instagram URL is in the batch, export the user's Firefox Instagram cookies once before the per-URL loop. The cookies file is used by both `yt-dlp` (via `--cookies-from-browser firefox` natively) AND the authenticated Playwright scraper in Mode F (which loads the Netscape-format file directly).
