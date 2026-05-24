@@ -81,7 +81,7 @@ https://open.spotify.com/episode/EPISODE_ID [whisper-model: large-v3]
 - Directives are case-insensitive: `[Transcript-Only]` and `[transcript-only]` are equivalent.
 - If no directive is present, YouTube URLs default to **captions-first**: attempt to fetch captions, then fall back to audio download + Whisper if no captions are available. Non-YouTube platforms always use audio download (no captions available).
 - **`[audio-only]`**: Forces audio download + Whisper transcription, skipping the caption attempt entirely. Use when auto-generated captions are known to be poor quality or in the wrong language.
-- **Local folder paths**: If the entry starts with `/` (absolute path) instead of `http`, it is treated as a local folder containing images. All supported image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`) are treated as a single post. The `[transcript-only]` and timestamp directives are ignored for folder entries. Only flat directory scanning (no recursion into subdirectories).
+- **Local folder paths**: If the entry starts with `/` (absolute path) instead of `http`, it is treated as a local folder containing images. All supported image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`) are treated as a single post. The `[transcript-only]` and timestamp directives are ignored for folder entries. **Recursive scanning up to depth 5** (see `RECURSIVE_FOLDER_UPDATE.md` for details). Each image gets a `<slug>-paths.txt` mapping that preserves the original subfolder structure for analysis context.
 - **`[display-only]`**: The sub-agent returns the analysis text instead of saving to a file; the parent displays it in the conversation. Skips Step 5 file save (analysis is returned in the sub-agent result instead), Step 6 cleanup still runs, Step 7 `watch-urls.md` update is skipped for this URL, and GitHub sync skips this URL. Useful for quick one-off checks or when the user provides a URL inline rather than via `watch-urls.md`. Can combine with other directives (e.g. `[display-only transcript-only]`). When a URL is provided directly in the user's message (not from `watch-urls.md`), `display-only` is implied automatically.
 - **`[article]`**: Treats the URL as an HTML article/blog/news page rather than a video. The skill fetches the page with `curl` (or `WebFetch`) and extracts the readable body using `trafilatura` (preferred) or `pandoc -f html -t plain` (fallback). Skips yt-dlp, captions, audio download, and Whisper entirely. The extracted text becomes the transcript at `/tmp/url-analyzer/<slug>.txt`. The slug is derived from the article's `<title>` tag (or `[article title: ...]` if provided). Dedup uses Check B (slug match) only — Check A is skipped for article URLs. Inter-request delay still applies (the fetch is a server call). `[transcript-only]`, `[audio-only]`, and `[timestamp-range]` are silently ignored for articles.
 - **`[plain-text]`**: Treats the entry as a path to a local `.txt` file containing the content to analyze. No network call. The file's contents are copied into `/tmp/url-analyzer/<slug>.txt` and the sub-agent runs Steps 3–6 directly. The slug is derived from the filename basename (without extension) or `[plain-text title: ...]` if provided. Both Check A and the `yt-dlp` part of Check B are skipped — dedup uses local slug match against `~/Documents/truth-analyses/` only. No inter-request delay, no batch cooldown, no retry logic (no server contacted). The path must end in `.txt` and the file must exist; otherwise the entry is marked failed. Other directives are ignored.
@@ -1537,6 +1537,8 @@ sleep $((15 + RANDOM % 16))   # randomized: 15–30 seconds for caption-only
 
 **Exception**: Local folder entries (Mode I), plain-text file entries (Mode K), and local audio entries (Mode O) do not count toward the inter-request delay or batch cooldown counters, since no server calls are made. Article fetches (Mode H) and podcast modes L/M/N DO make network requests and should count toward rate limits.
 
+**Manifest write ordering**: The orchestrator MUST write each URL's manifest row to `/tmp/url-analyzer/manifest.tsv` AFTER all download steps for that URL have completed AND BEFORE entering the inter-request delay. Writes are streaming (one row per URL, appended) rather than buffered-then-flushed — this trades a small interruption-window race (kill between download completion and manifest append → URL re-downloaded next run) against the protection of losing all rows if the process dies during the delay. Sub-agent dispatch reads only rows with `status=OK`. The process-singleton guard (see "Phase 1 prerequisite — process-singleton guard" above) is the actual protection against concurrent writers; `PIPE_BUF` atomicity is a property of pipes, not regular files, so DO NOT rely on it for append safety to `manifest.tsv`. Use `printf` (not `echo -e`) to write rows, and tab-delimit fields explicitly.
+
 **Podcast mode rate-limit budget:**
 - **Mode L (Spotify)** — 1 server call (combined yt-dlp probe+download invocation). Step 0b `--get-title` pre-check is skipped for Spotify URLs because Mode L produces the title via the same call. Apply standard 45–75s delay after the download (success OR DRM-failed log).
 - **Mode M (Apple Podcasts)** — 3 server calls clustered tightly: (a) iTunes Lookup, (b) feed `HEAD` probe, (c) RSS XML fetch + (d) enclosure download. The first three are sub-second metadata calls; apply ONE 45–75s delay after the enclosure download (matches Mode F carousel scrape's clustered-call treatment).
@@ -1605,7 +1607,7 @@ You are analyzing content for truth claims. Run Steps 2 (if needed), 3, 4, 5, an
 - Transcript source: <captions|whisper|ocr|html|plain-text>
 - Transcript file: /tmp/url-analyzer/<slug>.txt
 - Thumbnail file: /tmp/url-analyzer/<slug>.jpg  ← present for Instagram/Facebook reels (Mode E) and silent-video
-- Transcript degenerate: <true|false>  ← true when Whisper produced <30 words / music-only / hallucinated lyrics (or, for long podcasts, <30 words × chunk_count across all chunks)
+- Transcript degenerate: <unknown|n/a>  ← "unknown" for Instagram/Facebook reels (Mode E) and long podcasts — the sub-agent runs the `<30 words / music-only / hallucinated lyrics` check itself. "n/a" for YouTube captions, LinkedIn Whisper, article, plain-text, short podcasts, and other routes where the transcript is authoritative.
 - Podcast length: <short|long|n/a>  ← only set when content type is podcast
 - Chunk offsets: <comma-separated minute marks if long, otherwise "n/a">
 - Whisper model used: <small|medium|large-v3|n/a>
@@ -1616,10 +1618,13 @@ You are analyzing content for truth claims. Run Steps 2 (if needed), 3, 4, 5, an
 ## For Instagram/Facebook reels (Mode E) — dual-input pattern
 EVERY Instagram/Facebook reel has BOTH a transcript and a thumbnail. You MUST inspect both:
 1. Read /tmp/url-analyzer/<slug>.txt.
-2. Run Tesseract on /tmp/url-analyzer/<slug>.jpg: `tesseract /tmp/url-analyzer/<slug>.jpg stdout --dpi 300`.
-3. Use the Read tool to view the thumbnail visually (text overlay, brand, charts, gestures).
-4. If `Transcript degenerate=true` (or transcript reads as song lyrics / music description / single word), treat the THUMBNAIL TEXT OVERLAY as authoritative for claim extraction. Reels lead with the hook on-screen.
-5. If both transcript and thumbnail are uninformative, return Grade C / "no claims extractable" rather than fabricating.
+2. Compute the degenerate-transcript check yourself (the parent forwards `Transcript degenerate: unknown` for Mode E and does NOT pre-compute):
+   - Run `wc -w < /tmp/url-analyzer/<slug>.txt`. If the count is `<30`, mark the transcript as degenerate.
+   - Also mark as degenerate when the transcript reads as song lyrics, music description (e.g., `ДИНАМИЧНАЯ МУЗЫКА`, `MUSIC`, `музыка`), or a single-word hallucination (`You`, `Hehehee`, `Yeah`).
+3. Run Tesseract on /tmp/url-analyzer/<slug>.jpg: `tesseract /tmp/url-analyzer/<slug>.jpg stdout --dpi 300`.
+4. Use the Read tool to view the thumbnail visually (text overlay, brand, charts, gestures).
+5. If the transcript is degenerate (per step 2), treat the THUMBNAIL TEXT OVERLAY as authoritative for claim extraction. Reels lead with the hook on-screen.
+6. If both transcript and thumbnail are uninformative, return Grade C / "no claims extractable" rather than fabricating.
 
 ## For silent-video content (TRANSCRIPT_SOURCE=ocr, no transcript file)
 There is only a thumbnail. Run Tesseract + Read tool on /tmp/url-analyzer/<slug>.jpg. Write combined OCR + visual analysis to /tmp/url-analyzer/<slug>.txt before proceeding to Step 3.
@@ -1665,7 +1670,7 @@ Then assess channel/handle reputation.
 ## Step 5: Save analysis
 If DISPLAY_ONLY=false: save to ~/Documents/truth-analyses/<date>-<slug>.md
 and copy to ~/AI-Lab-Bench/LLM_Skills/url-truth-analyzer/truth-analyses/
-If DISPLAY_ONLY=true: return the full analysis text in your final response.
+If DISPLAY_ONLY=true: return the full analysis text in your final response. If the analysis markdown contains any line consisting solely of `---` or the literal string `---END RESULT---`, base64-encode the entire markdown and emit it as `display_analysis: base64:<encoded>` in the `---RESULT---` trailer to avoid accidentally terminating the parent's parser.
 <include Step 5 template verbatim>
 
 ## Step 6: Cleanup
@@ -1673,7 +1678,9 @@ Delete temp files for this URL only: /tmp/url-analyzer/<slug>*
 Never delete the analysis file or original source folders.
 
 ## Required response format
-End your response with exactly this block so the parent can parse your result:
+End your response with exactly this block so the parent can parse your result. Use the **literal** delimiters `---RESULT---` and `---END RESULT---` — these must be the only occurrences of these exact strings in the trailer; the parent finds the block by searching from the END of your response backward for `---END RESULT---`, then matching to the nearest preceding `---RESULT---`.
+
+For multiline `display_analysis` content (which may itself contain `---` dividers, e.g. EBM SORT rubric separators or the saved-analysis template's own dividers), base64-encode the markdown and prefix with `base64:`. Plain inline markdown and `none` remain backward-compatible.
 
 ---RESULT---
 status: success|failed
@@ -1682,7 +1689,7 @@ analysis_path: <path to saved .md file, or "none" if display-only>
 content_type: Medical|General Science
 title: <video/post title>
 url: <clean_url>
-display_analysis: <full analysis markdown if display-only, otherwise "none">
+display_analysis: none | <inline-markdown-without-triple-dashes> | base64:<base64-encoded full analysis markdown>
 error: <error message if failed, otherwise "none">
 ---END RESULT---
 ```
@@ -1694,13 +1701,13 @@ The parent reads `ebm-reference.md` once and injects its contents into every sub
 After all Phase 1 downloads are complete and all sub-agents have been dispatched:
 
 1. Poll each sub-agent using `AwaitShell` or by reading its output file, waiting for all to complete.
-2. Parse the `---RESULT---` block from each sub-agent's final response.
+2. Parse the `---RESULT---` block from each sub-agent's final response. Locate the block by searching from the END of the response backward for `---END RESULT---`, then matching to the nearest preceding `---RESULT---` — this avoids mis-terminating on any inner `---` dividers in the body.
 3. Collect all results into `RESULTS[]`:
    - Successful analyses (with file paths)
    - Failed analyses (with error reasons)
    - Display-only analyses (with returned markdown text)
    - Duplicates (recorded earlier in Phase 0 / Step 0b)
-4. For display-only results: output the `display_analysis` text to the user in the conversation.
+4. For display-only results: if `display_analysis` starts with `base64:`, decode the remainder (`base64 -d` or Python `base64.b64decode`) before rendering. Plain inline markdown and `none` render as-is. Output the resulting `display_analysis` text to the user in the conversation.
 
 Report:
 ```
@@ -1732,6 +1739,9 @@ Then proceed to **Step 7 (batch)**.
 - Any sub-agents still running will be interrupted — their temp files may remain in `/tmp/url-analyzer/`.
 - `watch-urls.md` will NOT have been updated (batch Step 7 hasn't run yet), so all URLs remain in `## Pending` for a clean re-run.
 - Re-running the skill will re-triage all pending URLs. Previously saved analysis files will be detected as duplicates via Check B slug match, so no redundant work occurs.
+- The Phase 1 manifest (`/tmp/url-analyzer/manifest.tsv`) is truncated on every Phase 1 start (after the singleton lock is held). Any "OK" rows for URLs whose sub-agents did not complete before interruption are lost — those URLs will be re-downloaded on the next run. This is acceptable because Check B slug match still prevents redundant analysis, but it does consume a fresh rate-limit budget per re-run.
+- The `/tmp/url-analyzer/` working directory is NOT cleaned between runs. Stale `<slug>.mp3`, `<slug>.jpg`, `<slug>-N.jpg`, and `<slug>.whisper.done` files from interrupted runs may collide with new downloads. If a re-run produces unexpected results, manually `rm -f /tmp/url-analyzer/*` before retrying.
+- The Phase 1 singleton lockdir at `/tmp/url-analyzer/phase1.lockdir` is removed automatically on process exit (the EXIT trap fires on clean exit and most signals; `kill -9` is the exception). If you suspect a stuck lockdir, `cat /tmp/url-analyzer/phase1.lockdir/pid` shows the holder PID — verify with `kill -0 $HOLDER`; if dead, `rm -rf /tmp/url-analyzer/phase1.lockdir` is safe. The next invocation's PID-liveness branch performs the same cleanup automatically.
 
 **Inline URL auto-detection** (URL provided directly in the user's message):
 - `DISPLAY_ONLY=true` is set automatically. Only one URL to process.
@@ -1872,23 +1882,16 @@ Whisper on a music-only or near-silent Instagram reel routinely emits one of the
 - Foreign-language music description: `ДИНАМИЧНАЯ МУЗЫКА`, `музыка`, `MUSIC`
 - A few song-lyric fragments unrelated to the post (e.g., `She hit the floor, low low low`)
 
-After Whisper finishes, run this check:
+**The degenerate-transcript check runs INSIDE the sub-agent, not in the parent.** The parent does not inspect the transcript after Whisper finishes — it only forwards `Transcript degenerate: unknown` in the sub-agent prompt for Mode E / long-podcast routes (see "## For Instagram/Facebook reels (Mode E) — dual-input pattern" in the dispatch template). The sub-agent runs `wc -w < /tmp/url-analyzer/<slug>.txt` itself and applies the heuristic below.
 
-```bash
-WORDS=$(wc -w < /tmp/url-analyzer/<slug>.txt)
-if [ "$WORDS" -lt 30 ]; then
-  TRANSCRIPT_QUALITY=low
-fi
-```
+The heuristic the sub-agent must apply:
+1. Word count `<30` → degenerate.
+2. Transcript reads as song lyrics, music description (`ДИНАМИЧНАЯ МУЗЫКА`, `MUSIC`, `музыка`), or a single-word hallucination (`You`, `Hehehee`, `Yeah`) → degenerate, even if word count ≥30.
+3. When degenerate: treat the transcript as zero-information noise, extract claims primarily from the thumbnail's text overlay via OCR + visual analysis (the thumbnail was already downloaded in Mode E), and if neither transcript nor thumbnail provides extractable content, return Grade C / "no claims extractable" rather than fabricating.
 
-When `TRANSCRIPT_QUALITY=low`, mark the URL with `TRANSCRIPT_DEGENERATE=true` so the sub-agent prompt explicitly tells the sub-agent:
-1. Treat the transcript as zero-information / noise.
-2. Extract claims primarily from the thumbnail's text overlay via OCR + visual analysis (the thumbnail was already downloaded in Mode E).
-3. If neither transcript nor thumbnail provides extractable content, return Grade C / "no claims extractable" rather than fabricating.
+**Do not gate on language**: Russian "ДИНАМИЧНАЯ МУЗЫКА" is a music description, not a Russian post. The word-count + lexical-pattern checks catch this without requiring per-language logic.
 
-**Do not gate on language**: Russian "ДИНАМИЧНАЯ МУЗЫКА" is a music description, not a Russian post. The word-count check catches this without requiring per-language logic.
-
-**After transcription completes**: Report `✓ Step 2/7: Transcription complete via Whisper (N words; degenerate=<true|false>)`
+**After transcription completes**: Report `✓ Step 2/7: Transcription complete via Whisper (N words; sub-agent will assess degeneracy)`
 
 ---
 
@@ -2130,18 +2133,41 @@ Independent of the per-claim analysis in Step 4a/4b, briefly characterize the so
    - For **local folder entries**: there is no channel. Record `Source channel: N/A (local folder)` and skip the reputation paragraph.
    - For **plain-text entries** (`CONTENT_TYPE=plain-text`): there is no channel. Record `Source channel: N/A (plain-text file)` and skip the reputation paragraph.
 
-2. Research the handle (1 web search, max 2 if the first is ambiguous):
+2. Check the persistent handles cache first:
+   - Read `~/Documents/truth-analyses/.handles-cache.md` if it exists.
+   - The cache is a markdown file with one section per handle (heading: `### @<handle>`), containing the most-recent reputation paragraph, the date researched, and source URLs used.
+   - If the handle is present AND the cache entry is less than 90 days old: reuse the cached paragraph verbatim and skip the web-search step (step 3 below).
+   - If the handle is present BUT older than 90 days: use the cached paragraph as a starting point, perform a single targeted web search for any new fact-checks or retractions since the cache date, and emit an updated paragraph.
+   - If the handle is NOT present: proceed to step 3 (research from scratch) AND, after writing your analysis, append a new `### @<handle>` section to the cache with today's date, the reputation paragraph you produced, and citation URLs used.
+   - Use a `mkdir`-lockdir append guard (the same pattern as the Phase 1 process-singleton guard, because `flock(1)` is not installed on macOS):
+     ```bash
+     LOCKDIR=/tmp/url-analyzer/handles-cache.lockdir
+     while ! mkdir "$LOCKDIR" 2>/dev/null; do
+       HOLDER=$(cat "$LOCKDIR/pid" 2>/dev/null)
+       if [ -z "$HOLDER" ] || ! kill -0 "$HOLDER" 2>/dev/null; then
+         rm -rf "$LOCKDIR"   # stale lock from a dead writer
+       else
+         sleep 1             # active writer, wait briefly
+       fi
+     done
+     echo $$ > "$LOCKDIR/pid"
+     # ... append your `### @<handle>` section to ~/Documents/truth-analyses/.handles-cache.md ...
+     rm -rf "$LOCKDIR"
+     ```
+   - The cache file lives at `~/Documents/truth-analyses/.handles-cache.md` (sibling to the analyses directory) — explicitly OUTSIDE the three skill-mirror locations (`~/.claude/skills/`, `~/.cursor/skills/`, `~/AI-Lab-Bench/LLM_Skills/`) so mutable runtime state does not break the md5-identity invariant the mirrors maintain.
+
+3. Research the handle (only if not served by the cache; 1 web search, max 2 if the first is ambiguous):
    - Search for the handle/channel name plus terms like `fact check`, `controversy`, `misinformation`, `credentials`, `retraction`, `debunked`, or `reputation`.
    - Prefer signals from fact-checker coverage (Health Feedback, Snopes, FactCheck.org, Full Fact, AltNews, BOOM Live), mainstream journalism, academic or professional credentials on verified profiles, platform verification badges, and prior analyses of the same handle in `~/Documents/truth-analyses/`.
    - If the handle is obscure and produces no credible signal, say so explicitly — do not fabricate a reputation.
 
-3. Write 2–4 sentences covering, where substantiated:
+4. Write 2–4 sentences covering, where substantiated:
    - Typical content style (explainer, opinion/commentary, news aggregation, motivational, product promotion, satire, call-out, etc.).
    - Track record on truthfulness (prior fact-checks, retractions, misinformation flags — or, conversely, a clean peer-reviewed / institutional record).
    - Verified credentials or platform status (blue check, institutional affiliation, medical license, PhD) — only if substantiated.
    - Known conflicts of interest (product lines, sponsorships, political alignment) that materially affect how the content should be read.
 
-4. Calibration rules:
+5. Calibration rules:
    - Documented misinformation history → state it plainly with a specific example or citation.
    - Broadly reputable → state it plainly.
    - No credible signal either way → write: `No notable public record on this handle's truthfulness was found; evaluate this post on its own merits.`
