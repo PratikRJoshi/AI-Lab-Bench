@@ -50,6 +50,28 @@ https://example.com/post [article title: My Article Title]
 
 # Plain-text file with optional title
 /Users/pratik.joshi/Downloads/claims.txt [plain-text title: Sugar Claims Snippet]
+
+# Podcast — Spotify episode (auto-detected by host)
+https://open.spotify.com/episode/EPISODE_ID
+
+# Podcast — Apple Podcasts episode (auto-detected by host; resolved via iTunes Lookup → publisher RSS)
+https://podcasts.apple.com/us/podcast/SHOW/idDIGITS?i=EPISODE_ID
+
+# Podcast — generic RSS feed; newest episode by default
+https://example.com/feed.xml [podcast-rss]
+
+# Podcast — Nth most recent episode from a feed (1 = newest)
+https://example.com/feed.xml [podcast-rss episode: 3]
+
+# Force podcast routing on a non-obvious source (e.g. long-form YouTube interview channel)
+https://youtu.be/VIDEO_ID [podcast]
+
+# High-stakes long podcast — override default Whisper "medium" with "large-v3"
+https://open.spotify.com/episode/EPISODE_ID [whisper-model: large-v3]
+
+# Local audio file — REQUIRES explicit [podcast] opt-in (no implicit routing)
+/Users/me/Downloads/episode.mp3 [podcast]
+/Users/me/Downloads/episode.m4a [podcast title: My Episode Title]
 ```
 
 **Directive rules:**
@@ -63,6 +85,45 @@ https://example.com/post [article title: My Article Title]
 - **`[display-only]`**: The sub-agent returns the analysis text instead of saving to a file; the parent displays it in the conversation. Skips Step 5 file save (analysis is returned in the sub-agent result instead), Step 6 cleanup still runs, Step 7 `watch-urls.md` update is skipped for this URL, and GitHub sync skips this URL. Useful for quick one-off checks or when the user provides a URL inline rather than via `watch-urls.md`. Can combine with other directives (e.g. `[display-only transcript-only]`). When a URL is provided directly in the user's message (not from `watch-urls.md`), `display-only` is implied automatically.
 - **`[article]`**: Treats the URL as an HTML article/blog/news page rather than a video. The skill fetches the page with `curl` (or `WebFetch`) and extracts the readable body using `trafilatura` (preferred) or `pandoc -f html -t plain` (fallback). Skips yt-dlp, captions, audio download, and Whisper entirely. The extracted text becomes the transcript at `/tmp/url-analyzer/<slug>.txt`. The slug is derived from the article's `<title>` tag (or `[article title: ...]` if provided). Dedup uses Check B (slug match) only — Check A is skipped for article URLs. Inter-request delay still applies (the fetch is a server call). `[transcript-only]`, `[audio-only]`, and `[timestamp-range]` are silently ignored for articles.
 - **`[plain-text]`**: Treats the entry as a path to a local `.txt` file containing the content to analyze. No network call. The file's contents are copied into `/tmp/url-analyzer/<slug>.txt` and the sub-agent runs Steps 3–6 directly. The slug is derived from the filename basename (without extension) or `[plain-text title: ...]` if provided. Both Check A and the `yt-dlp` part of Check B are skipped — dedup uses local slug match against `~/Documents/truth-analyses/` only. No inter-request delay, no batch cooldown, no retry logic (no server contacted). The path must end in `.txt` and the file must exist; otherwise the entry is marked failed. Other directives are ignored.
+- **`[podcast]`**: Forces podcast routing on any URL or local audio path. Used for non-obvious sources (e.g. a long-form YouTube interview channel that the user wants treated as a podcast for long/short auto-routing). For YouTube URLs with `[podcast]`, the existing Mode A/B download still applies — but Step 1.5 (duration probe) and Step 2 Path D (chunked Whisper for long episodes) become active. Auto-detected for Spotify (`open.spotify.com/episode/`) and Apple Podcasts (`podcasts.apple.com/.../id<digits>?i=...`) hosts.
+- **`[podcast-rss]`**: Treats the URL as a podcast RSS feed XML. Phase 1 Mode N parses the feed, picks the Nth most recent episode (1 = newest, default; controlled by `[episode: N]`), and downloads the audio enclosure. The slug is derived from the episode title. Check A is skipped; dedup uses (1) normalized feed URL + episode index pre-fetch, then (2) slug match post-resolution. `[transcript-only]`, `[audio-only]`, and `[timestamp-range]` are silently ignored.
+- **`[episode: N]`**: Combine with `[podcast-rss]` to select the Nth most recent episode (N is 1-indexed; 1 = newest). Episodes are sorted by `pubDate` (RSS 2.0) or `published`/`updated` (Atom) descending, not by feed order. Default N=1 when omitted.
+- **`[podcast title: ...]`**: Slug override for podcast entries, mirroring `[article title: ...]` and `[plain-text title: ...]`.
+- **`[whisper-model: <model>]`**: Override the default Whisper model for the long-podcast path (Step 2 Path D). Valid values: `tiny`, `base`, `small`, `medium`, `large`, `large-v2`, `large-v3`. The default for long podcasts is `medium`; short podcasts always use `small`. When `large-v3` is selected, the chunked-Whisper concurrency cap is forced to 1 (3 GB model × 2 = 6 GB+, would OOM on 16 GB systems).
+- **Local audio file paths** (`.mp3`, `.m4a`, `.wav`): REQUIRE explicit `[podcast]` opt-in, mirroring the `[plain-text]` pattern for `.txt` files. Without `[podcast]`, the entry fails Phase 0 triage with a `(failed YYYY-MM-DD — local audio file requires explicit [podcast] directive)` message. Routing priority: `[plain-text] > [article] > [podcast]/podcast-host > absolute-path local folder > URL processing`.
+
+**Directive parser (extension for `key: value` syntax)**: Existing directives are either bare keywords (`transcript-only`, `audio-only`, `display-only`) or implicit timestamp patterns (`00:05:00-00:15:00`). The new `key: value` form (`[episode: N]`, `[whisper-model: large-v3]`, `[podcast title: My Episode]`) requires **targeted regex captures**, not naive `:` splitting — naive splitting breaks `[podcast title: My Episode Title]` (multi-word value) and confuses with timestamp tokens. Use the following parse order inside the directive block:
+
+```python
+import re
+def parse_directives(block):
+    flags = {}
+    # 1. Multi-word title captures.
+    # Prefixed variants ([podcast|article|plain-text] title: ...) first.
+    m = re.search(r'(?:podcast|article|plain-text)\s+title:\s*(.+?)(?=\s+(?:transcript-only|audio-only|display-only|podcast|article|plain-text|episode:|whisper-model:)|$)', block, re.I)
+    if m:
+        flags['title'] = m.group(1).strip()
+    else:
+        # Generic bare title: (local-folder back-compat)
+        m = re.search(r'(?:^|\s)title:\s*(.+?)(?=\s+(?:transcript-only|audio-only|display-only|podcast|article|plain-text|episode:|whisper-model:)|$)', block, re.I)
+        if m: flags['title'] = m.group(1).strip()
+    # 2. episode: N (digits only)
+    m = re.search(r'episode:\s*(\d+)', block, re.I)
+    if m: flags['episode'] = int(m.group(1))
+    # 3. whisper-model: <token> (no spaces)
+    m = re.search(r'whisper-model:\s*([A-Za-z0-9._-]+)', block, re.I)
+    if m: flags['whisper_model'] = m.group(1)
+    # 4. Bare keyword flags
+    for kw in ('podcast-rss', 'podcast', 'transcript-only', 'audio-only', 'display-only', 'article', 'plain-text'):
+        if re.search(rf'\b{re.escape(kw)}\b', block, re.I):
+            flags[kw.replace('-','_')] = True
+    # 5. Timestamp range (last, since it would match digits)
+    m = re.search(r'(\d{1,2}:\d{2}(?::\d{2})?)-(\d{1,2}:\d{2}(?::\d{2})?)', block)
+    if m: flags['range'] = (m.group(1), m.group(2))
+    return flags
+```
+
+Validate `whisper-model` value against the whitelist above; on miss, warn and fall back to `medium`.
 
 ---
 
@@ -86,12 +147,14 @@ Before any server calls, run a single pass over ALL pending URLs:
 
 1. Parse directives for every entry
 2. Run Check A (video ID match) for every URL entry that doesn't have the `[article]` or `[plain-text]` directive, against the `## Processed` list. For `[article]` entries, Check A is an exact URL string match against processed URLs. For `[plain-text]` entries, Check A is skipped entirely.
-3. Partition into five lists:
+3. Partition into seven lists:
    - `DUPLICATES[]` — Check A matched; record for batch `watch-urls.md` update, no further processing
    - `NEEDS_PROCESSING[]` — video/audio/image URL entries requiring download + analysis
    - `LOCAL_FOLDERS[]` — local folder entries (skip Phase 1 downloads, dispatch sub-agents directly)
    - `ARTICLES[]` — entries with `[article]` directive (fetch HTML in Phase 1, then dispatch sub-agent)
    - `PLAIN_TEXT[]` — entries with `[plain-text]` directive (no fetch, dispatch sub-agent directly)
+   - `PODCASTS[]` — entries with `[podcast]` / `[podcast-rss]` directive OR auto-detected podcast host (Spotify, Apple Podcasts) OR URL path ending in `.xml`/`.rss`/`/feed` (root-tag confirmed in Mode N). Phase 1 routes to Mode L (Spotify), Mode M (Apple), Mode N (RSS), or Mode O (local audio).
+   - `MALFORMED[]` — entries that look like local audio (`.mp3`/`.m4a`/`.wav` absolute paths) but lack the required `[podcast]` directive. Mirrors the `[plain-text]` opt-in pattern. These are failed immediately with a clear message.
 
 Phase 0 makes zero server calls. Duplicates are resolved instantly.
 
@@ -114,6 +177,8 @@ Phase 1 produces a transcript `.txt` file per URL and dispatches an analysis sub
 **Article entries** run Step 0b normally (slug from `<title>` tag), then Mode H in Phase 1 (HTML fetch + readable-body extraction → `/tmp/url-analyzer/<slug>.txt`). Inter-request delay applies. Sub-agent dispatched after extraction.
 
 **Plain-text entries** skip Phase 1 entirely (no fetch). The file is copied to `/tmp/url-analyzer/<slug>.txt` via Mode K, and a sub-agent is dispatched immediately for Steps 3–6. Step 0b runs a local-only dedup variant (slug match against `~/Documents/truth-analyses/` filenames). No rate-limit counters consumed.
+
+**Podcast entries** run Mode L (Spotify), Mode M (Apple Podcasts → iTunes Lookup → RSS), Mode N (generic RSS feed), or Mode O (local audio) in Phase 1. After download, **Step 1.4** (timestamp trim if `[timestamp-range]` is supplied) and **Step 1.5** (duration probe via `ffprobe`) run before Step 2. Episodes over 30 minutes route to **Step 2 Path D** (chunked Whisper with `medium` model by default, `large-v3` opt-in via `[whisper-model: large-v3]`, parallelism capped at 2 — or 1 for `large-v3` to avoid OOM). Episodes ≤30 minutes route to standard Path B with the existing `small` model. Mode L/M/N consume the standard inter-request delay budget; Mode O (local audio) does not.
 
 ### Phase 2 — Analyze + save (parallel via sub-agents)
 
@@ -238,7 +303,12 @@ Extract the video ID from each pending URL using these rules:
 | `facebook.com/reel/ID` | path segment after `/reel/` (e.g. `862786000111258`) |
 | `facebook.com/watch/?v=ID` | value of `v=` query parameter |
 | `fb.watch/ID` | path segment after `fb.watch/` |
+| `open.spotify.com/episode/ID` | path segment after `/episode/` |
+| `podcasts.apple.com/.../id<digits>?i=ID` | value of `i=` query parameter |
+| RSS feed URLs (`.xml` / `.rss` / `/feed`) | no video ID — Check B by slug match only |
 | Other platforms | no video ID — goes to `NEEDS_PROCESSING` for Check B |
+
+**Note**: Local audio files (Mode O) skip Check A entirely; dedup uses Check B slug match only — same as Mode K (plain-text).
 
 Then parse every processed entry in `## Processed` in `watch-urls.md` **and** in `LLM_Skills/url-truth-analyzer/watch_urls_archive.md` (if it exists) and extract the video ID from each processed URL using the same rules. This ensures dedup works even after old entries have been archived by Phase -1.
 
@@ -253,10 +323,25 @@ Classify each pending entry into one of five lists:
 - **`DUPLICATES[]`** — Check A matched a processed entry. These are done — write their Step 7 entries immediately (duplicate format).
 - **`PLAIN_TEXT[]`** — Entry has `[plain-text]` directive. Skips Phase 1 fetching entirely; sub-agent dispatched after Mode K copy.
 - **`ARTICLES[]`** — Entry has `[article]` directive. Skips yt-dlp; Phase 1 runs Mode H (HTML fetch + body extraction), then sub-agent.
-- **`LOCAL_FOLDERS[]`** — Entry starts with `/` and is not an `http` URL (and has no `[plain-text]` directive). These skip Phase 1 entirely.
+- **`PODCASTS[]`** — Entry has `[podcast]` / `[podcast-rss]` directive OR matches a podcast host (Spotify, Apple Podcasts) OR has a URL path ending in `.xml`/`.rss`/`/feed`. Phase 1 routes to Mode L (Spotify), Mode M (Apple Podcasts), Mode N (RSS — root-tag confirmed during fetch), or Mode O (local audio). Step 1.5 (duration probe) then classifies the episode as short (≤30 min, Whisper `small`) or long (>30 min, chunked Whisper `medium`/`large-v3` via Path D).
+- **`MALFORMED[]`** — Entry is an absolute path ending in `.mp3`/`.m4a`/`.wav` (case-insensitive) but lacks the required `[podcast]` directive. Failed immediately with `(failed YYYY-MM-DD — local audio file requires explicit [podcast] directive; without it the file would be treated as a plain folder and fail)`. Mirrors the `[plain-text]` opt-in pattern.
+- **`LOCAL_FOLDERS[]`** — Entry starts with `/` and is not an `http` URL (and has no `[plain-text]` / `[podcast]` directive and no audio extension). These skip Phase 1 entirely.
 - **`NEEDS_PROCESSING[]`** — Everything else (video/audio/image URLs). These enter Phase 1 for Check B + download + transcription.
 
-**Routing priority** when multiple conditions could match: `[plain-text]` > `[article]` > absolute-path local folder > URL processing. A `.txt` file path without `[plain-text]` is treated as a (likely empty) folder and will fail validation — this is intentional, since the user opted not to auto-route.
+**Routing priority** when multiple conditions could match: `[plain-text]` > `[article]` > `[podcast]` / podcast-host > absolute-path local folder > URL processing. A `.txt` file path without `[plain-text]` is treated as a (likely empty) folder and will fail validation; a `.mp3`/`.m4a`/`.wav` path without `[podcast]` is routed to `MALFORMED[]` for clear feedback — both behaviors are intentional, since the user opted not to auto-route.
+
+### Sub-step — In-batch dedup (post-Step 3)
+
+Two-stage dedup against already-processed entries (Step 2 above) AND against other entries in the current batch:
+
+- **Stage A (pre-download, immediate)** — for each remaining entry, compute a "stable ID":
+  - Spotify: episode ID (path segment after `/episode/`)
+  - Apple: `i=` GUID query parameter value
+  - Local audio (Mode O): canonicalized absolute file path (via `realpath`)
+  - RSS: normalized feed URL + episode index (lower scheme/host, strip trailing slashes, drop tracking params)
+  
+  If two pending entries share the same stable ID, keep only the first occurrence; emit a `(duplicate of <first-sibling-URL> earlier in this batch)` Step 7 entry for the others.
+- **Stage B (post-resolution, just before enclosure download)** — applied only to RSS entries: dedup on the resolved episode title slug. If Mode N resolves two distinct feed URLs to the same episode (rare but possible for cross-posted shows), the second is dropped before enclosure download.
 
 ### Step 4: Record duplicates for batch update
 
@@ -265,11 +350,13 @@ For each entry in `DUPLICATES[]`, add to the `RESULTS[]` collection with status 
 Report:
 ```
 📋 Phase 0 complete: N total entries triaged
-   ⚠️  X duplicate(s) resolved instantly (Check A video ID match)
+   ⚠️  X duplicate(s) resolved instantly (Check A video ID match or in-batch dedup)
    📥 Y URL(s) queued for Phase 1 (download + transcribe + dispatch)
    📁 Z local folder(s) queued for sub-agent dispatch (OCR + analysis)
    📰 A article(s) queued for Phase 1 (HTML fetch + body extraction)
    📝 B plain-text file(s) queued for sub-agent dispatch (no fetch)
+   🎙️  C podcast(s) queued for Phase 1 (Spotify/Apple/RSS/local audio + long/short auto-routing)
+   ❌ D malformed entry(ies) (local audio without [podcast] directive — failed immediately)
 ```
 
 ---
@@ -283,12 +370,17 @@ Report:
 Before anything else, check whether the pending line contains a `[...]` directive block.
 
 1. Split the line on the first ` [` — everything before it is the **clean URL**; everything inside `[...]` is the **directive string**.
-2. Parse the directive string (case-insensitive):
-   - If it contains `transcript-only` → set mode flag `TRANSCRIPT_ONLY=true`
-   - If it matches a timestamp pattern like `00:05:00-00:15:00` or `5:00-15:00` → extract `START` and `END` values and set `TIMESTAMP_RANGE=true`
-   - If it contains `audio-only` → set mode flag `AUDIO_ONLY=true`
-   - If it contains `display-only` → set mode flag `DISPLAY_ONLY=true`
-   - Multiple directives can be present in the same block, e.g. `[transcript-only 00:05:00-00:15:00]`
+2. Parse the directive string with the regex-based parser shown in the **Directive rules** section above (case-insensitive). Set mode flags accordingly:
+   - `transcript-only` → `TRANSCRIPT_ONLY=true`
+   - timestamp pattern `HH:MM:SS-HH:MM:SS` (or `MM:SS-MM:SS`) → extract `START`/`END`, set `TIMESTAMP_RANGE=true`
+   - `audio-only` → `AUDIO_ONLY=true`
+   - `display-only` → `DISPLAY_ONLY=true`
+   - `podcast` → `PODCAST_FORCED=true` (force podcast routing on any URL/path)
+   - `podcast-rss` → `PODCAST_RSS=true` (route to Mode N)
+   - `episode: N` → `EPISODE_INDEX=N` (default 1 = newest)
+   - `whisper-model: <model>` → `WHISPER_MODEL_FROM_DIRECTIVE=<model>` (validated against whitelist `tiny|base|small|medium|large|large-v2|large-v3`; on miss, warn + fall back to `medium`)
+   - `podcast title: ...` / `article title: ...` / `plain-text title: ...` / bare `title: ...` → `TITLE_OVERRIDE`
+   - Multiple directives can be present in the same block, e.g. `[transcript-only 00:05:00-00:15:00]` or `[podcast-rss episode: 3]`
 3. Use the **clean URL** (without the directive block) for all subsequent processing.
 
 Report the parsed mode at the start of the URL:
@@ -326,6 +418,36 @@ After parsing directives, if the entry has the `[plain-text]` directive:
 5. Continue to Phase 1 Mode K — do NOT fall through to the local-folder check below.
 
 Progress indicator: `⏳ Step 0b: Plain-text file detected, checking for duplicates...`
+
+### Sub-step 0a-podcast: Detect podcast entry
+
+After parsing directives, route to a podcast mode if any of the following holds:
+
+1. **Auto-detection by host** (URL entries only):
+   - `open.spotify.com/episode/<id>` → `CONTENT_TYPE=podcast`, `PODCAST_MODE=L` (Spotify). Set `PODCAST_ID=<id>` from the path segment. Skip Step 0b `--get-title` check (Mode L's combined probe+download produces the title; dedup runs post-download by slug).
+   - `podcasts.apple.com/.../id<digits>?i=<episode-id>` → `CONTENT_TYPE=podcast`, `PODCAST_MODE=M` (Apple). Extract `APPLE_PODCAST_ID=<digits>` from the `id<digits>` segment and `EP_GUID=<episode-id>` from the `i=` query parameter.
+2. **Auto-detection by URL path** (URL entries only): URL path ends in `.xml`, `.rss`, or `/feed` → `CONTENT_TYPE=podcast`, `PODCAST_MODE=N` (RSS, deferred root-tag confirmation during fetch).
+3. **Explicit directives**:
+   - `[podcast-rss]` → `PODCAST_MODE=N` regardless of URL path.
+   - `[podcast]` on a YouTube URL → keep `CONTENT_TYPE=video` for download (Mode A/B), but set `PODCAST_LENGTH_CHECK=true` so Step 1.5 still runs after download to potentially trigger Path D.
+   - `[podcast]` on a local audio path (`.mp3`/`.m4a`/`.wav`) → `PODCAST_MODE=O`.
+4. **Local audio validation** (when `PODCAST_MODE=O`):
+   - If the path does not start with `/` → fail: `(failed YYYY-MM-DD — local audio entry must be an absolute path)`.
+   - If the path does not exist OR is not a regular file → fail: `(failed YYYY-MM-DD — local audio file does not exist or is not a regular file)`.
+   - If the extension is not `.mp3`/`.m4a`/`.wav` (case-insensitive) → fail: `(failed YYYY-MM-DD — local audio entry must have .mp3, .m4a, or .wav extension)`.
+   - If the file is empty (zero bytes) → fail: `(failed YYYY-MM-DD — local audio file is empty)`.
+5. **Malformed local audio (no `[podcast]` directive)**: If the entry is an absolute path ending in `.mp3`/`.m4a`/`.wav` but `[podcast]` is NOT present → add to `MALFORMED[]` with: `(failed YYYY-MM-DD — local audio file requires explicit [podcast] directive)`. Do not run Step 0b or dispatch a sub-agent.
+6. Extract slug:
+   - For Mode L/M/N: deferred until after title resolution in Phase 1 (use episode-ID or feed-hash temp naming meanwhile).
+   - For Mode O: `[podcast title: ...]` if supplied, otherwise the filename basename without extension.
+7. Dedup:
+   - Mode L: Check A by Spotify episode ID (path segment after `/episode/`); Check B by slug post-download.
+   - Mode M: Check A by Apple `i=` GUID; Check B by slug post-resolution.
+   - Mode N: Check A skipped; Check B by slug post-resolution.
+   - Mode O: Check A skipped; Check B by slug match against `~/Documents/truth-analyses/`.
+8. Continue to Phase 1 Mode L / M / N / O — do NOT fall through to the local-folder check below.
+
+Progress indicator: `⏳ Step 0b: Podcast entry detected (mode: L|M|N|O), checking for duplicates...`
 
 ### Sub-step 0a-local: Detect local folder entry
 
@@ -423,11 +545,12 @@ This call is a single light HTTP fetch and counts as one server visit (apply the
 
 1. **If `CONTENT_TYPE=plain-text`**: Skip Phase 1 fetching → Mode K (copy local `.txt` into `/tmp/url-analyzer/`). No server call.
 2. **If `CONTENT_TYPE=article`** (`[article]` directive): Skip yt-dlp entirely → Mode H (HTML fetch + readable-body extraction).
-3. **If YouTube URL and NOT `AUDIO_ONLY=true`**: Try captions first (Mode A). If captions found → set `TRANSCRIPT_SOURCE=captions`, done. If no captions → fall back to Mode B (audio download + Whisper).
-4. **If `AUDIO_ONLY=true`**: Skip caption attempt → Mode B (audio download + Whisper) directly.
-5. **If LinkedIn URL**: Mode D (three-stage pipeline)
-6. **If Facebook/Instagram URL**: Mode E (yt-dlp audio + thumbnail; both saved). If yt-dlp reports "No video formats found" but extracts metadata → Mode F (image/carousel).
-7. **If yt-dlp fails with other errors**: Apply retry logic.
+3. **If `CONTENT_TYPE=podcast`** (Spotify host / Apple Podcasts host / `[podcast]` / `[podcast-rss]` / local `.mp3`-`.m4a`-`.wav` with `[podcast]`): route to **Mode L** (Spotify), **Mode M** (Apple), **Mode N** (RSS), or **Mode O** (local audio). Then run Step 1.4 (timestamp trim if applicable) + Step 1.5 (duration probe) before Step 2. Long episodes (>30 min) use Step 2 **Path D** (chunked Whisper); short episodes use Path B.
+4. **If YouTube URL and NOT `AUDIO_ONLY=true`**: Try captions first (Mode A). If captions found → set `TRANSCRIPT_SOURCE=captions`, done. If no captions → fall back to Mode B (audio download + Whisper). If `[podcast]` directive is also present, run Step 1.5 after download to potentially trigger Path D.
+5. **If `AUDIO_ONLY=true`**: Skip caption attempt → Mode B (audio download + Whisper) directly.
+6. **If LinkedIn URL**: Mode D (three-stage pipeline)
+7. **If Facebook/Instagram URL**: Mode E (yt-dlp audio + thumbnail; both saved). If yt-dlp reports "No video formats found" but extracts metadata → Mode F (image/carousel).
+8. **If yt-dlp fails with other errors**: Apply retry logic.
 
 > **Captions-first rationale**: Caption fetches transfer ~10KB of metadata vs ~15MB for audio. When captions exist, this eliminates both the large download AND the 3–5 minute Whisper transcription, reducing per-URL processing from minutes to seconds.
 
@@ -922,6 +1045,398 @@ For Step 4c (channel reputation), there is no channel — the sub-agent records 
 
 ---
 
+### Mode L — Spotify podcast episode (yt-dlp + DRM detection)
+
+**Progress indicator**: `⏳ Step 1/7: Probing + downloading Spotify episode...`
+
+Spotify exposes some podcast episodes via yt-dlp's Spotify extractor (when the publisher distributes outside the Spotify+ DRM walled garden). Spotify Originals / Exclusives are DRM-protected and will fail — the failure message routes the user to the publisher's RSS instead.
+
+**Step L-1: Episode-ID temp naming + combined probe+download**
+
+Use the Spotify episode ID (path segment after `/episode/`) as the temp filename until the title-derived slug is known.
+
+```bash
+EP_ID=$(echo '<URL>' | grep -oE '/episode/[A-Za-z0-9]+' | sed 's|/episode/||')
+
+mkdir -p /tmp/url-analyzer
+yt-dlp --cookies-from-browser firefox --no-warnings \
+  -x --audio-format mp3 \
+  --print-to-file "%(title)s|%(duration)s|%(uploader)s" "/tmp/url-analyzer/sp-${EP_ID}.meta" \
+  -o "/tmp/url-analyzer/sp-${EP_ID}.%(ext)s" '<URL>' 2>&1 | tee "/tmp/url-analyzer/sp-${EP_ID}.ytdlp.log"
+```
+
+This is a single yt-dlp invocation — probe (`--print-to-file`) and download happen in one call. Mode L therefore consumes **1 server-call** budget. The normal Step 0b `--get-title` pre-check is **skipped for Spotify URLs** (the title arrives via this combined call); dedup runs post-download by slug.
+
+**Step L-2: Title → slug derivation + rename**
+
+```bash
+TITLE=$(cut -d'|' -f1 "/tmp/url-analyzer/sp-${EP_ID}.meta")
+SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')
+mv "/tmp/url-analyzer/sp-${EP_ID}.mp3" "/tmp/url-analyzer/${SLUG}.mp3"
+mv "/tmp/url-analyzer/sp-${EP_ID}.meta" "/tmp/url-analyzer/${SLUG}.meta"
+AUDIO_PATH="/tmp/url-analyzer/${SLUG}.mp3"
+```
+
+Now run Check B (slug-match against `~/Documents/truth-analyses/`); if duplicate, delete the just-downloaded `.mp3` and emit a duplicate entry.
+
+**Step L-3: Failure detection — distinct DRM / region-lock / 429 / generic**
+
+```bash
+LOG="/tmp/url-analyzer/sp-${EP_ID}.ytdlp.log"
+if grep -qiE 'DRM|Spotify\+|Spotify exclusive' "$LOG"; then
+  FAIL_MSG="Spotify exclusive / DRM-protected. Try the publisher's RSS feed instead; add as [podcast-rss]."
+elif grep -qiE 'not available in your country|geo|region' "$LOG"; then
+  FAIL_MSG="Spotify episode region-locked. Try via VPN or via the publisher's RSS feed [podcast-rss]."
+elif grep -qiE 'HTTP Error 429|Too Many Requests|rate limit' "$LOG"; then
+  FAIL_MSG="Spotify rate-limited (after standard exponential backoff retries exhausted). Retry manually after several hours."
+else
+  FAIL_MSG="Spotify download failed: $(tail -1 "$LOG")"
+fi
+```
+
+**Step L-4: Rate-limit** — 1 server call total. Apply standard 45–75s delay after success or after the DRM-failed log message.
+
+**Note**: `[transcript-only]` is silently ignored for Spotify (no caption tracks). `TRANSCRIPT_SOURCE=whisper`. Proceed to Step 1.4 (timestamp trim if applicable), then Step 1.5 (duration probe).
+
+---
+
+### Mode M — Apple Podcasts (iTunes Lookup → RSS resolution)
+
+**Progress indicator**: `⏳ Step 1/7: Resolving Apple Podcasts feedUrl via iTunes Lookup...`
+
+Apple Podcasts has no public episode-audio API; episodes are fetched from the publisher's RSS feed (which Apple does expose via iTunes Lookup). This mode resolves the feed URL, then delegates to Mode N with a GUID-match hint.
+
+**Step M-1: Extract IDs from URL**
+
+```bash
+APPLE_PODCAST_ID=$(echo '<URL>' | grep -oE 'id[0-9]+' | tr -d 'id')
+EP_GUID=$(echo '<URL>' | grep -oE '[?&]i=[^&]+' | sed 's/^[?&]i=//')
+```
+
+**Step M-2: iTunes Lookup with concrete failure detection**
+
+```bash
+LOOKUP_HTTP=$(curl -sL -w '\n%{http_code}' "https://itunes.apple.com/lookup?id=$APPLE_PODCAST_ID")
+HTTP_CODE=$(echo "$LOOKUP_HTTP" | tail -1)
+LOOKUP_BODY=$(echo "$LOOKUP_HTTP" | sed '$d')
+
+if [ "$HTTP_CODE" = "451" ]; then
+  FAIL_MSG="Apple Podcasts feed region-locked (HTTP 451). Try via VPN or use the publisher's RSS feed directly with [podcast-rss]."
+  exit_failed
+fi
+
+FEED_URL=$(echo "$LOOKUP_BODY" | python3 -c "import sys, json
+try:
+    d = json.load(sys.stdin)
+except Exception as e:
+    print('__JSON_PARSE_ERROR__'); sys.exit(0)
+if not d.get('results'): print('__NO_RESULTS__'); sys.exit(0)
+r = d['results'][0]
+if 'feedUrl' not in r or not r['feedUrl']: print('__NO_FEED_URL__'); sys.exit(0)
+print(r['feedUrl'])")
+
+case "$FEED_URL" in
+  __JSON_PARSE_ERROR__)
+    FAIL_MSG="Apple Podcasts: iTunes Lookup returned malformed JSON"
+    exit_failed ;;
+  __NO_RESULTS__)
+    FAIL_MSG="Apple Podcasts: iTunes Lookup returned no results for podcast id $APPLE_PODCAST_ID (podcast may be removed or region-locked from your IP)"
+    exit_failed ;;
+  __NO_FEED_URL__)
+    FAIL_MSG="Apple Podcasts: iTunes Lookup returned no feedUrl for podcast id $APPLE_PODCAST_ID. Likely Apple Podcasts Subscriptions-only (paywalled)."
+    exit_failed ;;
+esac
+```
+
+**Step M-3: Probe resolved feed URL to distinguish public from paywalled/region-locked**
+
+```bash
+STATUS=$(curl -sI "$FEED_URL" -o /dev/null -w '%{http_code}')
+if [ -z "$STATUS" ] || [ "$STATUS" = "000" ]; then
+  STATUS=$(curl -skI "$FEED_URL" -o /dev/null -w '%{http_code}')
+  [ "$STATUS" != "000" ] && echo "⚠️  Apple feed required insecure TLS (-k) — publisher has bad cert chain."
+fi
+case "$STATUS" in
+  200|301|302|307|308) ;;
+  401|403) FAIL_MSG="Apple Podcasts: feed URL requires auth (HTTP $STATUS); likely paywalled"; exit_failed ;;
+  451) FAIL_MSG="Apple Podcasts feed region-locked (HTTP 451)"; exit_failed ;;
+esac
+```
+
+**Step M-4: Delegate to Mode N with GUID hint**
+
+Invoke Mode N with `FEED_URL` and `EP_GUID`. Mode N iterates items and matches against `<guid>`, `<enclosure url>`, or item `<link>` containing `$EP_GUID` (publishers stash the Apple `i=` value in different places). If no GUID match is found, Mode N emits a non-fatal warning and uses the most-recent episode instead. The Step 7 entry should append a note when this fallback occurs.
+
+**Step M-5: Rate-limit** — 3 server calls clustered tightly (iTunes Lookup + RSS XML fetch + enclosure download — plus 1 HEAD probe for the feed, which is sub-second). Apply ONE 45–75s delay after the enclosure download (clustered-call treatment matches `Mode F` carousel scrape).
+
+**Note**: `[transcript-only]` is silently ignored. `TRANSCRIPT_SOURCE=whisper`. Proceed to Step 1.4 / 1.5 after Mode N download completes.
+
+---
+
+### Mode N — Generic podcast RSS feed
+
+**Progress indicator**: `⏳ Step 1/7: Fetching RSS feed XML and parsing for episode enclosure...`
+
+This mode handles direct RSS feed URLs (with `[podcast-rss]` directive or auto-detected by URL path) and is also invoked by Mode M as the second stage of Apple resolution.
+
+**Step N-1: Fetch feed + root-tag confirmation**
+
+```bash
+mkdir -p /tmp/url-analyzer
+FEED_HASH=$(echo '<RSS_URL>' | shasum -a 1 | cut -c1-12)
+FEED_PATH="/tmp/url-analyzer/feed-${FEED_HASH}.xml"
+curl -sL -A "Mozilla/5.0" --max-time 60 '<RSS_URL>' > "$FEED_PATH"
+
+# Strip UTF-8 BOM if present (some publishers emit it; ET.parse chokes)
+sed -i '' -e '1s/^\xEF\xBB\xBF//' "$FEED_PATH" 2>/dev/null || true
+
+# Root-tag sniff via streaming iterparse (handles huge feeds without loading full file)
+ROOT_TAG=$(python3 - "$FEED_PATH" <<'EOF'
+import sys
+from xml.etree import ElementTree as ET
+try:
+    for ev, el in ET.iterparse(sys.argv[1], events=('start',)):
+        print(el.tag.split('}', 1)[-1] if '}' in el.tag else el.tag); break
+except Exception:
+    print('')
+EOF
+)
+case "$ROOT_TAG" in
+  rss|feed) ;;
+  *) FAIL_MSG="URL did not return RSS or Atom XML at root (got: '$ROOT_TAG')"; exit_failed ;;
+esac
+```
+
+**Step N-2: Parse feed → choose episode (with pubDate-sorted ordering, namespace-agnostic, GUID match)**
+
+```bash
+PARSE_OUT=$(python3 - "$FEED_PATH" "${EPISODE_INDEX:-1}" "${EP_GUID:-}" <<'EOF'
+import sys, json
+from xml.etree import ElementTree as ET
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
+
+feed_path, ep_index, ep_guid = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+
+try:
+    tree = ET.parse(feed_path)
+except ET.ParseError as e:
+    print(json.dumps({"error": f"RSS parse error: {e}"})); sys.exit(0)
+except Exception as e:
+    print(json.dumps({"error": f"feed read error: {e}"})); sys.exit(0)
+
+root = tree.getroot()
+
+def lname(t):
+    return t.split('}', 1)[-1] if '}' in t else t
+
+items = [el for el in root.iter() if lname(el.tag) in ('item', 'entry')]
+if not items:
+    print(json.dumps({"error": "no <item> or <entry> elements found in feed"})); sys.exit(0)
+
+def child_text(item, target_local):
+    for c in item:
+        if lname(c.tag) == target_local:
+            return (c.text or '').strip()
+    return ''
+
+def child_attr(item, target_local, attr):
+    for c in item:
+        if lname(c.tag) == target_local:
+            return c.get(attr, '')
+    return ''
+
+def find_enclosure_url(item):
+    u = child_attr(item, 'enclosure', 'url')
+    if u: return u
+    for c in item:
+        if lname(c.tag) == 'link' and c.get('rel') == 'enclosure':
+            return c.get('href', '')
+    for c in item:
+        if lname(c.tag) == 'content' and c.get('url') and (
+                c.get('type', '').startswith('audio') or c.get('medium') == 'audio'):
+            return c.get('url')
+    return ''
+
+def find_pubdate(item):
+    for tag in ('pubDate', 'published', 'updated'):
+        txt = child_text(item, tag)
+        if not txt: continue
+        try:
+            return parsedate_to_datetime(txt)
+        except Exception:
+            try:
+                return datetime.fromisoformat(txt.replace('Z', '+00:00'))
+            except Exception:
+                continue
+    return datetime.fromtimestamp(0, tz=timezone.utc)
+
+# Sort by pubDate descending (newest first) — required for [episode: N] semantics
+items.sort(key=find_pubdate, reverse=True)
+
+chosen = None
+chosen_idx = ep_index - 1
+guid_matched = False
+
+if ep_guid:
+    for i, it in enumerate(items):
+        guid = child_text(it, 'guid')
+        enc_url = find_enclosure_url(it)
+        link = child_attr(it, 'link', 'href') or child_text(it, 'link')
+        if ep_guid in guid or ep_guid in enc_url or ep_guid in link:
+            chosen, chosen_idx, guid_matched = it, i, True
+            break
+
+if chosen is None:
+    if chosen_idx < 0 or chosen_idx >= len(items):
+        chosen_idx = 0
+    chosen = items[chosen_idx]
+
+title = child_text(chosen, 'title')
+enc_url = find_enclosure_url(chosen)
+duration = ''
+for c in chosen:
+    if lname(c.tag) == 'duration':
+        duration = (c.text or '').strip(); break
+guid = child_text(chosen, 'guid')
+
+if not enc_url:
+    print(json.dumps({"error": "no audio enclosure found in selected item (video-only or transcript-only feed)"})); sys.exit(0)
+
+print(json.dumps({
+    "title": title,
+    "url": enc_url,
+    "duration": duration,
+    "guid": guid,
+    "chosen_index": chosen_idx,
+    "total_items": len(items),
+    "guid_matched": guid_matched,
+    "guid_requested": bool(ep_guid),
+}))
+EOF
+)
+
+ENCLOSURE_URL=$(echo "$PARSE_OUT" | python3 -c "import json, sys; d=json.loads(sys.stdin.read()); print(d.get('url',''))")
+ERROR_MSG=$(echo "$PARSE_OUT" | python3 -c "import json, sys; d=json.loads(sys.stdin.read()); print(d.get('error',''))")
+
+if [ -n "$ERROR_MSG" ]; then
+  FAIL_MSG="$ERROR_MSG"
+  exit_failed
+fi
+```
+
+**Step N-3: Title → slug + Check B + download enclosure**
+
+```bash
+TITLE=$(echo "$PARSE_OUT" | python3 -c "import json, sys; print(json.loads(sys.stdin.read())['title'])")
+SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//' | head -c 60)
+
+# Check B dedup (slug match against ~/Documents/truth-analyses/) AND Stage B in-batch dedup
+# (if another already-resolved RSS entry in the batch has the same slug, skip download here).
+
+curl -sL -A "Mozilla/5.0" --max-time 600 \
+  -o /tmp/url-analyzer/${SLUG}.mp3 "$ENCLOSURE_URL"
+AUDIO_PATH="/tmp/url-analyzer/${SLUG}.mp3"
+
+# Rename feed cache to slug for consistent cleanup
+mv "$FEED_PATH" "/tmp/url-analyzer/${SLUG}.feed.xml"
+```
+
+**Step N-4: Apple GUID fallback notation**
+
+When invoked by Mode M with an `EP_GUID` that did not match any item (`guid_matched=false` AND `guid_requested=true`), append a note to the Step 7 entry: `... (analyzed YYYY-MM-DD; Apple GUID not found in RSS — analyzed newest episode "<title>" → truth-analyses/...)`. The user can verify whether the right episode was processed.
+
+**Step N-5: Rate-limit** — 2 server calls clustered (XML fetch + enclosure download). Apply ONE 45–75s delay after the enclosure download.
+
+**Note**: `[transcript-only]`, `[audio-only]`, and `[timestamp-range]` are silently ignored. `TRANSCRIPT_SOURCE=whisper`. Proceed to Step 1.4 / 1.5.
+
+---
+
+### Mode O — Local audio file (.mp3 / .m4a / .wav)
+
+**Progress indicator**: `⏳ Step 1/7: Copying local audio to working directory...`
+
+No fetch. Mirror of Mode K (plain-text), but for audio. Validation already happened in Sub-step 0a-podcast; this step only stages the file.
+
+```bash
+mkdir -p /tmp/url-analyzer
+EXT=$(echo '<absolute-path>' | awk -F. '{print tolower($NF)}')
+
+SLUG="${TITLE_OVERRIDE_SLUG:-$(basename '<absolute-path>' ".$EXT" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')}"
+cp '<absolute-path>' "/tmp/url-analyzer/${SLUG}.${EXT}"
+AUDIO_PATH="/tmp/url-analyzer/${SLUG}.${EXT}"
+```
+
+`AUDIO_PATH` preserves the original extension so subsequent steps (ffprobe, ffmpeg chunking, Whisper) work uniformly with `.mp3`/`.m4a`/`.wav`. Modes L/M/N all set `AUDIO_PATH` to a `.mp3` path; Mode O is the only mode that may set it to `.m4a` or `.wav`.
+
+**No server call** — no inter-request delay, no batch-cooldown counter, no retry logic.
+
+Set `CONTENT_TYPE=podcast`, `TRANSCRIPT_SOURCE=whisper`. For Step 4c (channel reputation), there is no channel — the sub-agent records `Source channel: N/A (local audio file)` and skips the reputation paragraph.
+
+**Original file safety**: Never modify or delete the user's source audio file. Step 6 cleanup deletes only the copy under `/tmp/url-analyzer/`.
+
+**After Mode O**: Report `✓ Step 1/7: Local audio staged (extension: <ext>, no download needed).` Proceed to Step 1.4 / 1.5.
+
+---
+
+## Step 1.4: Timestamp trim (podcasts only, when `TIMESTAMP_RANGE=true`)
+
+**Progress indicator**: `⏳ Step 1.4: Trimming audio to requested timestamp range...`
+
+If the entry has a `[HH:MM:SS-HH:MM:SS]` directive, trim the downloaded audio **before** duration classification. This means a 90-minute episode trimmed to `[00:05:00-00:15:00]` (10 minutes) routes to the short path, not the long path. The trim uses `-c copy` (stream copy, no re-encode) because it operates on the already-encoded file Modes L/M/N produced.
+
+```bash
+if [ "$TIMESTAMP_RANGE" = "true" ]; then
+  TRIMMED="${AUDIO_PATH%.*}.trimmed.${AUDIO_PATH##*.}"
+  ffmpeg -y -i "$AUDIO_PATH" -ss "${START}" -to "${END}" -c copy "$TRIMMED" && \
+    mv "$TRIMMED" "$AUDIO_PATH"
+fi
+```
+
+Only applies to `CONTENT_TYPE=podcast`. For all other content types, this step is a no-op.
+
+---
+
+## Step 1.5: Duration probe + long/short routing (podcasts only)
+
+**Progress indicator**: `⏳ Step 1.5: Probing audio duration to classify long vs short...`
+
+Classify the (possibly trimmed) audio as **short** (≤30 min) or **long** (>30 min). `ffprobe` works uniformly on `.mp3`/`.m4a`/`.wav` so `$AUDIO_PATH` is read directly.
+
+```bash
+DURATION_SEC=$(ffprobe -v quiet -show_entries format=duration \
+  -of csv=p=0 "$AUDIO_PATH" 2>/dev/null | cut -d. -f1)
+if [ -z "$DURATION_SEC" ] || [ "$DURATION_SEC" -lt 1 ]; then
+  DURATION_SEC=0
+  echo "⚠️  Step 1.5: Could not determine duration via ffprobe; defaulting to short Whisper path."
+fi
+
+WHISPER_MODEL_OVERRIDE="${WHISPER_MODEL_FROM_DIRECTIVE:-}"
+if [ "$DURATION_SEC" -gt 1800 ]; then
+  PODCAST_LENGTH=long
+  WHISPER_MODEL="${WHISPER_MODEL_OVERRIDE:-medium}"
+  if [ "$WHISPER_MODEL" = "large-v3" ]; then
+    MAX_WHISPER_JOBS=1   # 3 GB model × 2 = 6 GB+, force serial on 16 GB systems
+  else
+    MAX_WHISPER_JOBS=2
+  fi
+else
+  PODCAST_LENGTH=short
+  WHISPER_MODEL=small
+  MAX_WHISPER_JOBS=1   # n/a but set for safety
+fi
+```
+
+**Routing**:
+- `PODCAST_LENGTH=short` → Step 2 Path B (existing single-pass Whisper `small`).
+- `PODCAST_LENGTH=long` → Step 2 Path D (new chunked Whisper, see below).
+
+**Step 1.5 also runs for YouTube URLs with `[podcast]` directive** (`PODCAST_LENGTH_CHECK=true` set in Sub-step 0a-podcast) so long YouTube interviews can also opt into Path D.
+
+**Sub-agent dispatch timing (long path):** Step 2 Path D for a 90-minute episode at `medium` takes ~5–15 minutes. Path D MUST run as a background process so the parent can proceed with the next URL's download during the inter-request delay. The sub-agent for this URL is dispatched LATE (after Path D's stitch step writes the transcript `.txt` atomically), not after the delay ends. The existing "await transcript ready" logic at the end of Phase 1 already handles this — verify the `wait` loop iterates over Path D background PIDs in addition to Path B PIDs.
+
+---
+
 ### Retry with exponential backoff
 
 If `yt-dlp` fails and the output contains any of: `Sign in to confirm`, `HTTP Error 429`, `Too Many Requests`, or `rate limit` — this is a server-side rate limit. Apply exponential backoff:
@@ -980,7 +1495,13 @@ If Whisper finishes before the delay ends, the sub-agent is dispatched immediate
 sleep $((15 + RANDOM % 16))   # randomized: 15–30 seconds for caption-only
 ```
 
-**Exception**: Local folder entries (Mode I) and plain-text file entries (Mode K) do not count toward the inter-request delay or batch cooldown counters, since no server calls are made. Article fetches (Mode H) DO make network requests and should count toward rate limits.
+**Exception**: Local folder entries (Mode I), plain-text file entries (Mode K), and local audio entries (Mode O) do not count toward the inter-request delay or batch cooldown counters, since no server calls are made. Article fetches (Mode H) and podcast modes L/M/N DO make network requests and should count toward rate limits.
+
+**Podcast mode rate-limit budget:**
+- **Mode L (Spotify)** — 1 server call (combined yt-dlp probe+download invocation). Step 0b `--get-title` pre-check is skipped for Spotify URLs because Mode L produces the title via the same call. Apply standard 45–75s delay after the download (success OR DRM-failed log).
+- **Mode M (Apple Podcasts)** — 3 server calls clustered tightly: (a) iTunes Lookup, (b) feed `HEAD` probe, (c) RSS XML fetch + (d) enclosure download. The first three are sub-second metadata calls; apply ONE 45–75s delay after the enclosure download (matches Mode F carousel scrape's clustered-call treatment).
+- **Mode N (Generic RSS)** — 2 server calls clustered: (a) RSS XML fetch + (b) enclosure download. Apply ONE 45–75s delay after the enclosure download.
+- **Mode O (Local audio)** — 0 server calls. No inter-request delay. Does not count toward batch cooldown.
 
 ### Batch cooldown
 
@@ -1040,11 +1561,14 @@ You are analyzing content for truth claims. Run Steps 2 (if needed), 3, 4, 5, an
 - Slug: <slug>
 - Title: <title>
 - Handle / uploader: <uploader_id> / <uploader>
-- Content type: <video|audio|image|article|plain-text|silent-video>
+- Content type: <video|audio|image|article|plain-text|silent-video|podcast>
 - Transcript source: <captions|whisper|ocr|html|plain-text>
 - Transcript file: /tmp/url-analyzer/<slug>.txt
 - Thumbnail file: /tmp/url-analyzer/<slug>.jpg  ← present for Instagram/Facebook reels (Mode E) and silent-video
-- Transcript degenerate: <true|false>  ← true when Whisper produced <30 words / music-only / hallucinated lyrics
+- Transcript degenerate: <true|false>  ← true when Whisper produced <30 words / music-only / hallucinated lyrics (or, for long podcasts, <30 words × chunk_count across all chunks)
+- Podcast length: <short|long|n/a>  ← only set when content type is podcast
+- Chunk offsets: <comma-separated minute marks if long, otherwise "n/a">
+- Whisper model used: <small|medium|large-v3|n/a>
 - Directives: <parsed directives or "none">
 - Display only: <true|false>
 - Date: <YYYY-MM-DD>
@@ -1067,6 +1591,23 @@ and Read tool for visual analysis, then save combined output to /tmp/url-analyze
 ## For article content (TRANSCRIPT_SOURCE=html) or plain-text content (TRANSCRIPT_SOURCE=plain-text)
 Step 2 is a no-op — the transcript file at /tmp/url-analyzer/<slug>.txt was already produced
 by Mode H or Mode K in Phase 1. Read it directly and proceed to Step 3.
+
+## For long podcast content (CONTENT_TYPE=podcast, PODCAST_LENGTH=long)
+The transcript at /tmp/url-analyzer/<slug>.txt is segmented with `=== Chunk N (~M min mark) ===`
+headers, one per ~10-minute window (already produced by Step 2 Path D in Phase 1).
+1. Group your Step 4 claim extraction by chunk: list each chunk's primary claims under its timestamp header.
+2. When citing a specific claim in your Verdict or ELI5 section, include the approximate timestamp
+   range in parentheses, e.g. `(claimed around the 40 min mark)`.
+3. In the Verdict section, explicitly note whether the show's accuracy holds consistently throughout
+   or varies by segment — e.g. "Strong fact base in the first hour; speculative claims in the closing 20 min."
+4. Channel reputation (Step 4c) treats the show + host as the source channel (e.g. "The Daily / Michael Barbaro").
+5. If `Transcript degenerate=true` (sub-30 words per chunk average across all chunks — almost certainly
+   silence/music or non-speech content), return Grade C / "no claims extractable" rather than fabricating.
+   The Step 7 entry will still be `analyzed`, not `failed`.
+
+## For short podcast content (CONTENT_TYPE=podcast, PODCAST_LENGTH=short)
+Treat the transcript like a video — single-pass claim extraction, no chunk grouping. Channel reputation
+still uses the podcast show + host as the source channel.
 
 ## Step 3: Classify content
 Read the transcript and classify as Medical or General Science.
@@ -1172,6 +1713,8 @@ The extraction method depends on the content type:
 - **Image content** (`TRANSCRIPT_SOURCE=ocr`) → Path C below (runs in Phase 2)
 - **Article content** (`TRANSCRIPT_SOURCE=html`) → No-op. The transcript was already produced by Mode H in Phase 1.
 - **Plain-text content** (`TRANSCRIPT_SOURCE=plain-text`) → No-op. The transcript was already produced by Mode K in Phase 1.
+- **Long podcast content** (`CONTENT_TYPE=podcast`, `PODCAST_LENGTH=long`) → Path D below (chunked Whisper, parallel, runs as a background process during Phase 1 delay; can take 5–15 min).
+- **Short podcast content** (`CONTENT_TYPE=podcast`, `PODCAST_LENGTH=short`) → Path B (existing single-pass Whisper `small`).
 
 ---
 
@@ -1375,6 +1918,88 @@ Source: [subfolder path if from local folder, otherwise "carousel image 2"]
 
 ---
 
+### Path D — Chunked Whisper for long podcasts (`TRANSCRIPT_SOURCE=whisper`, `PODCAST_LENGTH=long`)
+
+**Progress indicator**: `⏳ Step 2/7: Splitting long podcast into 10-minute chunks for parallel Whisper transcription...`
+
+Long podcasts (>30 min, classified by Step 1.5) bypass Path B and run a chunked Whisper pipeline. Chunking is required because single-pass Whisper on a 90-minute file takes 15–30 minutes and risks running out of GPU memory; parallel chunks finish in ~5–10 minutes wall-clock with the `medium` model.
+
+**Step D-1: Split with ffmpeg segment muxer (re-encoding, NOT `-c copy`)**
+
+```bash
+mkdir -p /tmp/url-analyzer/${SLUG}-chunks
+ffmpeg -y -i "$AUDIO_PATH" \
+  -f segment -segment_time 600 -reset_timestamps 1 \
+  -c:a libmp3lame -q:a 4 \
+  /tmp/url-analyzer/${SLUG}-chunks/chunk-%03d.mp3
+
+CHUNK_COUNT=$(ls /tmp/url-analyzer/${SLUG}-chunks/chunk-*.mp3 2>/dev/null | wc -l | tr -d ' ')
+if [ "$CHUNK_COUNT" -eq 0 ]; then
+  FAIL_MSG="ffmpeg produced zero chunks from $AUDIO_PATH — file may be corrupt"
+  exit_failed
+fi
+```
+
+**Re-encoding rationale**: `-c copy` on the segment muxer can leave dangling frames at chunk boundaries that Whisper transcribes as garbage (similar issue to LinkedIn DASH HE-AAC corruption documented in Mode D). `-c:a libmp3lame -q:a 4` re-encodes each chunk cleanly (CPU cost ~30s per hour of audio on modern hardware) at ~165 kbps VBR. The CPU tradeoff is worth the transcript quality.
+
+`$AUDIO_PATH` is used (not a hardcoded `.mp3` path) so Mode O sources with `.m4a` or `.wav` extensions are handled uniformly — ffmpeg decodes any of them and re-encodes the chunks to mp3.
+
+**Step D-2: Parallel Whisper with portable concurrency cap**
+
+```bash
+# $MAX_WHISPER_JOBS set by Step 1.5 (1 for large-v3, 2 otherwise)
+# macOS bash 3.2 lacks `wait -n`, so use PID array + polling
+PIDS=()
+for chunk in /tmp/url-analyzer/${SLUG}-chunks/chunk-*.mp3; do
+  [ -f "$chunk" ] || continue
+  while [ "$(jobs -r | wc -l)" -ge "$MAX_WHISPER_JOBS" ]; do sleep 2; done
+  whisper "$chunk" --model "$WHISPER_MODEL" \
+    --output_format txt \
+    --output_dir /tmp/url-analyzer/${SLUG}-chunks/ &
+  PIDS+=($!)
+done
+for pid in "${PIDS[@]}"; do wait $pid; done
+```
+
+**Step D-3: Stitch chunk transcripts with timestamp headers**
+
+```bash
+python3 - <<EOF > /tmp/url-analyzer/${SLUG}.txt
+import glob
+chunks = sorted(glob.glob('/tmp/url-analyzer/${SLUG}-chunks/chunk-*.txt'))
+out = []
+for i, ch in enumerate(chunks):
+    offset_min = i * 10
+    out.append(f"=== Chunk {i+1} (~{offset_min} min mark) ===")
+    try:
+        out.append(open(ch).read().strip())
+    except FileNotFoundError:
+        out.append("[chunk failed to transcribe]")
+    out.append("")
+print('\n'.join(out))
+EOF
+```
+
+The transcript file at `/tmp/url-analyzer/${SLUG}.txt` is written atomically as the LAST step. The existing sub-agent "await transcript ready" dispatch logic detects this and spawns the analysis sub-agent.
+
+**Step D-4: Degenerate transcript detection (mostly silence / music)**
+
+```bash
+TOTAL_WORDS=$(wc -w < /tmp/url-analyzer/${SLUG}.txt)
+EXPECTED_MIN_WORDS=$(( CHUNK_COUNT * 30 ))   # ~30 words/chunk × N chunks
+if [ "$TOTAL_WORDS" -lt "$EXPECTED_MIN_WORDS" ]; then
+  TRANSCRIPT_DEGENERATE=true
+fi
+```
+
+When `TRANSCRIPT_DEGENERATE=true`, the sub-agent prompt instructs the sub-agent to return **Grade C / "no claims extractable"** rather than fabricating (mirrors Mode E behavior for music-only Instagram reels). The Step 7 entry is still `analyzed` (not `failed`) because the analysis itself completed correctly — it just found no claims.
+
+**Only ffmpeg-level chunking failure (Step D-1) produces a `failed` entry**; transcription-then-empty is a successful analysis with no claims.
+
+**After Path D**: Report `✓ Step 2/7: Long podcast transcription complete via chunked Whisper (N chunks × ~10 min, model: $WHISPER_MODEL, $TOTAL_WORDS words total; degenerate=$TRANSCRIPT_DEGENERATE)`
+
+---
+
 ## Step 3: Classify the content (Phase 2 — runs inside sub-agent)
 
 **Progress indicator**: `⏳ Step 3/7: Classifying content type...`
@@ -1504,12 +2129,13 @@ Save to `~/Documents/truth-analyses/YYYY-MM-DD-<slugified-title>.md`:
 
 ```markdown
 # Truth Analysis: <Post Title or Video Title>
-**Source URL**: <URL>                                  ← for URL entries (video/audio/image/article)
+**Source URL**: <URL>                                  ← for URL entries (video/audio/image/article/podcast-from-URL)
 **Source**: Local folder: /path/to/folder (N images)   ← for local folder entries
 **Source**: Plain-text file: /path/to/file.txt         ← for plain-text entries
+**Source**: Local audio file: /path/to/file.mp3        ← for Mode O (local audio podcast) entries
 **Analyzed**: YYYY-MM-DD
 **Content type**: Medical | General Science
-**Format**: Video | Audio | Image Post | Carousel (N images) | Article | Plain Text
+**Format**: Video | Audio | Image Post | Carousel (N images) | Article | Plain Text | Podcast (short) | Podcast (long, N chunks)
 
 **Share?**: <one sentence recommendation: Yes/No/With caveats — would you share this with a scientifically curious friend who knows nothing about the topic, if your goal is for them to come away with an accurate understanding?>
 
@@ -1574,9 +2200,12 @@ The `extract_audio` command downloads video/audio files and creates working dire
 - The truth analysis markdown file in `~/Documents/truth-analyses/`
 
 **What to delete** (only files belonging to this sub-agent's slug):
-- `/tmp/url-analyzer/<slug>.*` — all temp files for this URL (`.mp3`, `.mp4`, `.wav`, `.vtt`, `.srt`, `.jpg`, `.png`, `.txt`, `_transcription.txt`)
+- `/tmp/url-analyzer/<slug>.*` — all temp files for this URL (`.mp3`, `.m4a`, `.wav`, `.mp4`, `.vtt`, `.srt`, `.jpg`, `.png`, `.txt`, `.meta`, `.feed.xml`, `_transcription.txt`)
 - `/tmp/url-analyzer/<slug>-*.jpg` — carousel/folder images for this slug
 - `/tmp/url-analyzer/<slug>-paths.txt` — subfolder mapping file if present
+- `/tmp/url-analyzer/<slug>-chunks/` — entire directory (chunked Whisper output for long podcasts, Step 2 Path D)
+- `/tmp/url-analyzer/sp-<EP_ID>.*` — Spotify pre-rename temp files (Mode L), if Mode L failed before the slug-rename step
+- `/tmp/url-analyzer/feed-<HASH>.xml` — RSS feed XML cache (Mode N) — already renamed to `<slug>.feed.xml` on success
 - Any folders created by `extract_audio` (typically long hash-named directories)
 
 **Local folder entries**: Delete only copies in `/tmp/url-analyzer/` and intermediary files. **Never delete the original source folder or its contents.** The original folder path is user-managed data.
@@ -1585,11 +2214,16 @@ The `extract_audio` command downloads video/audio files and creates working dire
 
 **Article entries**: Delete the extracted body at `/tmp/url-analyzer/<slug>.txt`. There is no other state to remove.
 
+**Podcast entries (Mode O — local audio)**: Delete only the copy at `/tmp/url-analyzer/<slug>.<ext>` (and chunks dir if Path D ran). **Never delete the user's original audio source file** — it lives outside `/tmp/url-analyzer/`.
+
+**Podcast entries (Modes L/M/N)**: Delete the downloaded `.mp3`, the `.meta` and `.ytdlp.log` (Mode L), the `.feed.xml` (Modes M/N), and the chunks dir (Path D). No external user files to preserve.
+
 **How to clean up:**
 ```bash
 rm -f /tmp/url-analyzer/<slug>.*
 rm -f /tmp/url-analyzer/<slug>-*.jpg
 rm -f /tmp/url-analyzer/<slug>-paths.txt
+rm -rf /tmp/url-analyzer/<slug>-chunks/
 ```
 
 Do **not** delete files belonging to other slugs — other sub-agents may still be using them.
@@ -1654,6 +2288,19 @@ If a directive was used, append it in parentheses for traceability:
 - /path/to/file.txt [plain-text title: My Title] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
 ```
 
+**Podcast entry** (sub-agent returned `status: success`):
+```
+- <SPOTIFY_URL> [podcast] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- <APPLE_URL> [podcast] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- <APPLE_URL> [podcast] (analyzed YYYY-MM-DD; Apple GUID not found in RSS — analyzed newest episode "<title>" → truth-analyses/YYYY-MM-DD-<slug>.md)
+- <RSS_URL> [podcast-rss] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- <RSS_URL> [podcast-rss episode: 3] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- <YOUTUBE_URL> [podcast] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- <ANY_URL> [podcast whisper-model: large-v3] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- /path/to/file.mp3 [podcast] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+- /path/to/file.m4a [podcast title: My Episode Title] (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md)
+```
+
 **Duplicate entry** (detected by parent in Phase 0 or Step 0b):
 ```
 - <URL> (duplicate of <original-URL> → see truth-analyses/<existing-file>.md)
@@ -1684,6 +2331,37 @@ If a directive was used, append it in parentheses for traceability:
 - /path/to/file.txt [plain-text] (failed YYYY-MM-DD — file does not exist or is not a regular file)
 - /path/to/file.txt [plain-text] (failed YYYY-MM-DD — plain-text entry must be a .txt file)
 - /path/to/file.txt [plain-text] (failed YYYY-MM-DD — plain-text file is empty)
+```
+
+**Failed podcast entry** (status-semantics note: a degenerate transcript — sub-30 words/chunk avg, e.g. all silence/music — is `analyzed` with Grade C verdict, NOT `failed`. Only the failures below mark the entry `failed`):
+```
+# Spotify
+- <SPOTIFY_URL> [podcast] (failed YYYY-MM-DD — Spotify exclusive / DRM-protected. Try the publisher's RSS feed instead; add as [podcast-rss].)
+- <SPOTIFY_URL> [podcast] (failed YYYY-MM-DD — Spotify episode region-locked. Try via VPN or via the publisher's RSS feed [podcast-rss].)
+- <SPOTIFY_URL> [podcast] (failed YYYY-MM-DD — Spotify rate-limited after exponential backoff retries exhausted. Retry manually after several hours.)
+
+# Apple Podcasts
+- <APPLE_URL> [podcast] (failed YYYY-MM-DD — Apple Podcasts: iTunes Lookup returned malformed JSON)
+- <APPLE_URL> [podcast] (failed YYYY-MM-DD — Apple Podcasts: iTunes Lookup returned no results for podcast id N — likely removed or region-locked)
+- <APPLE_URL> [podcast] (failed YYYY-MM-DD — Apple Podcasts: iTunes Lookup returned no feedUrl for podcast id N — likely Apple Podcasts Subscriptions-only)
+- <APPLE_URL> [podcast] (failed YYYY-MM-DD — Apple Podcasts: feed URL requires auth (HTTP 4xx); likely paywalled)
+- <APPLE_URL> [podcast] (failed YYYY-MM-DD — Apple Podcasts feed region-locked (HTTP 451))
+
+# RSS
+- <RSS_URL> [podcast-rss] (failed YYYY-MM-DD — URL did not return RSS or Atom XML at root (got: '<actual-tag>'))
+- <RSS_URL> [podcast-rss] (failed YYYY-MM-DD — RSS parse error: <reason>)
+- <RSS_URL> [podcast-rss] (failed YYYY-MM-DD — no <item> or <entry> elements found in feed)
+- <RSS_URL> [podcast-rss] (failed YYYY-MM-DD — no audio enclosure found in selected item — video-only or transcript-only feed)
+
+# Local audio (Mode O)
+- /path/to/file.mp3 [podcast] (failed YYYY-MM-DD — local audio entry must be an absolute path)
+- /path/to/file.mp3 [podcast] (failed YYYY-MM-DD — local audio file does not exist or is not a regular file)
+- /path/to/file.xyz [podcast] (failed YYYY-MM-DD — local audio entry must have .mp3, .m4a, or .wav extension)
+- /path/to/file.mp3 [podcast] (failed YYYY-MM-DD — local audio file is empty)
+- /path/to/file.mp3 (failed YYYY-MM-DD — local audio file requires explicit [podcast] directive)   ← MALFORMED[] partition
+
+# Path D long-podcast chunking
+- <URL> [podcast] (failed YYYY-MM-DD — ffmpeg produced zero chunks from audio file — file may be corrupt)
 ```
 
 **Display-only entry** (sub-agent returned `status: success` with `DISPLAY_ONLY=true`):
@@ -1776,3 +2454,35 @@ git push origin main
 ```
 ℹ️  GitHub sync skipped — <reason>.
 ```
+
+---
+
+## Dependencies
+
+- `yt-dlp` — required for YouTube (Modes A/B), LinkedIn (Mode D), Facebook/Instagram (Modes E/F), Spotify (Mode L).
+- `ffmpeg` + `ffprobe` — required for LinkedIn DASH (Mode D), trim (Step 1.4), duration probe (Step 1.5), and chunked Whisper splitting (Step 2 Path D). Available via `brew install ffmpeg` on macOS.
+- `whisper` — Python package (`pip3 install --user --break-system-packages openai-whisper`). Required models depend on usage:
+  - `small` (~250 MB) — default for short content (videos, short podcasts).
+  - `medium` (~1.5 GB) — default for long podcasts (Step 2 Path D).
+  - `large-v3` (~3 GB) — optional, activated via `[whisper-model: large-v3]`. When this model is used in Path D, chunked-Whisper concurrency is automatically capped at 1 to avoid OOM on 16 GB systems.
+- `tesseract` — required for image OCR (Mode F, Mode I, Path C). `brew install tesseract`.
+- `trafilatura` (preferred) or `pandoc` (fallback) — required for article body extraction (Mode H).
+- `curl` — required for article fetching (Mode H), iTunes Lookup (Mode M), RSS feed + enclosure download (Mode N).
+- `xml.etree.ElementTree` — Python stdlib. No install needed. Used for RSS/Atom parsing (Mode N).
+- Python `playwright` + Chromium — required for Instagram carousel scraping (Mode F).
+- Firefox with logged-in sessions — required for authenticated yt-dlp cookie extraction (LinkedIn, Facebook, Instagram, Spotify). iTunes Lookup and generic RSS feeds need no authentication.
+
+---
+
+## Out of scope (intentionally — these are NOT supported)
+
+- **Speaker diarization** for podcasts (who-said-what) — would require `pyannote.audio` and heavy ML deps; not worth the maintenance burden.
+- **Live podcast streams** — only completed episodes with downloadable audio.
+- **Transcript-only mode for podcasts** — no native caption tracks exist on Spotify, Apple Podcasts, or generic RSS feeds. The `[transcript-only]` directive is silently ignored for podcast entries.
+- **Per-chapter EBM SORT grading** — long podcasts get ONE overall SORT grade, with timestamp-keyed evidence callouts in the analysis text. Per-chapter grading would require chapter-level claim segmentation which is fragile.
+- **Video-only RSS feeds** (no `<enclosure>` element pointing at audio) — fails with explicit message.
+- **Transcript-only RSS feeds** — fails with the same "no audio enclosure" message.
+- **Apple Podcasts Subscriptions** (paywalled, no public RSS) — iTunes Lookup returns no `feedUrl`; fails with explicit message.
+- **Spotify Originals / Exclusives** (DRM-protected) — yt-dlp cannot extract; fails with explicit message pointing the user at the publisher's RSS.
+- **Same-slug temp file collisions across runs** — if two unrelated podcasts produce identical episode title slugs (e.g. both titled "Episode 1"), the second one will overwrite the first's temp files mid-flight. In-batch dedup catches same-feed/same-episode-ID duplicates, but cross-podcast slug collision is documented and deferred. Fix would require per-entry temp subdirs (`/tmp/url-analyzer/<slug>-<shorthash>/`), an architectural change.
+- **`jobs -r` concurrency cap scope** — Step 2 Path D's `jobs -r | wc -l` counts ALL background jobs in the sub-agent's shell, including unrelated ones. In practice the sub-agent shell is isolated and only runs chunked Whisper, so this is a non-issue.
