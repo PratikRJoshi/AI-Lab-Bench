@@ -91,6 +91,7 @@ https://open.spotify.com/episode/EPISODE_ID [whisper-model: large-v3]
 - **`[podcast title: ...]`**: Slug override for podcast entries, mirroring `[article title: ...]` and `[plain-text title: ...]`.
 - **`[whisper-model: <model>]`**: Override the default Whisper model for the long-podcast path (Step 2 Path D). Valid values: `tiny`, `base`, `small`, `medium`, `large`, `large-v2`, `large-v3`. The default for long podcasts is `medium`; short podcasts always use `small`. When `large-v3` is selected, the chunked-Whisper concurrency cap is forced to 1 (3 GB model × 2 = 6 GB+, would OOM on 16 GB systems).
 - **Local audio file paths** (`.mp3`, `.m4a`, `.wav`): REQUIRE explicit `[podcast]` opt-in, mirroring the `[plain-text]` pattern for `.txt` files. Without `[podcast]`, the entry fails Phase 0 triage with a `(failed YYYY-MM-DD — local audio file requires explicit [podcast] directive)` message. Routing priority: `[plain-text] > [article] > [podcast]/podcast-host > absolute-path local folder > URL processing`.
+- **`[channel]` / `[channel:N]` / `[top:N]`**: Treat the entry as a **channel/profile** and enumerate its top-N most-recent posts/videos/reels/carousels, then analyze each through the normal pipeline. Handled by **Phase 0 Step 0 — Channel Expansion** (`channel_enumerator.py`). Default N=5, hard cap N=25; a conflicting `[channel:N top:M]` (N≠M) fails the entry. Bare `@handle` requires a `platform:youtube|instagram|generic` hint. `include:videos,shorts,streams` selects YouTube tabs (default `videos`). Per-item directives (`transcript-only`, `audio-only`, `display-only`, timestamp ranges) propagate to each enumerated item; channel-only directives do not. YouTube uses `yt-dlp --flat-playlist`; Instagram uses `ig_carousel_scraper.py list-profile` with the exported Netscape cookies; generic uses RSS/Atom → yt-dlp → sitemap. See `CHANNEL_ENUMERATION.md`.
 
 **Directive parser (extension for `key: value` syntax)**: Existing directives are either bare keywords (`transcript-only`, `audio-only`, `display-only`) or implicit timestamp patterns (`00:05:00-00:15:00`). The new `key: value` form (`[episode: N]`, `[whisper-model: large-v3]`, `[podcast title: My Episode]`) requires **targeted regex captures**, not naive `:` splitting — naive splitting breaks `[podcast title: My Episode Title]` (multi-word value) and confuses with timestamp tokens. Use the following parse order inside the directive block:
 
@@ -150,6 +151,7 @@ Runs at the start of every `process watch-urls.md` invocation. Archives processe
 
 Before any server calls, run a single pass over ALL pending URLs:
 
+0. **Channel expansion (Step 0)**: if any entry is a channel/profile (`[channel:N]` or a channel-shaped URL), enumerate its top-N most-recent permalinks via `channel_enumerator.py` and inject them into the pending list before triage. Channel entries themselves are never downloaded.
 1. Parse directives for every entry
 2. Run Check A (video ID match) for every URL entry that doesn't have the `[article]` or `[plain-text]` directive, against the `## Processed` list. For `[article]` entries, Check A is an exact URL string match against processed URLs. For `[plain-text]` entries, Check A is skipped entirely.
 3. Partition into seven lists:
@@ -288,6 +290,48 @@ If nothing is older than 30 days, report `🧹 Housekeeping: Nothing to archive.
 **Progress indicator**: `📋 Phase 0: Triaging N URLs...`
 
 Before any server calls, run a single pass over ALL pending entries in `## Pending`:
+
+### Phase 0 Step 0: Channel Expansion (runs first, only if channel entries exist)
+
+**Progress indicator**: `📡 Phase 0 Step 0: Expanding C channel(s)...`
+
+A **channel entry** is a `## Pending` line marked with `[channel]`/`[channel:N]`/`[top:N]`, or a
+channel-shaped URL — YouTube `/@name`, `/c/name`, `/user/name`, `/channel/UC...`; Instagram
+`instagram.com/<user>/` (a single profile segment); or a bare `@handle` with a `platform:` hint. A
+single post/video URL (`watch?v=`, `youtu.be/`, `/shorts/ID`, `instagram.com/p|reel|tv/ID`) is NOT a
+channel.
+
+For each channel entry, enumerate its top-N most-recent permalinks (newest-first), then inject those
+permalinks into the pending list so the rest of Phase 0 (Check A, partitioning) and Phase 1/2 process
+them as ordinary single URLs. The channel entry itself is never downloaded.
+
+> Instagram channels require the Netscape cookies file exported in the **"Phase 1 prerequisite — export
+> Firefox cookies"** block. If any Instagram channel entry is present, run that export block now (before
+> enumeration) so `/tmp/url-analyzer/ig-cookies.txt` exists.
+
+```bash
+python3 ~/.claude/skills/url-truth-analyzer/channel_enumerator.py '<ENTRY incl. directives>' \
+  --ig-cookies /tmp/url-analyzer/ig-cookies.txt --json
+# Overrides: --top N, --platform youtube|instagram|generic, --include videos,shorts, --strict-order
+```
+
+- Per platform: YouTube → `yt-dlp --flat-playlist`; Instagram → `ig_carousel_scraper.py list-profile`
+  (cookies); generic → RSS/Atom → `yt-dlp` generic → sitemap.
+- On `success: true`: take `items[].url` (newest-first, capped at N) and add each as a pending entry,
+  carrying the inherited per-item directives and remembering the channel (`CHANNEL_URL`,
+  `CHANNEL_PLATFORM`, `CHANNEL_HANDLE`) for Step 4c reuse and Step 7 bookkeeping. Expanded permalinks
+  live only in the in-memory pending list — do NOT write them into `## Pending`. A re-run is safe
+  because Check A dedups anything already analyzed.
+- On `success: false`: record the channel entry as a failed expansion (see Step 7) and continue.
+  Common `error_code`s: `parse_error` (conflicting counts / bare handle without `platform:`),
+  `cookies_missing` / `login_required` (Instagram — export/refresh cookies), `enumeration_failed`
+  (generic with no feed/sitemap). If `found_n < requested_n`, process all found and note the shortfall.
+- Rate-limit: each enumeration call is ONE server interaction (see the channel-enumeration exception in
+  "Inter-request delay"). Inline/`[display-only]` channel entries make every expanded item display-only.
+
+Report: `📋 Phase 0 Step 0 complete: C channel(s) → M permalink(s) queued (S shortfall, F failed).`
+
+See `CHANNEL_ENUMERATION.md` for full directive and platform details.
 
 ### Phase 0 Step 1: Parse all directives
 
@@ -1548,6 +1592,11 @@ sleep $((15 + RANDOM % 16))   # randomized: 15–30 seconds for caption-only
 - **Mode N (Generic RSS)** — 2 server calls clustered: (a) RSS XML fetch + (b) enclosure download. Apply ONE 45–75s delay after the enclosure download.
 - **Mode O (Local audio)** — 0 server calls. No inter-request delay. Does not count toward batch cooldown.
 
+**Channel enumeration (Phase 0 Step 0) rate-limit budget:**
+- Each channel `channel_enumerator.py` call is ONE server interaction → apply one 45–75s inter-request delay after it (before the first expanded item's download) and count it toward the 5-item batch cooldown.
+- Two bounded sub-exceptions inside the enumerator are intentional and do NOT each incur the full delay: (a) **generic feed probing** uses lightweight HEAD requests that stop at the first hit (a bounded burst, not 45–75s spacing); (b) **YouTube multi-tab `--strict-order`** counts each per-tab `--dump-json` call as one delay unit, not one per video.
+- The expanded permalinks themselves are ordinary URLs and follow all standard delay/cooldown rules above.
+
 ### Batch cooldown
 
 After every **5th** successful or attempted download, insert an additional pause before continuing:
@@ -2149,6 +2198,7 @@ Independent of the per-claim analysis in Step 4a/4b, briefly characterize the so
    - For **article entries** (`CONTENT_TYPE=article`): the "source channel" is the publication. Use the URL's registrable domain (e.g. `nytimes.com`, `substack.com/@author`) and, if available, the article byline parsed from the HTML metadata (`<meta name="author">` or trafilatura's `metadata.author`). Research the publication and the byline author separately if both are present.
    - For **local folder entries**: there is no channel. Record `Source channel: N/A (local folder)` and skip the reputation paragraph.
    - For **plain-text entries** (`CONTENT_TYPE=plain-text`): there is no channel. Record `Source channel: N/A (plain-text file)` and skip the reputation paragraph.
+   - For **channel-enumerated items** (carrying `CHANNEL_HANDLE`/`CHANNEL_PLATFORM` from Phase 0 Step 0): use that handle directly — do NOT run a per-item `yt-dlp --print "%(uploader)s"` lookup. Because all items from one channel share a handle, the `### @<handle>` cache lookup below naturally computes the reputation once and reuses it for every sibling item in the batch (the first item researches and writes the cache; the rest hit the fresh cache entry).
 
 2. Check the persistent handles cache first:
    - Read `~/Documents/truth-analyses/.handles-cache.md` if it exists.
@@ -2401,6 +2451,23 @@ If a directive was used, append it in parentheses for traceability:
 - /path/to/folder (failed YYYY-MM-DD — path does not exist or is not a directory)
 - /path/to/folder (failed YYYY-MM-DD — no supported image files found in folder tree)
 - /path/to/folder (failed YYYY-MM-DD — folder structure exceeds maximum depth of 5 levels. Found: N levels)
+```
+
+**Channel entry** (expanded in Phase 0 Step 0). Record a nested **channel summary** PLUS one flat
+per-item line each (so future Check A/B dedup sees the items normally — dedup parses the flat lines,
+not the nested sub-bullets):
+```
+- <channel-url> [channel:N] (expanded YYYY-MM-DD — found M/N newest, processed P, duplicate D, failed F)
+  - <item-url-1> → truth-analyses/YYYY-MM-DD-<slug>.md
+  - <item-url-2> → failed: <reason>
+- <item-url-1> (analyzed YYYY-MM-DD → truth-analyses/YYYY-MM-DD-<slug>.md; expanded from <channel-url>)
+- <item-url-2> (failed YYYY-MM-DD — <reason>; expanded from <channel-url>)
+```
+**Failed channel expansion** (enumeration produced no items):
+```
+- <channel-entry> (failed YYYY-MM-DD — channel enumeration failed: <reason>; retry: <action>)
+- <channel-entry> (failed YYYY-MM-DD — Instagram cookies missing/login wall; export Firefox cookies and retry)
+- <channel-entry> (failed YYYY-MM-DD — bare handle requires platform hint: platform:youtube or platform:instagram)
 ```
 
 **Failed article entry**:
