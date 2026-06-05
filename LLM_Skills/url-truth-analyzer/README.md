@@ -25,6 +25,10 @@ Given a URL or a local folder of screenshots, the skill:
 | Twitter/X | Video posts, image posts | Firefox cookies |
 | Waking Up | Course audio | Firefox cookies |
 | Local folders | Screenshots, photos (recursive up to 5 levels) | N/A |
+| Spotify | Podcast episodes (non-DRM) | Firefox cookies |
+| Apple Podcasts | Episodes via iTunes Lookup → publisher RSS | None |
+| Generic RSS | Podcast RSS feeds (RSS 2.0 + Atom; `<itunes:duration>` aware) | None |
+| Local audio | `.mp3` / `.m4a` / `.wav` files (requires `[podcast]` opt-in) | N/A |
 
 ## Processing modes
 
@@ -39,6 +43,8 @@ Given a URL or a local folder of screenshots, the skill:
 | **Article** | `[article]` directive | curl + trafilatura body extraction |
 | **Plain-text** | `[plain-text]` directive on a local .txt | Local read, no network |
 | **Image/OCR** | Image posts or local folders | OCR + Claude vision analysis |
+| **Podcast (short)** | Spotify/Apple/RSS/YouTube episode ≤30 min, or `.mp3`/`.m4a`/`.wav` with `[podcast]` | Single-pass Whisper `small` |
+| **Podcast (long)** | Any podcast source >30 min (auto-detected via `ffprobe`) | Parallel chunked Whisper (`medium` default; `large-v3` opt-in via `[whisper-model: large-v3]`). 10-min chunks with timestamp headers so claim analysis can cite segments. |
 
 ## How to use
 
@@ -52,7 +58,15 @@ https://youtu.be/VIDEO_ID
 https://www.instagram.com/p/POST_ID/
 ~/Desktop/my-screenshots
 https://youtu.be/LONG_VIDEO [transcript-only 00:10:00-00:30:00]
+https://open.spotify.com/episode/EPISODE_ID
+https://podcasts.apple.com/us/podcast/SHOW/idDIGITS?i=EP_ID
+https://feeds.example.com/show.xml [podcast-rss episode: 2]
+/Users/me/Downloads/long-interview.mp3 [podcast]
 ```
+
+### Podcast support
+
+Now supports podcast episodes from **Spotify** (`open.spotify.com/episode/...`), **Apple Podcasts** (resolved via the iTunes Lookup API → publisher RSS), **generic podcast RSS feeds** (`[podcast-rss]`, with `[episode: N]` for non-newest selection), and **local `.mp3`/`.m4a`/`.wav` files** (`[podcast]` opt-in, mirroring the `[plain-text]` pattern). Episodes are auto-classified by `ffprobe` duration: ≤30 min uses single-pass Whisper `small`; >30 min uses parallel chunked Whisper `medium` (or `large-v3` opt-in via `[whisper-model: large-v3]`) with 10-min segments. Long-podcast analyses are organized by chunk timestamp so you can see whether the show's accuracy holds throughout or drifts in specific segments. Spotify Originals (DRM-protected) and Apple Podcasts Subscriptions (paywalled) emit explicit failure messages directing you to the publisher's RSS feed instead.
 
 ### 2. Trigger processing
 
@@ -115,10 +129,11 @@ Each analysis follows a consistent structure:
 
 ## Dependencies
 
-- **yt-dlp** — media downloading from social platforms (with `--cookies-from-browser firefox` for authenticated access)
-- **ffmpeg** — audio extraction and format conversion
-- **OpenAI Whisper** (`whisper` CLI, `small` model) — speech-to-text transcription
+- **yt-dlp** — media downloading from social platforms and Spotify (with `--cookies-from-browser firefox` for authenticated access)
+- **ffmpeg** + **ffprobe** — audio extraction, format conversion, podcast chunking (Path D), and duration probing (Step 1.5)
+- **OpenAI Whisper** (`whisper` CLI) — speech-to-text transcription. Models: `small` (default, short content); `medium` (~1.5 GB, long podcasts); `large-v3` (~3 GB, opt-in via `[whisper-model: large-v3]`)
 - **Tesseract OCR** — text extraction from images and thumbnails
+- **Python stdlib** `xml.etree.ElementTree` — RSS/Atom feed parsing for podcast Mode N (no install needed)
 - **Firefox** — cookie source for authenticated downloads (must be logged in to the social platforms you want to scrape from)
 - **Playwright + Chromium** — required for Instagram image carousels (yt-dlp can't extract image URLs from image-only carousels even with auth). Install once: `pip3 install --user --break-system-packages playwright && playwright install chromium`
 - **trafilatura** (optional) — preferred article-body extractor for `[article]` URLs (`pandoc` is the fallback)
