@@ -7,8 +7,41 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 
 ## Pending
 
-
 ## Processed
+
+### 2026-06-08 — Channel batch (3 channels × 10 latest items; reels-only analyzed, carousel posts not extractable due to scraper feed bleed-through)
+- **rujuta.diwekar [channel]** — 5 reels analyzed, 5 carousel posts failed (feed bleed-through). Hindi/Hinglish audio re-transcribed via Whisper translate.
+- **science_vs [channel]** — 7 reels analyzed, 3 carousel posts failed (feed bleed-through).
+- **saffrontrail [channel]** — 8 reels analyzed, 2 carousel posts failed (feed bleed-through). Strong evidence-based content; 3 reels are disclosed paid MuscleBlaze ads (COI flagged).
+
+#### rujuta.diwekar reels
+- https://www.instagram.com/reel/DZUGctQBjkP/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-rujuta-diwekar-junk-comments-body-shaming-kids.md)
+- https://www.instagram.com/reel/DY4T5ndsO9Y/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-rujuta-diwekar-responsible-himalaya-travel.md)
+- https://www.instagram.com/reel/DYymkuITB5E/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-rujuta-diwekar-3-desi-hacks-beat-the-heat.md)
+- https://www.instagram.com/reel/DYoU5fss-q_/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-rujuta-diwekar-love-is-walking-slowly-companionship.md)
+- https://www.instagram.com/reel/DYekByThVzP/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-rujuta-diwekar-mango-seasonal-diabetes-thyroid.md)
+
+#### science_vs reels
+- https://www.instagram.com/reel/DZLC309I37Q/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-science-vs-peptides-body-hack-risks.md)
+- https://www.instagram.com/reel/DY8A1cRx71b/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-science-vs-air-pollution-clean-air.md)
+- https://www.instagram.com/reel/DYnlNzzxDEA/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-science-vs-ibogaine-opioid-addiction.md)
+- https://www.instagram.com/reel/DYlCQ0XxZXP/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-science-vs-tattoos-psychology-body-ownership.md)
+- https://www.instagram.com/reel/DYivAezRqLC/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-science-vs-tattoos-cancer-relative-vs-absolute-risk.md)
+- https://www.instagram.com/reel/DYydembr8sw/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-science-vs-hantavirus-how-scary-is-it.md)
+- https://www.instagram.com/reel/DYGE6nyxAWH/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-science-vs-tattoos-ink-lymph-nodes.md)
+
+#### saffrontrail reels
+- https://www.instagram.com/reel/DO_EB2Kk_qa/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-saffrontrail-black-fungus-onions-aspergillus-niger.md)
+- https://www.instagram.com/reel/DZSNiCFTiKK/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-saffrontrail-probiotic-supplements-marketing-vs-evidence.md)
+- https://www.instagram.com/reel/DZMHJF1TgY3/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-saffrontrail-walking-boosts-creativity-stanford.md)
+- https://www.instagram.com/reel/DYKC1zjvWso/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-saffrontrail-mothers-day-4-things-moms-need.md)
+- https://www.instagram.com/reel/DRCTe7LE4vn/ (analyzed 2026-06-08 → truth-analyses/2026-06-08-saffrontrail-no-gods-no-gurus-book-promo.md)
+- https://www.instagram.com/reel/DYwzR1gTOFB/ (analyzed 2026-06-08, PAID AD/COI → truth-analyses/2026-06-08-saffrontrail-creatine-for-women-AD.md)
+- https://www.instagram.com/reel/DYRziUovUUb/ (analyzed 2026-06-08, PAID AD/COI → truth-analyses/2026-06-08-saffrontrail-3-reasons-creatine-AD.md)
+- https://www.instagram.com/reel/DXeVqiJExCB/ (analyzed 2026-06-08, PAID AD/COI → truth-analyses/2026-06-08-saffrontrail-strength-training-women-30s-AD.md)
+- https://www.instagram.com/p/DTApmVPE2Go/ (failed 2026-06-08 — carousel post; scraper feed bleed-through, content not extractable)
+- https://www.instagram.com/p/DZB_hetE_G_/ (failed 2026-06-08 — carousel post; scraper feed bleed-through, content not extractable)
+
 - https://www.instagram.com/p/Cgm8lUNlQzkxrGqMFM_Vngec0KjQenrT7rht880/ (failed 2026-05-14 — private/followers-only account; share-link token expired or requires authentication as follower)
 - https://www.instagram.com/p/Cbc-15olAWkM8dHfR3T5JFH8kbbotfr9v6hEvg0/ (failed 2026-05-14 — private/followers-only account; share-link token expired or requires authentication as follower)
 - https://www.instagram.com/p/CrZI3ZnvH7-nhyWB5xSxzeboGJksvwxzEa8_2I0/ (failed 2026-05-14 — private/followers-only account; share-link token expired or requires authentication as follower)
