@@ -9,6 +9,21 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 
 ## Processed
 
+### 2026-06-09 — Channel batch (thesecurerelationship, 10 latest items)
+- **thesecurerelationship [channel]** — Julie Menanno, MA, LMFT, LCPC (licensed couples therapist, EFT/attachment). 8 carousel captions + 1 reel analyzed via embed/captioned + Whisper; 1 post unextractable. All claims accurate & evidence-aligned; 1 post is direct book promo (COI flagged). No false/harmful content.
+
+#### thesecurerelationship items
+- https://www.instagram.com/p/C6Wh2vBLXNY/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-secure-love-book-contents-promo.md; expanded from channel)
+- https://www.instagram.com/p/DZYw7GckvXQ/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-sex-intimacy-loneliness-couples.md; expanded from channel)
+- https://www.instagram.com/p/DZVQMkwD0sR/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-cant-shame-relationship-into-thriving.md; expanded from channel)
+- https://www.instagram.com/p/DZUpjpeEt7d/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-space-can-feel-like-abandonment.md; expanded from channel)
+- https://www.instagram.com/p/DZQJszogPt3/ (FAILED 2026-06-09 — not extractable: no video formats, no embed caption; expanded from channel)
+- https://www.instagram.com/p/DZNrmSaEhge/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-one-partner-interrupts-negative-cycle.md; expanded from channel)
+- https://www.instagram.com/p/DZLQXHdjOe5/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-anxious-attachment-fear-of-abandonment.md; expanded from channel)
+- https://www.instagram.com/p/DZKd4fwAZew/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-attachment-patterns-can-be-unlearned.md; expanded from channel)
+- https://www.instagram.com/p/DZJBHWOsGot/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-26-year-anniversary-personal.md; expanded from channel)
+- https://www.instagram.com/reel/DZI4EtfiVY9/ (analyzed 2026-06-09 → truth-analyses/2026-06-09-thesecurerelationship-loving-disorganized-attachment-consistency.md; expanded from channel)
+
 ### 2026-06-08 — Channel batch (3 channels × 10 latest items; reels-only analyzed, carousel posts not extractable due to scraper feed bleed-through)
 - **rujuta.diwekar [channel]** — 5 reels analyzed, 5 carousel posts failed (feed bleed-through). Hindi/Hinglish audio re-transcribed via Whisper translate.
 - **science_vs [channel]** — 7 reels analyzed, 3 carousel posts failed (feed bleed-through).
