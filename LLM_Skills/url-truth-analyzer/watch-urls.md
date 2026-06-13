@@ -6,13 +6,51 @@ When you trigger the analysis, the skill will transcribe it, analyze truth claim
 ---
 
 ## Pending
-@thewellnourishedmama [platform:instagram channel:10]
-@macrofriendlydesi [platform:instagram channel:10]
-@_plantbaes_ [platform:instagram channel:10]
-@karinadoninutrition [platform:instagram channel:10]
 
 
 ## Processed
+
+### 2026-06-12 — Channel batch (3 nutrition channels × 10 latest items + 1 failed expansion)
+- **thewellnourishedmama [channel]** — FAILED: handle does not exist on Instagram (404 "Sorry, this page isn't available"). Try a variant: @well_nourished_mama, @wellnourishedmama, or @wellnourishedmom — all return HTTP 200.
+- **macrofriendlydesi [channel]** — Neha (Veg Macro Nutrition Expert, ~4.85K followers, vegetarian Indian macro coach, no formal RD/MD credentials). 10 items analyzed: 8 reels (Mode E) + 2 carousels/images. All weight-loss/postpartum content. Mostly Grade B/C SORT — directionally aligned with energy-balance literature but heavy on marketing-funnel hooks ("comment SIMPLE for the method"). No misinformation flagged.
+- **_plantbaes_ [channel]** — Sarah Cobacho (Accredited Nutritionist, Australia, ~2M followers). 9 items analyzed (1 carousel failed Phase 1 scrape): 8 reels + 1 single-image. Mostly recipe-only content (no claims to validate). One supplement-promo reel flagged for COI (Age Mates "longevity blend"). Clean track record.
+- **karinadoninutrition [channel]** — Karin Adoni Ben David (self-described "Certified Nutritionist 20+ years", ~743K followers, "Good vs Bad in grocery stores" format). 9 items analyzed (1 carousel failed Phase 1 scrape). Reels mix defensible label observations (Sunny D ≠ OJ; "frozen dessert" FDA distinction) with mechanistic exaggeration ("non-toxic" framings) and several materially inaccurate brand claims (e.g., "Skippy is mainly sugar and oil" — actually ~90% peanuts). Credentials not independently verified; topics often outside any nutrition certification's scope (water chemistry, dermatology, toxicology).
+
+#### macrofriendlydesi items
+- https://www.instagram.com/reel/DZOlEt1tXN1/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DZOlEt1tXN1-weight-loss-eating-everything.md; expanded from channel)
+- https://www.instagram.com/p/DZN0oOLD15T/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DZN0oOLD15T-30-lbs-weight-loss-teaser.md; expanded from channel; only 1 of 6 carousel slides scraped)
+- https://www.instagram.com/p/DZMCupljQb-/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DZMCupljQb-non-restrictive-eating-weight-loss.md; expanded from channel; 7 of 6 slides — duplicated aspect ratios)
+- https://www.instagram.com/reel/DZJcI7KNmL5/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DZJcI7KNmL5-macro-tracking-didnt-work.md; expanded from channel)
+- https://www.instagram.com/reel/DVjBt8fjcxh/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DVjBt8fjcxh-cut-carbs-treadmill-failure.md; expanded from channel)
+- https://www.instagram.com/reel/DZGxSbfNQ4o/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DZGxSbfNQ4o-quit-all-sugar-mom-belly.md; expanded from channel)
+- https://www.instagram.com/reel/DMfiCVaMt7W/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DMfiCVaMt7W-client-lost-4lbs-5weeks-without-restriction.md; expanded from channel)
+- https://www.instagram.com/reel/DW7WI71j7YK/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DW7WI71j7YK-cant-eat-carbs-and-lose-weight.md; expanded from channel)
+- https://www.instagram.com/reel/DTYVE8uD-Sa/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DTYVE8uDSa-eat-favorite-foods-lose-mom-belly.md; expanded from channel)
+- https://www.instagram.com/reel/DJ1RvWUxqvs/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-macrofriendlydesi-DJ1RvWUxqvs-discipline-not-the-issue-weight-loss.md; expanded from channel)
+
+#### _plantbaes_ items
+- https://www.instagram.com/reel/DAst650vxNF/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DAst650vxNF-mediterranean-tzatziki-bowl.md; expanded from channel)
+- https://www.instagram.com/p/DZe4gXzkUkk/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DZe4gXzkUkk-erewhon-style-kale-white-bean-salad.md; expanded from channel; routed as single-image — recipe-only)
+- https://www.instagram.com/reel/DZZu6M7hdkr/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DZZu6M7hdkr-crispy-rice-salad.md; expanded from channel)
+- https://www.instagram.com/p/DZZSkFIES0d/ (failed 2026-06-12 — Playwright scraper returned no images for 8-slide carousel; expanded from channel)
+- https://www.instagram.com/reel/DZSBo3Uhx8Q/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DZSBo3Uhx8Q-roasted-potato-avocado-ranch-salad.md; expanded from channel)
+- https://www.instagram.com/reel/DZM29wvhPYu/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DZM29wvhPYu-erewhon-copycat-salad.md; expanded from channel)
+- https://www.instagram.com/reel/DZHtTZrBRYK/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DZHtTZrBRYK-mediterranean-potato-crust-tart.md; expanded from channel)
+- https://www.instagram.com/reel/DZCjvz6BNFv/ (analyzed 2026-06-12, COI flagged → truth-analyses/2026-06-12-_plantbaes_-DZCjvz6BNFv-blueberry-oats-longevity-supplement.md; expanded from channel)
+- https://www.instagram.com/reel/DY__AHLh8v7/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DY-AHLh8v7-easy-red-lentil-gf-bread.md; expanded from channel)
+- https://www.instagram.com/reel/DY60WxGB4WT/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-_plantbaes_-DY60WxGB4WT-no-bake-mini-chocolate-tart.md; expanded from channel)
+
+#### karinadoninutrition items
+- https://www.instagram.com/reel/C7wt4GQp_nl/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-C7wt4GQp_nl-costco-foods-to-avoid.md; expanded from channel)
+- https://www.instagram.com/reel/DZdnGjvBy9O/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DZdnGjvBy9O-good-vs-bad-beauty-costco.md; expanded from channel)
+- https://www.instagram.com/reel/DZcrxhlRAQ3/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DZcrxhlRAQ3-target-hidden-gems-grocery-haul.md; expanded from channel; reposted from @healthwithhunter)
+- https://www.instagram.com/reel/DZbL8FKu138/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DZbL8FKu138-trader-joes-good-vs-bad.md; expanded from channel)
+- https://www.instagram.com/p/DZbC7m0gUE8/ (failed 2026-06-12 — Playwright scraper returned no images for 18-slide carousel; expanded from channel)
+- https://www.instagram.com/reel/DZYb9f6B_8U/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DZYb9f6B_8U-good-bad-kids-edition-costco.md; expanded from channel)
+- https://www.instagram.com/p/DZYAO34GezT/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DZYAO34GezT-good-vs-bad-costco-aldi-product-picks.md; expanded from channel; carousel — full 19 slides recovered visually)
+- https://www.instagram.com/reel/DZVwjqDyqCB/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DZVwjqDyqCB-non-toxic-home-good-vs-bad.md; expanded from channel)
+- https://www.instagram.com/reel/DYfKu2JOmb5/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DYfKu2JOmb5-good-vs-bad-home-edition.md; expanded from channel)
+- https://www.instagram.com/reel/DZVT6NUOhhc/ (analyzed 2026-06-12 → truth-analyses/2026-06-12-karinadoninutrition-DZVT6NUOhhc-best-kids-finds-target.md; expanded from channel)
 
 ### 2026-06-09 — Channel batch (thesecurerelationship, 10 latest items)
 - **thesecurerelationship [channel]** — Julie Menanno, MA, LMFT, LCPC (licensed couples therapist, EFT/attachment). 8 carousel captions + 1 reel analyzed via embed/captioned + Whisper; 1 post unextractable. All claims accurate & evidence-aligned; 1 post is direct book promo (COI flagged). No false/harmful content.
