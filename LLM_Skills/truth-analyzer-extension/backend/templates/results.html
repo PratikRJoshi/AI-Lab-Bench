@@ -18,67 +18,94 @@
       --step-waiting: #94a3b8;
     }
 
-    body { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+    body { max-width: 920px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 
-    /* On wide screens, give the body extra right margin so the sticky TOC
-       can sit alongside without overlapping content. */
-    @media (min-width: 1180px) {
-      body { max-width: 860px; margin-right: 320px; }
-    }
-
-    /* ── Table of Contents ───────────────────────────────────────────── */
+    /* ── Table of Contents (always inline at top of analysis) ────────── */
     #toc {
-      background: var(--pico-card-background-color);
+      background: linear-gradient(180deg, var(--accent-light) 0%, var(--pico-card-background-color) 100%);
       border: 1px solid var(--pico-muted-border-color);
       border-radius: var(--pico-border-radius);
-      padding: 0.85rem 1.1rem;
-      margin: 0 0 1.5rem;
-      font-size: 0.88rem;
+      padding: 1rem 1.25rem;
+      margin: 0 0 1.75rem;
+      font-size: 0.9rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     #toc-label {
-      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.06em; color: var(--accent);
-      margin-bottom: 0.5rem;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--accent);
+      margin-bottom: 0.6rem;
       display: flex; align-items: center; justify-content: space-between;
     }
     #toc-label button {
       background: none; border: none; color: var(--pico-muted-color);
-      cursor: pointer; padding: 0; font-size: 0.75rem;
+      cursor: pointer; padding: 0.15rem 0.4rem; font-size: 0.75rem;
+      border-radius: 4px;
     }
-    #toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc-item; }
-    #toc ol li { padding: 0.15rem 0; counter-increment: toc-item; }
+    #toc-label button:hover { background: rgba(0,0,0,0.06); color: var(--accent); }
+    #toc ol {
+      list-style: none; padding: 0; margin: 0;
+      counter-reset: toc-item;
+      column-count: 1;
+    }
+    @media (min-width: 720px) { #toc ol { column-count: 2; column-gap: 1.5rem; } }
+    #toc ol li {
+      padding: 0.2rem 0; counter-increment: toc-item;
+      break-inside: avoid;
+    }
     #toc ol li::before {
-      content: counter(toc-item) ". ";
-      color: var(--pico-muted-color); margin-right: 0.25rem;
+      content: counter(toc-item) ".";
+      color: var(--accent); margin-right: 0.4rem; font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
-    #toc ol li.h3 { padding-left: 1.25rem; font-size: 0.83rem; }
-    #toc ol li.h3::before { content: "› "; }
+    #toc ol li.h3 { padding-left: 1.25rem; font-size: 0.84rem; }
+    #toc ol li.h3::before { content: "›"; color: var(--pico-muted-color); }
     #toc a {
       color: var(--pico-color); text-decoration: none;
       border-bottom: 1px dashed transparent;
     }
-    #toc a:hover, #toc a:focus { border-bottom-color: var(--accent); color: var(--accent); }
-
-    @media (min-width: 1180px) {
-      #toc {
-        position: fixed; top: 1.5rem; right: 1.5rem;
-        width: 280px; max-height: calc(100vh - 3rem); overflow-y: auto;
-        margin: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      }
+    #toc a:hover, #toc a:focus {
+      border-bottom-color: var(--accent); color: var(--accent);
     }
     #toc.collapsed ol { display: none; }
 
-    /* Anchor scroll padding so the heading isn't hidden under sticky bars. */
+    /* ── Section beautification ──────────────────────────────────────── */
     #md-content :where(h1, h2, h3) { scroll-margin-top: 1rem; }
-    #md-content h2 { margin-top: 2rem; padding-top: 0.25rem; }
-    #md-content h2:first-of-type { margin-top: 0.5rem; }
-    #md-content h3 {
-      margin-top: 1.4rem;
-      background: var(--pico-card-background-color);
-      border-left: 3px solid var(--accent-light);
-      padding: 0.5rem 0.75rem;
+
+    /* H1 = post title — keep modest */
+    #md-content h1 { font-size: 1.55rem; margin: 0 0 1rem; }
+
+    /* H2 = top-level section card */
+    #md-content h2 {
+      font-size: 1.2rem;
+      margin: 2.25rem 0 0.75rem;
+      padding: 0.5rem 0.85rem;
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
       border-radius: 0 6px 6px 0;
+      color: var(--accent);
+    }
+    #md-content h2:first-of-type { margin-top: 0.5rem; }
+
+    /* H3 = subsection chip — claim slides, etc. */
+    #md-content h3 {
+      font-size: 1rem;
+      margin: 1.4rem 0 0.5rem;
+      padding: 0.4rem 0.7rem;
+      background: var(--pico-card-background-color);
+      border-left: 3px solid var(--pico-muted-border-color);
+      border-radius: 0 4px 4px 0;
+      color: var(--pico-color);
+    }
+
+    /* Section body spacing */
+    #md-content h2 + p,
+    #md-content h2 + ul,
+    #md-content h2 + ol { margin-top: 0.5rem; }
+    #md-content p { line-height: 1.6; }
+    #md-content ul, #md-content ol { line-height: 1.55; }
+    #md-content hr {
+      border: 0; border-top: 1px solid var(--pico-muted-border-color);
+      margin: 2rem 0;
     }
 
     /* Subtle anchor link beside each heading for easy URL-sharing. */
