@@ -635,13 +635,20 @@ def _run_claude_cli(
     timeout: int = 600,
     cwd: Path | None = None,
 ) -> str:
-    """Run `claude --print --dangerously-skip-permissions` via a PTY and return stdout.
+    """Run `claude --print --output-format=stream-json` via a PTY and return the
+    full concatenated assistant transcript (every text turn, in order).
 
-    The PTY is required so the corporate Claude Code CLI can complete its OAuth
-    handshake without trying to write to /dev/tty. *prompt* is fed on stdin.
+    Why stream-json instead of plain text: with the default text format, claude
+    --print returns ONLY the final assistant message. The url-truth-analyzer
+    skill emits the analysis several turns before its housekeeping/cleanup
+    summary, so the final-turn-only mode dropped the analysis on the floor.
+    Parsing stream-json lets us capture every text block from every assistant
+    turn and stitch them together.
+
+    The PTY is still required so the corporate Claude Code CLI can complete
+    its OAuth handshake without writing to /dev/tty. *prompt* is fed on stdin.
     *heartbeats* is an optional list of (elapsed_seconds, message) pairs; each
-    is emitted once when its threshold is crossed, giving the browser visible
-    progress while the skill runs (since claude --print only emits on completion).
+    is emitted once when its threshold is crossed.
     """
     import pty, select, fcntl
 
@@ -662,7 +669,10 @@ def _run_claude_cli(
 
         with open(prompt_path, "rb") as stdin_f:
             proc = subprocess.Popen(
-                ["claude", "--print", "--dangerously-skip-permissions"],
+                [
+                    "claude", "--print", "--dangerously-skip-permissions",
+                    "--output-format=stream-json", "--verbose",
+                ],
                 stdin=stdin_f,
                 stdout=slave_fd,
                 stderr=slave_fd,
@@ -671,7 +681,40 @@ def _run_claude_cli(
             )
         os.close(slave_fd)
 
-        chunks: list[str] = []
+        # Line-buffered byte accumulator. stream-json emits one JSON object per
+        # line; we parse on each newline and discard non-JSON noise (PTY tty
+        # escape junk, occasional warnings).
+        line_buf = bytearray()
+        assistant_text_parts: list[str] = []
+        result_text: str | None = None  # final "result" event's "result" field
+        result_is_error = False
+        result_error_msg: str | None = None
+        raw_chunks: list[str] = []  # for diagnostics if no JSON ever parses
+
+        def _handle_line(raw_line: bytes) -> None:
+            nonlocal result_text, result_is_error, result_error_msg
+            stripped = _strip_terminal_escapes(
+                raw_line.decode("utf-8", errors="replace")
+            ).strip()
+            if not stripped or not stripped.startswith("{"):
+                return
+            try:
+                evt = json.loads(stripped)
+            except json.JSONDecodeError:
+                return
+            etype = evt.get("type")
+            if etype == "assistant":
+                msg = evt.get("message") or {}
+                for block in msg.get("content") or []:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        text = block.get("text") or ""
+                        if text:
+                            assistant_text_parts.append(text)
+            elif etype == "result":
+                result_text = evt.get("result")
+                result_is_error = bool(evt.get("is_error"))
+                result_error_msg = evt.get("api_error_status") or None
+
         start = time.time()
         deadline = start + timeout
         eof = False
@@ -686,41 +729,57 @@ def _run_claude_cli(
                 try:
                     data = os.read(master_fd, 4096)
                 except OSError:
-                    # PTY slave closed — child finished writing. Drain done.
                     eof = True
+                    data = b""
+                if data:
+                    raw_chunks.append(data.decode("utf-8", errors="replace"))
+                    line_buf.extend(data)
+                    while b"\n" in line_buf:
+                        line, _, rest = line_buf.partition(b"\n")
+                        line_buf[:] = rest
+                        _handle_line(bytes(line))
                 else:
-                    if data:
-                        chunks.append(data.decode("utf-8", errors="replace"))
-                    else:
-                        # Empty read on a ready fd = EOF on this PTY too.
-                        # Without this, a silent-exit child leaves the loop
-                        # spinning until the wall-clock timeout.
-                        eof = True
+                    eof = True
             elif proc.poll() is not None:
-                # No data ready and child gone. Try one final non-blocking
-                # drain in case some output landed between select() and now.
                 try:
                     data = os.read(master_fd, 4096)
                     if data:
-                        chunks.append(data.decode("utf-8", errors="replace"))
+                        raw_chunks.append(data.decode("utf-8", errors="replace"))
+                        line_buf.extend(data)
                 except OSError:
                     pass
                 eof = True
 
-        # Reap the child. If it's already a zombie this returns immediately;
-        # if it's somehow still alive (we hit the wall-clock deadline), kill.
+        # Drain any final partial line (rare — stream-json normally ends with \n).
+        if line_buf:
+            _handle_line(bytes(line_buf))
+
         try:
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait(timeout=5)
-        output = _strip_terminal_escapes("".join(chunks)).strip()
-        if proc.returncode != 0 and not output:
+
+        if result_is_error:
             raise RuntimeError(
-                f"claude CLI exited with code {proc.returncode}. "
-                "Make sure you are logged in: run `claude` in a terminal first."
+                f"claude --print reported error: {result_error_msg or 'unspecified'}"
             )
-        return output
+
+        # Prefer concatenated assistant turns (this is the skill's full output).
+        # Fall back to the "result" field only if we didn't parse any assistant
+        # text — which means the JSON stream was malformed or the run was a
+        # single-turn refusal.
+        full = "\n\n".join(p.strip() for p in assistant_text_parts if p.strip())
+        if not full and result_text:
+            full = result_text.strip()
+
+        if not full:
+            raw_preview = _strip_terminal_escapes("".join(raw_chunks))[:500]
+            raise RuntimeError(
+                f"claude CLI returned no parseable output (exit={proc.returncode}). "
+                f"Raw head: {raw_preview!r}"
+            )
+        return full
     finally:
         if master_fd is not None:
             try:
