@@ -47,7 +47,7 @@
        which made the TOC items lay out horizontally and centered. */
     nav#toc ol {
       list-style: none; padding: 0; margin: 0;
-      counter-reset: toc-h2;
+      counter-reset: toc-item;
       display: flex !important;
       flex-direction: column !important;
       align-items: stretch !important;
@@ -56,27 +56,27 @@
     }
     nav#toc ol li {
       padding: 0.25rem 0;
+      counter-increment: toc-item;
       display: flex; align-items: baseline;
       justify-content: flex-start;
       gap: 0.4rem;
       text-align: left;
     }
     /* Pico inserts `::before { float: left; content: "​" }` on `nav li`
-       — that empty zero-width space was invisible but pushed our real
-       counter pseudo-element off; reset it. */
-    nav#toc ol li::before { float: none; }
-    #toc ol li.h2 { counter-increment: toc-h2; }
-    #toc ol li.h2::before {
-      content: counter(toc-h2) ".";
+       — reset it so our counter pseudo-element renders correctly. */
+    nav#toc ol li::before {
+      float: none;
+      content: counter(toc-item) ".";
       color: var(--accent); font-weight: 600;
       font-variant-numeric: tabular-nums;
       flex-shrink: 0; min-width: 1.5rem;
     }
-    #toc ol li.h3 { padding-left: 1.75rem; font-size: 0.85rem; }
-    #toc ol li.h3::before {
-      content: "›"; color: var(--pico-muted-color);
-      flex-shrink: 0; min-width: 0.8rem;
+    /* H3 entries are sub-sections — indent + lighter, but keep numbering
+       continuous so every TOC row has its own counter. */
+    #toc ol li.h3 {
+      padding-left: 1.75rem; font-size: 0.85rem;
     }
+    #toc ol li.h3::before { color: var(--pico-muted-color); }
     #toc a {
       color: var(--pico-color); text-decoration: none;
       border-bottom: 1px dashed transparent;
