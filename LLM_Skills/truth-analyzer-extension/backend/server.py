@@ -9,7 +9,7 @@ from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s  %(levelname)-7s  %(message)s",
+    format="%(asctime)s  %(levelname)-7s  %(name)s  %(message)s",
     datefmt="%H:%M:%S",
 )
 
@@ -159,7 +159,11 @@ def api_status(job_id: str):
 
 @app.get("/results/<job_id>")
 def results_page(job_id: str):
-    return render_template("results.html", job_id=job_id)
+    # /tmp/truth-analyzer.log is where start.sh redirects nohup output. The
+    # template uses this to render a copy-able tail command on the progress
+    # panel. The user can override via env if they redirect logs elsewhere.
+    log_path = os.getenv("LOG_PATH", "/tmp/truth-analyzer.log")
+    return render_template("results.html", job_id=job_id, log_path=log_path)
 
 
 @app.post("/api/save/<job_id>")

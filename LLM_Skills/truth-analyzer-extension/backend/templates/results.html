@@ -200,6 +200,30 @@
     <li id="step-finish"    ><span class="icon">○</span><span class="label">Complete</span></li>
   </ul>
   <div id="live-log" style="margin-top:1rem; font-size:0.8rem; color: var(--pico-muted-color); max-height:120px; overflow-y:auto;"></div>
+
+  <details id="tail-hint" style="margin-top:1rem; font-size:0.8rem; color: var(--pico-muted-color);">
+    <summary style="cursor:pointer;">🔎 Want low-level detail? Tail the backend log.</summary>
+    <p style="margin:0.5rem 0 0.25rem;">Run this in a terminal to follow the full backend log:</p>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <code id="tail-cmd-all"
+            style="flex:1; background:var(--pico-card-background-color); padding:0.4rem 0.6rem;
+                   border-radius:var(--pico-border-radius); user-select:all;
+                   font-family:var(--pico-font-family-monospace); white-space:nowrap;
+                   overflow-x:auto;"></code>
+      <button type="button" id="copy-tail-all"
+              style="font-size:0.75rem; padding:0.25rem 0.6rem;">Copy</button>
+    </div>
+    <p style="margin:0.6rem 0 0.25rem;">Or just this job's lines:</p>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <code id="tail-cmd-job"
+            style="flex:1; background:var(--pico-card-background-color); padding:0.4rem 0.6rem;
+                   border-radius:var(--pico-border-radius); user-select:all;
+                   font-family:var(--pico-font-family-monospace); white-space:nowrap;
+                   overflow-x:auto;"></code>
+      <button type="button" id="copy-tail-job"
+              style="font-size:0.75rem; padding:0.25rem 0.6rem;">Copy</button>
+    </div>
+  </details>
 </div>
 
 <div id="error-panel">
@@ -253,6 +277,7 @@
   "use strict";
 
   const JOB_ID = {{ job_id | tojson }};
+  const LOG_PATH = {{ log_path | tojson }};
   let rawMarkdown = "";
 
   const STEP_MAP = {
@@ -490,12 +515,36 @@
       });
   });
 
+  function populateTailHints() {
+    // The backend logger uses name="job.<short_id>" where short_id is the
+    // first 8 hex chars of JOB_ID. The job-filtered tail greps on that.
+    const shortId = JOB_ID.slice(0, 8);
+    const allCmd = `tail -f ${LOG_PATH}`;
+    const jobCmd = `tail -f ${LOG_PATH} | grep --line-buffered "job.${shortId}"`;
+    document.getElementById("tail-cmd-all").textContent = allCmd;
+    document.getElementById("tail-cmd-job").textContent = jobCmd;
+
+    const wireCopy = (btnId, cmd) => {
+      document.getElementById(btnId).addEventListener("click", () => {
+        navigator.clipboard.writeText(cmd).then(() => {
+          const btn = document.getElementById(btnId);
+          const orig = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        });
+      });
+    };
+    wireCopy("copy-tail-all", allCmd);
+    wireCopy("copy-tail-job", jobCmd);
+  }
+
   window.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     const srcUrl = params.get("url");
     if (srcUrl) {
       document.getElementById("url-display").textContent = decodeURIComponent(srcUrl);
     }
+    populateTailHints();
     startSSE();
   });
 </script>
