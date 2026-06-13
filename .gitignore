@@ -1,0 +1,10 @@
+# Skill runtime caches (regenerated on demand, never source)
+LLM_Skills/url-truth-analyzer/cache/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
