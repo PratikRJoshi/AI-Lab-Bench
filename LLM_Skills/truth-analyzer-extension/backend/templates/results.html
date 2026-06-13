@@ -29,6 +29,7 @@
       margin: 0 0 1.75rem;
       font-size: 0.9rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      text-align: left;
     }
     #toc-label {
       font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
@@ -44,23 +45,26 @@
     #toc-label button:hover { background: rgba(0,0,0,0.06); color: var(--accent); }
     #toc ol {
       list-style: none; padding: 0; margin: 0;
-      counter-reset: toc-item;
+      counter-reset: toc-h2;
       display: flex; flex-direction: column; gap: 0.1rem;
+      text-align: left;
     }
     #toc ol li {
-      padding: 0.25rem 0; counter-increment: toc-item;
+      padding: 0.25rem 0;
       display: flex; align-items: baseline; gap: 0.4rem;
+      text-align: left;
     }
-    #toc ol li::before {
-      content: counter(toc-item) ".";
+    #toc ol li.h2 { counter-increment: toc-h2; }
+    #toc ol li.h2::before {
+      content: counter(toc-h2) ".";
       color: var(--accent); font-weight: 600;
       font-variant-numeric: tabular-nums;
       flex-shrink: 0; min-width: 1.5rem;
     }
-    #toc ol li.h3 { padding-left: 1.5rem; font-size: 0.85rem; }
+    #toc ol li.h3 { padding-left: 1.75rem; font-size: 0.85rem; }
     #toc ol li.h3::before {
       content: "›"; color: var(--pico-muted-color);
-      min-width: 0.8rem;
+      flex-shrink: 0; min-width: 0.8rem;
     }
     #toc a {
       color: var(--pico-color); text-decoration: none;
