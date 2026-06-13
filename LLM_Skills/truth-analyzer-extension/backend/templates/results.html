@@ -45,20 +45,23 @@
     #toc ol {
       list-style: none; padding: 0; margin: 0;
       counter-reset: toc-item;
-      column-count: 1;
+      display: flex; flex-direction: column; gap: 0.1rem;
     }
-    @media (min-width: 720px) { #toc ol { column-count: 2; column-gap: 1.5rem; } }
     #toc ol li {
-      padding: 0.2rem 0; counter-increment: toc-item;
-      break-inside: avoid;
+      padding: 0.25rem 0; counter-increment: toc-item;
+      display: flex; align-items: baseline; gap: 0.4rem;
     }
     #toc ol li::before {
       content: counter(toc-item) ".";
-      color: var(--accent); margin-right: 0.4rem; font-weight: 600;
+      color: var(--accent); font-weight: 600;
       font-variant-numeric: tabular-nums;
+      flex-shrink: 0; min-width: 1.5rem;
     }
-    #toc ol li.h3 { padding-left: 1.25rem; font-size: 0.84rem; }
-    #toc ol li.h3::before { content: "›"; color: var(--pico-muted-color); }
+    #toc ol li.h3 { padding-left: 1.5rem; font-size: 0.85rem; }
+    #toc ol li.h3::before {
+      content: "›"; color: var(--pico-muted-color);
+      min-width: 0.8rem;
+    }
     #toc a {
       color: var(--pico-color); text-decoration: none;
       border-bottom: 1px dashed transparent;
@@ -492,6 +495,15 @@
   });
 
   function renderAnalysis(md) {
+    // Strip pre-analysis chatter. claude --print's stream-json captures every
+    // assistant turn, so any "thinking out loud" before the formal report
+    // (e.g. "Caveman mode on. Now analyze URL.", "Inline URL detected.
+    // DISPLAY_ONLY=true. Captions-first attempt.", "Captions ready (N words).
+    // Classify: ...") arrives ahead of the title. Drop everything before
+    // the first markdown H1.
+    const titleIdx = md.search(/^# /m);
+    if (titleIdx > 0) md = md.slice(titleIdx);
+
     // Share? line
     const shareMatch = md.match(/\*\*Share\?\*\*:\s*(.+)/);
     if (shareMatch) {
