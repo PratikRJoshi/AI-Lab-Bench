@@ -44,34 +44,98 @@ WHISPER_MODEL = os.getenv("WHISPER_MODEL", "small")
 # url-truth-analyzer project skill resolves correctly.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
+# How many recent posts to enumerate when the user clicks the extension on a
+# channel/profile home page. Capped at 25 by the skill itself.
+CHANNEL_BATCH_SIZE = int(os.getenv("CHANNEL_BATCH_SIZE", "10"))
+
+
+# Channel/profile home pages we want to auto-expand. The skill enumerates
+# these via channel_enumerator.py and analyzes the top-N most-recent posts.
+# Mirrors the patterns the skill itself recognizes (see SKILL.md, "channel
+# entry"), but applied client-side here so we can pass a [channel:N] hint
+# and surface the longer expected runtime in progress events.
+_YOUTUBE_CHANNEL_RE = re.compile(
+    r"^https?://(?:www\.)?youtube\.com/(?:@[^/?#]+|c/[^/?#]+|user/[^/?#]+|channel/UC[^/?#]+)/?$",
+    re.IGNORECASE,
+)
+_INSTAGRAM_PROFILE_RE = re.compile(
+    r"^https?://(?:www\.)?instagram\.com/(?!p/|reel/|reels/|tv/|stories/|explore/|accounts/|direct/)"
+    r"([^/?#]+)/?$",
+    re.IGNORECASE,
+)
+_TWITTER_PROFILE_RE = re.compile(
+    r"^https?://(?:www\.)?(?:twitter\.com|x\.com)/(?!i/|home$|search$|explore$|notifications$|messages$|compose$)"
+    r"([A-Za-z0-9_]{1,15})/?$",
+    re.IGNORECASE,
+)
+_TIKTOK_PROFILE_RE = re.compile(
+    r"^https?://(?:www\.)?tiktok\.com/@[^/?#]+/?$",
+    re.IGNORECASE,
+)
+
+
+def _is_channel_url(url: str) -> bool:
+    """True for handle/profile home pages that should expand to a batch."""
+    return bool(
+        _YOUTUBE_CHANNEL_RE.match(url)
+        or _INSTAGRAM_PROFILE_RE.match(url)
+        or _TWITTER_PROFILE_RE.match(url)
+        or _TIKTOK_PROFILE_RE.match(url)
+    )
+
 
 def run_skill_analysis(url: str, emit: EmitFn) -> str:
     """Delegate URL analysis to the local Claude Code CLI's url-truth-analyzer skill.
 
-    Builds a one-line prompt naming the skill, runs `claude --print`, and returns
-    the final assistant markdown. The skill itself handles download, transcription,
-    search, and analysis. Inline-URL invocation implies [display-only] in the
-    skill, so no files are written and watch-urls.md is untouched.
+    For a single post/article URL, the skill returns one analysis. For a
+    handle/profile home page, the URL is annotated with `[channel:N]` so the
+    skill enumerates the top-N most-recent posts and analyzes each one. In both
+    cases the inline-URL convention implies `[display-only]` — no files are
+    written and watch-urls.md is untouched.
     """
     clean_url = _strip_tracking(url)
+    is_channel = _is_channel_url(clean_url)
     emit("progress", f"🔗 Cleaned URL: {clean_url}")
-    emit("progress", "🤖 Handing off to local Claude Code (url-truth-analyzer skill) …")
 
-    prompt = (
-        f"Use the url-truth-analyzer skill to analyze this URL: {clean_url}\n\n"
-        "Return the full analysis markdown as your final response."
-    )
-
-    heartbeats = [
-        (15,  "📥 Skill is downloading content (yt-dlp / article fetch / OCR) …"),
-        (60,  "📝 Transcribing or extracting text …"),
-        (150, "🌐 Searching for supporting / refuting evidence …"),
-        (240, "🧠 Analyzing claims — almost there …"),
-        (360, "⏳ Still working (long videos can take 5+ minutes) …"),
-    ]
+    if is_channel:
+        emit(
+            "progress",
+            f"📺 Channel page detected — analyzing the top {CHANNEL_BATCH_SIZE} most-recent posts. "
+            "This typically takes 30–60+ minutes; keep this tab open.",
+        )
+        skill_input = f"{clean_url} [channel:{CHANNEL_BATCH_SIZE}]"
+        prompt = (
+            "Use the url-truth-analyzer skill on this channel/profile entry. "
+            "Enumerate the most-recent posts via Phase 0 Step 0 (channel expansion), "
+            "then run the full analysis pipeline on each enumerated permalink and "
+            "return every per-item analysis concatenated, with clear headings.\n\n"
+            f"Entry: {skill_input}"
+        )
+        heartbeats = [
+            (30,   "📥 Enumerating posts on the channel …"),
+            (90,   "📝 Item 1 in flight (download + transcribe) …"),
+            (300,  "🌐 Several items processed; still going through the batch …"),
+            (900,  "⏳ ~15 min in. Channel batches commonly run 30–60 min."),
+            (1800, "⏳ Still working — long batches can take an hour. Don't close the tab."),
+        ]
+        timeout = 60 * 90  # 90 min hard ceiling for a 10-item batch
+    else:
+        emit("progress", "🤖 Handing off to local Claude Code (url-truth-analyzer skill) …")
+        prompt = (
+            f"Use the url-truth-analyzer skill to analyze this URL: {clean_url}\n\n"
+            "Return the full analysis markdown as your final response."
+        )
+        heartbeats = [
+            (15,  "📥 Skill is downloading content (yt-dlp / article fetch / OCR) …"),
+            (60,  "📝 Transcribing or extracting text …"),
+            (150, "🌐 Searching for supporting / refuting evidence …"),
+            (240, "🧠 Analyzing claims — almost there …"),
+            (360, "⏳ Still working (long videos can take 5+ minutes) …"),
+        ]
+        timeout = 900
 
     output = _run_claude_cli(
-        prompt, emit, heartbeats=heartbeats, timeout=900, cwd=_REPO_ROOT
+        prompt, emit, heartbeats=heartbeats, timeout=timeout, cwd=_REPO_ROOT
     )
     if not output.strip():
         raise RuntimeError(

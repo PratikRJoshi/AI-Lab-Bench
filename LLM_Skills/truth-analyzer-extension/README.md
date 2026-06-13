@@ -31,7 +31,9 @@ Firefox 🔍 toolbar  →  localhost:5757  →  claude --print (url-truth-analyz
    - Open `about:debugging` → **This Firefox** → **Load Temporary Add-on…**
    - Pick `extension/manifest.json` from this directory.
 
-4. **Use it:** click the 🔍 toolbar icon on any page (or right-click → *Analyze with Truth Analyzer*). A new tab opens with live progress, then the analysis renders with a sticky TOC.
+4. **Use it:**
+   - **Single post / article:** click the 🔍 toolbar icon (or right-click → *Analyze with Truth Analyzer*). A new tab opens with live progress, then the analysis renders with a sticky TOC.
+   - **Channel / handle home page** (e.g. `instagram.com/<handle>/`, `youtube.com/@channel`, `x.com/<user>`, `tiktok.com/@user`): one click enumerates the top 10 most-recent posts and analyzes each one. Runtime is typically 30–60+ minutes — keep the tab open.
 
 5. **Manage the backend:**
    - Start: `./backend/start.sh`
@@ -44,6 +46,7 @@ Firefox 🔍 toolbar  →  localhost:5757  →  claude --print (url-truth-analyz
 |-----|---------|---------|
 | `USE_CLAUDE_CLI` | `true` | Required — backend delegates to local `claude` |
 | `MAX_CONCURRENT_JOBS` | `3` | How many analyses can run in parallel |
+| `CHANNEL_BATCH_SIZE` | `10` | Posts to enumerate when clicked on a channel home page (skill caps at 25) |
 | `PORT` | `5757` | Backend listen port |
 
 Other keys in `.env.example` belong to the legacy in-process pipeline and are unused by the current `server.py`.

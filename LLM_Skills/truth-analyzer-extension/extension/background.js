@@ -5,6 +5,20 @@ const BACKEND = "http://localhost:5757";
 // Tracking/sharing params to strip before sending to the backend.
 const STRIP_PREFIXES = ["utm_", "igsh", "fbclid", "gclid", "ref", "si", "s"];
 
+// Channel/profile home pages — clicking the extension here expands to the
+// top-N most-recent posts on the backend. Mirrors the regexes in
+// backend/analyzer.py::_is_channel_url so the user sees an upfront notice.
+const CHANNEL_PATTERNS = [
+  /^https?:\/\/(?:www\.)?youtube\.com\/(?:@[^/?#]+|c\/[^/?#]+|user\/[^/?#]+|channel\/UC[^/?#]+)\/?$/i,
+  /^https?:\/\/(?:www\.)?instagram\.com\/(?!p\/|reel\/|reels\/|tv\/|stories\/|explore\/|accounts\/|direct\/)[^/?#]+\/?$/i,
+  /^https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/(?!i\/|home$|search$|explore$|notifications$|messages$|compose$)[A-Za-z0-9_]{1,15}\/?$/i,
+  /^https?:\/\/(?:www\.)?tiktok\.com\/@[^/?#]+\/?$/i,
+];
+
+function isChannelUrl(url) {
+  return CHANNEL_PATTERNS.some(re => re.test(url));
+}
+
 function stripTracking(rawUrl) {
   let parsed;
   try {
@@ -37,6 +51,13 @@ function notify(title, message) {
 
 async function analyzeUrl(rawUrl) {
   const url = stripTracking(rawUrl);
+
+  if (isChannelUrl(url)) {
+    notify(
+      "Channel page detected",
+      "Analyzing the top 10 most-recent posts. This typically takes 30–60+ minutes — keep the result tab open."
+    );
+  }
 
   let resp;
   try {
