@@ -12,6 +12,7 @@
   "permissions": [
     "activeTab",
     "contextMenus",
+    "notifications",
     "tabs",
     "http://localhost:5757/*"
   ],

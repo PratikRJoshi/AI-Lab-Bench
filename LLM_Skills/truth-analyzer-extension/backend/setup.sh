@@ -6,11 +6,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "Creating virtual environment..."
-python3 -m venv .venv
+python3 -m venv truth-analyzer-env
 
 echo "Installing dependencies..."
 truth-analyzer-env/bin/pip install --upgrade pip
-truth-analyzer-env/bin/pip install -r requirements.txt boto3
+truth-analyzer-env/bin/pip install -r requirements.txt
 
 echo ""
 echo "Setup complete."

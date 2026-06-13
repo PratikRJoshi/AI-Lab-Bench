@@ -19,10 +19,16 @@ load_dotenv(Path(__file__).parent / ".env")
 from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 
-from analyzer import run_analysis
+from analyzer import run_skill_analysis
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Maximum number of analyses that may be in flight at once. Each job spawns its
+# own `claude --print` subprocess and runs the full skill pipeline (yt-dlp,
+# Whisper, OCR), so 3 is a sane default for a developer laptop. Bump via env if
+# you want more concurrency.
+MAX_CONCURRENT_JOBS = int(os.getenv("MAX_CONCURRENT_JOBS", "3"))
 
 # In-memory store: id -> {"status", "events": list, "cond": Condition, "done": bool}
 # Events are stored as {"event": str, "data": str} and never discarded.
@@ -63,7 +69,7 @@ def _worker(job_id: str, url: str) -> None:
     try:
         log.info("▶  Starting analysis for %s", url)
         job["status"] = "running"
-        result_md = run_analysis(url, emit)
+        result_md = run_skill_analysis(url, emit)
         job["result"] = result_md
         job["status"] = "done"
         log.info("✅ Analysis complete (%d chars)", len(result_md))
@@ -88,16 +94,21 @@ def api_analyze():
     if not url:
         return jsonify({"error": "url is required"}), 400
 
-    # Only allow one analysis at a time — reject if one is already running
+    # Cap concurrent analyses. Each job is heavy (claude subprocess + yt-dlp +
+    # Whisper); without a cap, a few impatient clicks can pin the whole machine.
     with _jobs_lock:
-        running = [j for j in _jobs.values() if j["status"] == "running"]
-        if running:
-            busy_id = running[0]["id"]
+        running = [j for j in _jobs.values() if j["status"] in ("queued", "running")]
+        if len(running) >= MAX_CONCURRENT_JOBS:
             return jsonify({
-                "error": "busy",
-                "message": "An analysis is already in progress. Wait for it to finish or open the existing result.",
-                "existing_id": busy_id,
-            }), 409
+                "error": "limit_exceeded",
+                "message": (
+                    f"Already running {len(running)} of {MAX_CONCURRENT_JOBS} "
+                    "allowed concurrent analyses. Wait for one to finish."
+                ),
+                "running": len(running),
+                "limit": MAX_CONCURRENT_JOBS,
+                "running_ids": [j["id"] for j in running],
+            }), 429
 
         job_id = uuid.uuid4().hex
         _jobs[job_id] = _make_job(job_id)

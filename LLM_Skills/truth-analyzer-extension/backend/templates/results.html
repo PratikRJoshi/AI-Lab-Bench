@@ -20,6 +20,75 @@
 
     body { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 
+    /* On wide screens, give the body extra right margin so the sticky TOC
+       can sit alongside without overlapping content. */
+    @media (min-width: 1180px) {
+      body { max-width: 860px; margin-right: 320px; }
+    }
+
+    /* ── Table of Contents ───────────────────────────────────────────── */
+    #toc {
+      background: var(--pico-card-background-color);
+      border: 1px solid var(--pico-muted-border-color);
+      border-radius: var(--pico-border-radius);
+      padding: 0.85rem 1.1rem;
+      margin: 0 0 1.5rem;
+      font-size: 0.88rem;
+    }
+    #toc-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--accent);
+      margin-bottom: 0.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #toc-label button {
+      background: none; border: none; color: var(--pico-muted-color);
+      cursor: pointer; padding: 0; font-size: 0.75rem;
+    }
+    #toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc-item; }
+    #toc ol li { padding: 0.15rem 0; counter-increment: toc-item; }
+    #toc ol li::before {
+      content: counter(toc-item) ". ";
+      color: var(--pico-muted-color); margin-right: 0.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+    #toc ol li.h3 { padding-left: 1.25rem; font-size: 0.83rem; }
+    #toc ol li.h3::before { content: "› "; }
+    #toc a {
+      color: var(--pico-color); text-decoration: none;
+      border-bottom: 1px dashed transparent;
+    }
+    #toc a:hover, #toc a:focus { border-bottom-color: var(--accent); color: var(--accent); }
+
+    @media (min-width: 1180px) {
+      #toc {
+        position: fixed; top: 1.5rem; right: 1.5rem;
+        width: 280px; max-height: calc(100vh - 3rem); overflow-y: auto;
+        margin: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      }
+    }
+    #toc.collapsed ol { display: none; }
+
+    /* Anchor scroll padding so the heading isn't hidden under sticky bars. */
+    #md-content :where(h1, h2, h3) { scroll-margin-top: 1rem; }
+    #md-content h2 { margin-top: 2rem; padding-top: 0.25rem; }
+    #md-content h2:first-of-type { margin-top: 0.5rem; }
+    #md-content h3 {
+      margin-top: 1.4rem;
+      background: var(--pico-card-background-color);
+      border-left: 3px solid var(--accent-light);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Subtle anchor link beside each heading for easy URL-sharing. */
+    #md-content :where(h1, h2, h3) .anchor-link {
+      opacity: 0; margin-left: 0.5rem; font-size: 0.75em;
+      color: var(--pico-muted-color); text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    #md-content :where(h1, h2, h3):hover .anchor-link { opacity: 1; }
+
     .app-header {
       display: flex; align-items: center; gap: 0.75rem;
       border-bottom: 2px solid var(--pico-muted-border-color);
@@ -158,6 +227,14 @@
     <p class="share-text" id="share-text"></p>
   </div>
 
+  <nav id="toc" style="display:none" aria-label="Table of contents">
+    <div id="toc-label">
+      <span>📑 On this page</span>
+      <button type="button" id="toc-toggle" aria-expanded="true">Hide</button>
+    </div>
+    <ol id="toc-list"></ol>
+  </nav>
+
   <div id="md-content"></div>
 
   <div class="eli5-box" id="eli5-box" style="display:none">
@@ -276,6 +353,54 @@
     });
   }
 
+  function slugify(text) {
+    return text.toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .slice(0, 60) || "section";
+  }
+
+  function buildTOC(container) {
+    const headings = container.querySelectorAll("h2, h3");
+    if (headings.length < 2) return;
+
+    const list = document.getElementById("toc-list");
+    const used = new Set();
+    headings.forEach(h => {
+      let id = slugify(h.textContent);
+      let suffix = 1;
+      while (used.has(id)) id = `${slugify(h.textContent)}-${++suffix}`;
+      used.add(id);
+      h.id = id;
+
+      const anchor = document.createElement("a");
+      anchor.href = `#${id}`;
+      anchor.className = "anchor-link";
+      anchor.textContent = "#";
+      anchor.setAttribute("aria-label", "Link to section");
+      h.appendChild(anchor);
+
+      const li = document.createElement("li");
+      li.className = h.tagName.toLowerCase();
+      const link = document.createElement("a");
+      link.href = `#${id}`;
+      link.textContent = h.textContent.replace(/#$/, "").trim();
+      li.appendChild(link);
+      list.appendChild(li);
+    });
+
+    document.getElementById("toc").style.display = "block";
+  }
+
+  document.getElementById("toc-toggle").addEventListener("click", () => {
+    const toc = document.getElementById("toc");
+    const btn = document.getElementById("toc-toggle");
+    const collapsed = toc.classList.toggle("collapsed");
+    btn.textContent = collapsed ? "Show" : "Hide";
+    btn.setAttribute("aria-expanded", String(!collapsed));
+  });
+
   function renderAnalysis(md) {
     // Share? line
     const shareMatch = md.match(/\*\*Share\?\*\*:\s*(.+)/);
@@ -296,6 +421,7 @@
     const mdEl = document.getElementById("md-content");
     safeSetHtml(mdEl, marked.parse(md));
     addSortBadges(mdEl);
+    buildTOC(mdEl);
 
     document.getElementById("analysis-output").style.display = "block";
   }

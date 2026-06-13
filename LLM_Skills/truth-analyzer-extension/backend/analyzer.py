@@ -37,8 +37,49 @@ WHISPER_MODEL = os.getenv("WHISPER_MODEL", "small")
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Entry points
 # ---------------------------------------------------------------------------
+
+# Path to the AI-Lab-Bench repo root, used as cwd for `claude --print` so the
+# url-truth-analyzer project skill resolves correctly.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def run_skill_analysis(url: str, emit: EmitFn) -> str:
+    """Delegate URL analysis to the local Claude Code CLI's url-truth-analyzer skill.
+
+    Builds a one-line prompt naming the skill, runs `claude --print`, and returns
+    the final assistant markdown. The skill itself handles download, transcription,
+    search, and analysis. Inline-URL invocation implies [display-only] in the
+    skill, so no files are written and watch-urls.md is untouched.
+    """
+    clean_url = _strip_tracking(url)
+    emit("progress", f"🔗 Cleaned URL: {clean_url}")
+    emit("progress", "🤖 Handing off to local Claude Code (url-truth-analyzer skill) …")
+
+    prompt = (
+        f"Use the url-truth-analyzer skill to analyze this URL: {clean_url}\n\n"
+        "Return the full analysis markdown as your final response."
+    )
+
+    heartbeats = [
+        (15,  "📥 Skill is downloading content (yt-dlp / article fetch / OCR) …"),
+        (60,  "📝 Transcribing or extracting text …"),
+        (150, "🌐 Searching for supporting / refuting evidence …"),
+        (240, "🧠 Analyzing claims — almost there …"),
+        (360, "⏳ Still working (long videos can take 5+ minutes) …"),
+    ]
+
+    output = _run_claude_cli(
+        prompt, emit, heartbeats=heartbeats, timeout=900, cwd=_REPO_ROOT
+    )
+    if not output.strip():
+        raise RuntimeError(
+            "claude --print returned empty output. Check that the url-truth-analyzer "
+            "skill is available (`claude` interactively → /skills) and that you are logged in."
+        )
+    return output
+
 
 def run_analysis(url: str, emit: EmitFn) -> str:
     """Run the full pipeline for *url*, streaming progress via *emit*.
@@ -100,6 +141,17 @@ def run_analysis(url: str, emit: EmitFn) -> str:
 # ---------------------------------------------------------------------------
 # Step 0 — Helpers
 # ---------------------------------------------------------------------------
+
+# Matches CSI sequences (ESC [ … final-byte) and OSC sequences (ESC ] … BEL/ST).
+# claude --print runs through a PTY, which adds terminal-mode setup/teardown
+# bytes that markdown renderers shouldn't see. Plain ESC and stray \r are also
+# scrubbed so they don't break the rendered output.
+_ANSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][\x20-\x7e]|\x1b[78]|\x0e|\x0f")
+
+
+def _strip_terminal_escapes(text: str) -> str:
+    return _ANSI_RE.sub("", text).replace("\r\n", "\n").replace("\r", "\n")
+
 
 def _strip_tracking(url: str) -> str:
     """Remove common tracking params (igsh=, utm_*, fbclid=, etc.)."""
@@ -505,21 +557,42 @@ def _analyze_anthropic(system: str, user: str, emit: EmitFn) -> str:
 
 
 def _analyze_claude_cli(system: str, user: str, emit: EmitFn) -> str:
-    """Run claude --print via a pseudo-TTY so corporate OAuth auth works."""
-    import pty, select, fcntl, termios
-
+    """Legacy path: run claude --print with a one-shot prompt for the bundled prompt template."""
     emit("progress", "🤖  Calling Claude CLI (PTY mode) …")
     prompt = f"{system}\n\n---\n\n{user}"
+    return _run_claude_cli(prompt, emit, timeout=600)
 
-    # Write prompt to a temp file so it can be fed via stdin
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False,
-                                     encoding="utf-8") as f:
+
+def _run_claude_cli(
+    prompt: str,
+    emit: EmitFn,
+    *,
+    heartbeats: list[tuple[int, str]] | None = None,
+    timeout: int = 600,
+    cwd: Path | None = None,
+) -> str:
+    """Run `claude --print --dangerously-skip-permissions` via a PTY and return stdout.
+
+    The PTY is required so the corporate Claude Code CLI can complete its OAuth
+    handshake without trying to write to /dev/tty. *prompt* is fed on stdin.
+    *heartbeats* is an optional list of (elapsed_seconds, message) pairs; each
+    is emitted once when its threshold is crossed, giving the browser visible
+    progress while the skill runs (since claude --print only emits on completion).
+    """
+    import pty, select, fcntl
+
+    heartbeats = sorted(heartbeats or [], key=lambda hb: hb[0])
+    next_hb = 0
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".txt", delete=False, encoding="utf-8"
+    ) as f:
         f.write(prompt)
         prompt_path = f.name
 
+    master_fd: int | None = None
     try:
         master_fd, slave_fd = pty.openpty()
-        # Make master non-blocking
         fl = fcntl.fcntl(master_fd, fcntl.F_GETFL)
         fcntl.fcntl(master_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
@@ -530,12 +603,19 @@ def _analyze_claude_cli(system: str, user: str, emit: EmitFn) -> str:
                 stdout=slave_fd,
                 stderr=slave_fd,
                 close_fds=True,
+                cwd=str(cwd) if cwd else None,
             )
         os.close(slave_fd)
 
         chunks: list[str] = []
-        deadline = time.time() + 600  # 10-minute hard timeout
+        start = time.time()
+        deadline = start + timeout
         while time.time() < deadline:
+            elapsed = int(time.time() - start)
+            while next_hb < len(heartbeats) and elapsed >= heartbeats[next_hb][0]:
+                emit("progress", heartbeats[next_hb][1])
+                next_hb += 1
+
             r, _, _ = select.select([master_fd], [], [], 5.0)
             if r:
                 try:
@@ -543,12 +623,12 @@ def _analyze_claude_cli(system: str, user: str, emit: EmitFn) -> str:
                     if data:
                         chunks.append(data.decode("utf-8", errors="replace"))
                 except OSError:
-                    break  # slave closed → process done
+                    break
             elif proc.poll() is not None:
-                break  # process exited with no more output
+                break
 
         proc.wait(timeout=10)
-        output = "".join(chunks).strip()
+        output = _strip_terminal_escapes("".join(chunks)).strip()
         if proc.returncode != 0 and not output:
             raise RuntimeError(
                 f"claude CLI exited with code {proc.returncode}. "
@@ -556,8 +636,12 @@ def _analyze_claude_cli(system: str, user: str, emit: EmitFn) -> str:
             )
         return output
     finally:
+        if master_fd is not None:
+            try:
+                os.close(master_fd)
+            except OSError:
+                pass
         try:
-            os.close(master_fd)
+            os.unlink(prompt_path)
         except OSError:
             pass
-        os.unlink(prompt_path)
