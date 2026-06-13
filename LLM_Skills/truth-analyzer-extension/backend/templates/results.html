@@ -280,40 +280,32 @@
   const LOG_PATH = {{ log_path | tojson }};
   let rawMarkdown = "";
 
-  const STEP_MAP = {
-    "detecting":  "step-detect",
-    "platform":   "step-detect",
-    "download":   "step-download",
-    "downloading":"step-download",
-    "transcrib":  "step-transcribe",
-    "ocr":        "step-transcribe",
-    "extracting": "step-transcribe",
-    "search":     "step-search",
-    "searching":  "step-search",
-    "analyz":     "step-analyze",
-    "llm":        "step-analyze",
-    "claude":     "step-analyze",
-    "calling":    "step-analyze",
-    "complete":   "step-finish",
-  };
+  // Ordered list of step IDs. Position in this array == "how far along we are";
+  // we never advance backwards.
+  const STEP_ORDER = [
+    "step-detect",
+    "step-download",
+    "step-transcribe",
+    "step-search",
+    "step-analyze",
+    "step-finish",
+  ];
 
-  let currentStepId = null;
+  // Each rule is [regex, stepId]. Regexes are tried in order; the first match
+  // wins. Word boundaries / explicit phrases avoid the old false positives —
+  // e.g. "Handing off to local Claude Code" used to trip "step-analyze" via
+  // the bare keyword "claude".
+  const STEP_RULES = [
+    [/\bdetect(?:ing|ed)?\b|\bplatform\b/i,                     "step-detect"],
+    [/\bdownload(?:ing)?\b|yt-dlp|article fetch/i,              "step-download"],
+    [/\btranscrib(?:ing|e[ds]?)?\b|\bocr\b|extracting text/i,   "step-transcribe"],
+    [/\b(?:web )?search(?:ing)?\b|supporting.*refuting/i,       "step-search"],
+    [/\banalyz(?:e|ing)\b|\bllm\b|claim(?:s)? analysis|almost there/i,
+                                                                 "step-analyze"],
+    [/\bcomplete\b|\bdone\b/i,                                  "step-finish"],
+  ];
 
-  function markActive(stepId) {
-    if (currentStepId && currentStepId !== stepId) {
-      markDone(currentStepId);
-    }
-    const el = document.getElementById(stepId);
-    if (el && !el.classList.contains("done")) {
-      el.classList.remove("waiting");
-      el.classList.add("active");
-      const icon = el.querySelector(".icon");
-      const spinner = document.createElement("span");
-      spinner.className = "spinner";
-      icon.replaceChildren(spinner);
-      currentStepId = stepId;
-    }
-  }
+  let currentStepIdx = -1;
 
   function markDone(stepId) {
     const el = document.getElementById(stepId);
@@ -324,10 +316,30 @@
     }
   }
 
+  function markActive(stepId) {
+    const el = document.getElementById(stepId);
+    if (!el) return;
+    el.classList.remove("waiting");
+    el.classList.add("active");
+    const icon = el.querySelector(".icon");
+    const spinner = document.createElement("span");
+    spinner.className = "spinner";
+    icon.replaceChildren(spinner);
+  }
+
+  // Advance to step N, marking all earlier steps done (so we never leave a
+  // gap with an ○ behind a ✓). Refuses to move backwards.
+  function advanceTo(stepId) {
+    const idx = STEP_ORDER.indexOf(stepId);
+    if (idx < 0 || idx <= currentStepIdx) return;
+    for (let i = 0; i < idx; i++) markDone(STEP_ORDER[i]);
+    markActive(stepId);
+    currentStepIdx = idx;
+  }
+
   function guessStep(msg) {
-    const lc = msg.toLowerCase();
-    for (const [kw, sid] of Object.entries(STEP_MAP)) {
-      if (lc.includes(kw)) { markActive(sid); return; }
+    for (const [re, sid] of STEP_RULES) {
+      if (re.test(msg)) { advanceTo(sid); return; }
     }
   }
 
