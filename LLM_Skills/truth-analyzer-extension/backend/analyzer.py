@@ -674,7 +674,8 @@ def _run_claude_cli(
         chunks: list[str] = []
         start = time.time()
         deadline = start + timeout
-        while time.time() < deadline:
+        eof = False
+        while not eof and time.time() < deadline:
             elapsed = int(time.time() - start)
             while next_hb < len(heartbeats) and elapsed >= heartbeats[next_hb][0]:
                 emit("progress", heartbeats[next_hb][1])
@@ -684,14 +685,35 @@ def _run_claude_cli(
             if r:
                 try:
                     data = os.read(master_fd, 4096)
+                except OSError:
+                    # PTY slave closed — child finished writing. Drain done.
+                    eof = True
+                else:
+                    if data:
+                        chunks.append(data.decode("utf-8", errors="replace"))
+                    else:
+                        # Empty read on a ready fd = EOF on this PTY too.
+                        # Without this, a silent-exit child leaves the loop
+                        # spinning until the wall-clock timeout.
+                        eof = True
+            elif proc.poll() is not None:
+                # No data ready and child gone. Try one final non-blocking
+                # drain in case some output landed between select() and now.
+                try:
+                    data = os.read(master_fd, 4096)
                     if data:
                         chunks.append(data.decode("utf-8", errors="replace"))
                 except OSError:
-                    break
-            elif proc.poll() is not None:
-                break
+                    pass
+                eof = True
 
-        proc.wait(timeout=10)
+        # Reap the child. If it's already a zombie this returns immediately;
+        # if it's somehow still alive (we hit the wall-clock deadline), kill.
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=5)
         output = _strip_terminal_escapes("".join(chunks)).strip()
         if proc.returncode != 0 and not output:
             raise RuntimeError(
