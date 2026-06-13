@@ -200,6 +200,48 @@ def api_save(job_id: str):
     return jsonify({"path": str(dest)})
 
 
+@app.post("/api/open")
+def api_open():
+    """Open a saved analysis file (or reveal in Finder) on the user's machine.
+
+    Browsers block file:// navigation from an http:// page, so the front-end
+    asks the server to do it via macOS `open`. The server only allows paths
+    inside ~/Documents/truth-analyses/ or the repo's truth-analyses dir, so
+    this can't be turned into an arbitrary-file open primitive.
+    """
+    import subprocess
+    body = request.get_json(force=True, silent=True) or {}
+    raw_path = (body.get("path") or "").strip()
+    mode = body.get("mode") or "open"  # "open" | "reveal"
+    if not raw_path:
+        return jsonify({"error": "path is required"}), 400
+
+    target = Path(raw_path).expanduser().resolve()
+    allowed_roots = [
+        (Path.home() / "Documents" / "truth-analyses").resolve(),
+        (Path.home() / "AI-Lab-Bench" / "LLM_Skills" / "url-truth-analyzer" / "truth-analyses").resolve(),
+    ]
+    if not any(_is_within(target, root) for root in allowed_roots):
+        return jsonify({"error": "path not in an allowed directory"}), 403
+    if not target.exists():
+        return jsonify({"error": "file does not exist"}), 404
+
+    args = ["open", "-R", str(target)] if mode == "reveal" else ["open", str(target)]
+    try:
+        subprocess.run(args, check=True, timeout=5)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+        return jsonify({"error": f"open failed: {e}"}), 500
+    return jsonify({"ok": True})
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
 @app.get("/")
 def index():
     return render_template("index.html")

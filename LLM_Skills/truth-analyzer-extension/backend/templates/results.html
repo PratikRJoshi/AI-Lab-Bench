@@ -271,6 +271,32 @@
     <button id="save-btn" class="outline">💾 Save to truth-analyses/</button>
     <a href="/" role="button" class="outline secondary">← Analyze another URL</a>
   </div>
+
+  <div id="save-result" style="display:none; margin-top:0.75rem; padding:0.75rem 1rem;
+                                background:#f0fdf4; border:1px solid #bbf7d0;
+                                border-radius:var(--pico-border-radius);">
+    <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase;
+                letter-spacing:0.05em; color:var(--green); margin-bottom:0.5rem;">
+      ✅ <span id="save-result-label">Saved</span>
+    </div>
+    <input id="save-result-path" type="text" readonly
+           style="width:100%; font-family:var(--pico-font-family-monospace);
+                  font-size:0.85rem; padding:0.4rem 0.6rem;
+                  background:var(--pico-card-background-color);
+                  border:1px solid var(--pico-muted-border-color);
+                  border-radius:var(--pico-border-radius); margin-bottom:0.5rem;
+                  user-select:all;">
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button type="button" id="save-copy-path"
+              style="font-size:0.8rem; padding:0.3rem 0.7rem;">📋 Copy path</button>
+      <button type="button" id="save-open-file"
+              style="font-size:0.8rem; padding:0.3rem 0.7rem;">📄 Open file</button>
+      <button type="button" id="save-reveal-file"
+              style="font-size:0.8rem; padding:0.3rem 0.7rem;">📁 Reveal in Finder</button>
+    </div>
+    <p id="save-result-error" style="display:none; margin:0.5rem 0 0;
+                                       font-size:0.8rem; color:var(--red);"></p>
+  </div>
 </div>
 
 <script>
@@ -519,17 +545,71 @@
     });
   });
 
+  let savedPath = null;
+
+  function showSaveError(msg) {
+    const errEl = document.getElementById("save-result-error");
+    errEl.textContent = msg;
+    errEl.style.display = "block";
+  }
+
   document.getElementById("save-btn").addEventListener("click", () => {
+    const btn = document.getElementById("save-btn");
+    btn.disabled = true;
+    btn.textContent = "💾 Saving…";
     fetch(`/api/save/${encodeURIComponent(JOB_ID)}`, { method: "POST" })
-      .then(r => r.json())
-      .then(d => {
-        const btn = document.getElementById("save-btn");
-        btn.textContent = d.path ? `✅ Saved to ${d.path}` : `❌ ${d.error}`;
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        btn.disabled = false;
+        btn.textContent = "💾 Save to truth-analyses/";
+        if (!ok || !d.path) {
+          showSaveError(d.error || "Save failed");
+          document.getElementById("save-result").style.display = "block";
+          document.getElementById("save-result-path").value = "";
+          return;
+        }
+        savedPath = d.path;
+        document.getElementById("save-result-path").value = d.path;
+        document.getElementById("save-result-error").style.display = "none";
+        document.getElementById("save-result").style.display = "block";
       })
-      .catch(() => {
-        document.getElementById("save-btn").textContent = "❌ Save failed";
+      .catch(err => {
+        btn.disabled = false;
+        btn.textContent = "💾 Save to truth-analyses/";
+        showSaveError(String(err));
+        document.getElementById("save-result").style.display = "block";
       });
   });
+
+  document.getElementById("save-copy-path").addEventListener("click", () => {
+    if (!savedPath) return;
+    navigator.clipboard.writeText(savedPath).then(() => {
+      const b = document.getElementById("save-copy-path");
+      const orig = b.textContent;
+      b.textContent = "Copied!";
+      setTimeout(() => { b.textContent = orig; }, 1500);
+    });
+  });
+
+  function openSavedFile(mode) {
+    if (!savedPath) return;
+    fetch("/api/open", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: savedPath, mode }),
+    })
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        if (!ok) showSaveError(d.error || "Open failed");
+        else document.getElementById("save-result-error").style.display = "none";
+      })
+      .catch(err => showSaveError(String(err)));
+  }
+
+  document.getElementById("save-open-file").addEventListener("click",
+    () => openSavedFile("open"));
+  document.getElementById("save-reveal-file").addEventListener("click",
+    () => openSavedFile("reveal"));
 
   function populateTailHints() {
     // The backend logger uses name="job.<short_id>" where short_id is the
