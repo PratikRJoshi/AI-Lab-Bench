@@ -19,6 +19,29 @@ if [ ! -d "truth-analyzer-env" ]; then
 fi
 
 # ── Backend ────────────────────────────────────────────────────────────
+# Refuse to kill a backend that has analyses in flight unless the user opts
+# in (FORCE=1 or interactive y). Each in-flight job's claude --print
+# subprocess and SSE stream die with the parent process — so a careless
+# restart loses your running analyses and any completed ones still in memory.
+if running_count="$(curl -s --max-time 2 http://localhost:5757/health \
+                    | python3 -c 'import sys,json;print(json.load(sys.stdin).get("running",0))' \
+                    2>/dev/null)" && [ -n "$running_count" ] && [ "$running_count" -gt 0 ]; then
+  if [ "${FORCE:-0}" = "1" ]; then
+    echo "⚠  $running_count analysis/analyses in flight — killing anyway (FORCE=1)."
+  elif [ -t 0 ]; then
+    printf "⚠  %s analysis/analyses in flight. Kill anyway? [y/N] " "$running_count"
+    read -r answer
+    case "$answer" in
+      y|Y|yes|YES) ;;
+      *) echo "Aborted. Re-run with FORCE=1 to skip this prompt."; exit 1 ;;
+    esac
+  else
+    echo "⚠  $running_count analysis/analyses in flight and stdin is not a TTY."
+    echo "   Aborting to avoid data loss. Re-run with FORCE=1 to override."
+    exit 1
+  fi
+fi
+
 lsof -ti :5757 2>/dev/null | xargs kill -9 2>/dev/null || true
 sleep 1
 

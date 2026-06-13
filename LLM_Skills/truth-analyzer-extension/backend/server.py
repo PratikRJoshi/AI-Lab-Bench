@@ -22,6 +22,11 @@ from flask_cors import CORS
 from analyzer import run_skill_analysis
 
 app = Flask(__name__)
+# Pick up template edits (e.g. results.html) on next request without a server
+# restart. Restarting kills in-flight jobs (which live in this process's
+# memory), so this is a real UX win during iteration.
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.jinja_env.auto_reload = True
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Maximum number of analyses that may be in flight at once. Each job spawns its
@@ -202,7 +207,15 @@ def index():
 
 @app.get("/health")
 def health():
-    return jsonify({"ok": True})
+    with _jobs_lock:
+        running = sum(1 for j in _jobs.values() if j["status"] in ("queued", "running"))
+        total = len(_jobs)
+    return jsonify({
+        "ok": True,
+        "running": running,
+        "total": total,
+        "limit": MAX_CONCURRENT_JOBS,
+    })
 
 
 if __name__ == "__main__":
