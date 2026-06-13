@@ -27,18 +27,19 @@ Firefox 🔍 toolbar  →  localhost:5757  →  claude --print (url-truth-analyz
    ```
    The installer creates the venv, installs Python deps, copies `.env`, and starts the backend on `http://localhost:5757`.
 
-3. **Load the Firefox extension** (one-time per Firefox profile):
-   - Open `about:debugging` → **This Firefox** → **Load Temporary Add-on…**
-   - Pick `extension/manifest.json` from this directory.
+3. **The Firefox window opens automatically.** `start.sh` (called by `install.sh`) launches a dedicated Firefox window with the extension preloaded via Mozilla's `web-ext` CLI. The window uses a persistent profile at `~/.config/truth-analyzer/firefox-profile`, so IG logins, bookmarks, and cookies survive across runs.
+
+   Want to load it into your main Firefox profile instead? Run with `SKIP_FIREFOX_AUTOLAUNCH=1 ./backend/start.sh` and load `extension/manifest.json` manually via `about:debugging`. Both can coexist — they hit the same backend.
 
 4. **Use it:**
    - **Single post / article:** click the 🔍 toolbar icon (or right-click → *Analyze with Truth Analyzer*). A new tab opens with live progress, then the analysis renders with a sticky TOC.
    - **Channel / handle home page** (e.g. `instagram.com/<handle>/`, `youtube.com/@channel`, `x.com/<user>`, `tiktok.com/@user`): one click enumerates the top 10 most-recent posts and analyzes each one. Runtime is typically 30–60+ minutes — keep the tab open.
 
-5. **Manage the backend:**
-   - Start: `./backend/start.sh`
-   - Stop: `kill $(cat /tmp/truth-analyzer.pid)`
-   - Logs: `tail -f /tmp/truth-analyzer.log`
+5. **Manage the backend / Firefox:**
+   - Start both: `./backend/start.sh`
+   - Stop backend: `kill $(cat /tmp/truth-analyzer.pid)`
+   - Stop Firefox: `kill $(cat /tmp/truth-analyzer-webext.pid)` (or just close the window)
+   - Logs: `tail -f /tmp/truth-analyzer.log` (backend) / `/tmp/truth-analyzer-webext.log` (Firefox)
 
 ## Configuration (`backend/.env`)
 

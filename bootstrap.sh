@@ -49,6 +49,17 @@ brew_install yt-dlp
 brew_install ffmpeg
 brew_install tesseract
 brew_install pandoc
+# node is needed only for `web-ext`, the Mozilla CLI that auto-loads the
+# Firefox extension when start.sh runs.
+brew_install node
+
+# ── 2b. web-ext (auto-launch the extension when start.sh runs) ─────────
+if ! command -v web-ext >/dev/null 2>&1; then
+  green "▶ Installing web-ext (auto-loads the extension into Firefox)…"
+  npm install --global web-ext
+else
+  echo "  ✓ web-ext already installed"
+fi
 
 # ── 3. Python tools the skill needs ────────────────────────────────────
 green "▶ Installing Python packages used by the skill…"

@@ -12,7 +12,7 @@ cd ~/AI-Lab-Bench
 ./bootstrap.sh
 ```
 
-The script installs system tools (yt-dlp, ffmpeg, tesseract, pandoc), Python deps (whisper, trafilatura, playwright + Chromium), registers the `url-truth-analyzer` skill in `~/.claude/skills/`, and starts the backend. Then load `LLM_Skills/truth-analyzer-extension/extension/manifest.json` in Firefox via `about:debugging`. macOS only.
+The script installs system tools (yt-dlp, ffmpeg, tesseract, pandoc, node + web-ext), Python deps (whisper, trafilatura, playwright + Chromium), registers the `url-truth-analyzer` skill in `~/.claude/skills/`, starts the backend, and **auto-launches a dedicated Firefox window with the extension preloaded** (persistent profile at `~/.config/truth-analyzer/firefox-profile`). macOS only.
 
 See [LLM_Skills/truth-analyzer-extension/README.md](./LLM_Skills/truth-analyzer-extension/README.md) for usage details and configuration.
 
