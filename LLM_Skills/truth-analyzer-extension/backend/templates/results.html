@@ -434,17 +434,21 @@
       document.getElementById("share-bar").style.display = "block";
     }
 
-    // ELI5 section
-    const eli5Match = md.match(/## ELI5[^\n]*\n([\s\S]+?)(?:\n##|$)/);
+    // ELI5 section. Extracted into the green callout *and* stripped from the
+    // body so it doesn't render twice. The skill always emits ELI5 as the
+    // last section, so we drop everything from "## ELI5" onward to EOF.
+    const eli5Match = md.match(/## ELI5[^\n]*\n([\s\S]+?)(?:\n## |$)/);
+    let bodyMd = md;
     if (eli5Match) {
       const eli5El = document.getElementById("eli5-text");
       safeSetHtml(eli5El, marked.parse(eli5Match[1].trim()));
       document.getElementById("eli5-box").style.display = "block";
+      bodyMd = md.slice(0, eli5Match.index).trimEnd();
     }
 
-    // Full markdown
+    // Full markdown (with ELI5 stripped)
     const mdEl = document.getElementById("md-content");
-    safeSetHtml(mdEl, marked.parse(md));
+    safeSetHtml(mdEl, marked.parse(bodyMd));
     addSortBadges(mdEl);
     buildTOC(mdEl);
 
