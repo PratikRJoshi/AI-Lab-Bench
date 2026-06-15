@@ -49,6 +49,11 @@ Firefox 🔍 toolbar  →  localhost:5757  →  claude --print (url-truth-analyz
 | `MAX_CONCURRENT_JOBS` | `3` | How many analyses can run in parallel |
 | `CHANNEL_BATCH_SIZE` | `10` | Posts to enumerate when clicked on a channel home page (skill caps at 25) |
 | `PORT` | `5757` | Backend listen port |
+| `RESUME_MAX_WAIT` | `600` | Seconds to wait for the VPN to return before failing a job |
+| `RESUME_POLL_INTERVAL` | `20` | Seconds between connectivity probes while waiting |
+| `RESUME_MAX_ATTEMPTS` | `3` | Max resume/retry cycles per job before giving up |
+| `CLAUDE_IDLE_TIMEOUT` | `120` | Seconds of Claude silence before probing connectivity (detects a silent VPN stall) |
+| `CONNECTIVITY_PROBE_URL` | _(empty)_ | Cheap HEAD/GET probe URL; defaults to `ANTHROPIC_BASE_URL`. Empty = short `claude --print` ping fallback |
 
 Other keys in `.env.example` belong to the legacy in-process pipeline and are unused by the current `server.py`.
 
@@ -59,3 +64,4 @@ Other keys in `.env.example` belong to the legacy in-process pipeline and are un
 - **Instagram needs Firefox cookies** for `yt-dlp` access. Open the IG post in Firefox first while logged in.
 - **Hit the concurrency cap** → extension shows a notification but does not open a tab. Wait for an analysis to finish, or raise `MAX_CONCURRENT_JOBS`.
 - **Temporary add-on disappears on Firefox restart** — repeat step 3, or package as `.xpi` for permanent install.
+- **VPN drops mid-analysis** → the job does *not* fail immediately. It pauses, shows "Connection lost — waiting for VPN…", and waits up to `RESUME_MAX_WAIT` (default 10 min). When the VPN returns it resumes the same Claude session via `claude --resume` (best-effort), falling back to a full re-run. Past the bound, it fails with a clear message. True byte-exact mid-call resume isn't possible — the analysis is one `claude --print` subprocess — so `--resume` continues the Claude *session*, not the exact byte where it stopped.

@@ -49,6 +49,87 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 CHANNEL_BATCH_SIZE = int(os.getenv("CHANNEL_BATCH_SIZE", "10"))
 
 
+# ── VPN / connectivity resilience ──────────────────────────────────────────
+# The analysis runs through the corporate Claude gateway, which is only
+# reachable on VPN. If the VPN drops mid-analysis we don't want to hard-fail:
+# pause, wait (bounded) for connectivity to return, then resume the Claude
+# session via `claude --resume` (best-effort) or re-run.
+RESUME_MAX_WAIT = int(os.getenv("RESUME_MAX_WAIT", "600"))          # total secs to wait for VPN
+RESUME_POLL_INTERVAL = int(os.getenv("RESUME_POLL_INTERVAL", "20"))  # secs between connectivity probes
+RESUME_MAX_ATTEMPTS = int(os.getenv("RESUME_MAX_ATTEMPTS", "3"))     # resume/retry cycles per job
+CLAUDE_IDLE_TIMEOUT = int(os.getenv("CLAUDE_IDLE_TIMEOUT", "120"))   # secs of PTY silence before a connectivity check
+# Optional cheap connectivity probe (HEAD/GET). Defaults to ANTHROPIC_BASE_URL
+# when set; if empty, _check_connectivity falls back to a short `claude --print`
+# ping (tests the real dependency, but costs a small model call per probe).
+CONNECTIVITY_PROBE_URL = os.getenv("CONNECTIVITY_PROBE_URL", "") or os.getenv("ANTHROPIC_BASE_URL", "")
+
+# Stream Claude's full stream-json activity (every assistant turn, tool call, and
+# tool result) to the UI as "activity" SSE events. The browser keeps these behind
+# a "Show detailed activity" toggle. Set to "false" to disable the firehose.
+STREAM_CLAUDE_ACTIVITY = os.getenv("STREAM_CLAUDE_ACTIVITY", "true").lower() == "true"
+
+
+def _render_claude_activity(evt: dict) -> list[str]:
+    """Turn one stream-json event into human-readable activity line(s).
+
+    Firehose: includes full tool inputs and full tool results, mirroring what
+    you'd see in the Claude CLI. Returns an empty list for events with nothing
+    worth showing.
+    """
+    out: list[str] = []
+    etype = evt.get("type")
+    if etype == "system":
+        sub = evt.get("subtype") or "system"
+        model = evt.get("model")
+        out.append(f"⚙️  system: {sub}" + (f" ({model})" if model else ""))
+    elif etype == "assistant":
+        for block in (evt.get("message") or {}).get("content") or []:
+            if not isinstance(block, dict):
+                continue
+            bt = block.get("type")
+            if bt == "text":
+                txt = (block.get("text") or "").strip()
+                if txt:
+                    out.append(txt)
+            elif bt == "thinking":
+                txt = (block.get("thinking") or "").strip()
+                if txt:
+                    out.append("💭 " + txt)
+            elif bt == "tool_use":
+                name = block.get("name") or "tool"
+                try:
+                    inp = json.dumps(block.get("input") or {}, ensure_ascii=False)
+                except Exception:
+                    inp = str(block.get("input"))
+                out.append(f"🔧 {name}: {inp}")
+    elif etype == "user":
+        for block in (evt.get("message") or {}).get("content") or []:
+            if not isinstance(block, dict) or block.get("type") != "tool_result":
+                continue
+            content = block.get("content")
+            if isinstance(content, list):
+                parts = []
+                for c in content:
+                    if isinstance(c, dict) and c.get("type") == "text":
+                        parts.append(c.get("text") or "")
+                    else:
+                        parts.append(json.dumps(c, ensure_ascii=False))
+                text = "\n".join(parts)
+            elif isinstance(content, str):
+                text = content
+            else:
+                text = json.dumps(content, ensure_ascii=False)
+            prefix = "❌ result" if block.get("is_error") else "←  result"
+            out.append(f"{prefix}: {text}")
+    elif etype == "result":
+        out.append("✅ run finished")
+    return out
+
+
+class _ConnectivityError(RuntimeError):
+    """Raised when a claude --print run fails because the network/VPN is down."""
+
+
 # Channel/profile home pages we want to auto-expand. The skill enumerates
 # these via channel_enumerator.py and analyzes the top-N most-recent posts.
 # Mirrors the patterns the skill itself recognizes (see SKILL.md, "channel
@@ -84,7 +165,36 @@ def _is_channel_url(url: str) -> bool:
     )
 
 
-def run_skill_analysis(url: str, emit: EmitFn) -> str:
+# The skill narrates its process across many assistant turns; we keep only the
+# final deliverable by asking it to fence the analysis with these markers, then
+# extracting the fenced span(s). Falls back to the full transcript if absent.
+_ANALYSIS_MARKER_INSTRUCTION = (
+    "IMPORTANT — output format: wrap ONLY your final analysis markdown between "
+    "two marker lines, `<<<ANALYSIS>>>` on its own line immediately before it and "
+    "`<<<END_ANALYSIS>>>` on its own line immediately after it. Put no preamble, "
+    "status updates, or commentary inside those markers — only the analysis itself."
+)
+_ANALYSIS_SENTINEL_RE = re.compile(
+    r"<<<ANALYSIS>>>\s*(.*?)\s*<<<END_ANALYSIS>>>", re.DOTALL
+)
+
+
+def _extract_analysis(text: str) -> str:
+    """Return only the analysis the skill fenced in <<<ANALYSIS>>> markers.
+
+    Concatenates every fenced span (channel batches may fence each item). If no
+    markers are present — older skill, refusal, or a malformed stream — fall
+    back to the full text so nothing is ever lost.
+    """
+    spans = [
+        m.group(1).strip()
+        for m in _ANALYSIS_SENTINEL_RE.finditer(text)
+        if m.group(1).strip()
+    ]
+    return "\n\n".join(spans) if spans else text
+
+
+def run_skill_analysis(url: str, emit: EmitFn, raw_log_path: str | None = None) -> str:
     """Delegate URL analysis to the local Claude Code CLI's url-truth-analyzer skill.
 
     For a single post/article URL, the skill returns one analysis. For a
@@ -109,7 +219,8 @@ def run_skill_analysis(url: str, emit: EmitFn) -> str:
             "Enumerate the most-recent posts via Phase 0 Step 0 (channel expansion), "
             "then run the full analysis pipeline on each enumerated permalink and "
             "return every per-item analysis concatenated, with clear headings.\n\n"
-            f"Entry: {skill_input}"
+            + _ANALYSIS_MARKER_INSTRUCTION
+            + f"\n\nEntry: {skill_input}"
         )
         heartbeats = [
             (30,   "📥 Enumerating posts on the channel …"),
@@ -123,7 +234,8 @@ def run_skill_analysis(url: str, emit: EmitFn) -> str:
         emit("progress", "🤖 Handing off to local Claude Code (url-truth-analyzer skill) …")
         prompt = (
             f"Use the url-truth-analyzer skill to analyze this URL: {clean_url}\n\n"
-            "Return the full analysis markdown as your final response."
+            "Return the full analysis markdown as your final response.\n\n"
+            + _ANALYSIS_MARKER_INSTRUCTION
         )
         heartbeats = [
             (15,  "📥 Skill is downloading content (yt-dlp / article fetch / OCR) …"),
@@ -134,15 +246,18 @@ def run_skill_analysis(url: str, emit: EmitFn) -> str:
         ]
         timeout = 900
 
-    output = _run_claude_cli(
-        prompt, emit, heartbeats=heartbeats, timeout=timeout, cwd=_REPO_ROOT
+    output = _run_claude_resilient(
+        prompt, emit, heartbeats=heartbeats, timeout=timeout, cwd=_REPO_ROOT,
+        raw_log_path=raw_log_path,
     )
     if not output.strip():
         raise RuntimeError(
             "claude --print returned empty output. Check that the url-truth-analyzer "
             "skill is available (`claude` interactively → /skills) and that you are logged in."
         )
-    return output
+    # Strip the skill's step-by-step narration; keep only the final analysis the
+    # skill wrapped in <<<ANALYSIS>>> … <<<END_ANALYSIS>>> markers.
+    return _extract_analysis(output)
 
 
 def run_analysis(url: str, emit: EmitFn) -> str:
@@ -624,7 +739,156 @@ def _analyze_claude_cli(system: str, user: str, emit: EmitFn) -> str:
     """Legacy path: run claude --print with a one-shot prompt for the bundled prompt template."""
     emit("progress", "🤖  Calling Claude CLI (PTY mode) …")
     prompt = f"{system}\n\n---\n\n{user}"
-    return _run_claude_cli(prompt, emit, timeout=600)
+    out, _ = _run_claude_cli(prompt, emit, timeout=600)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Connectivity / VPN-resilience helpers
+# ---------------------------------------------------------------------------
+
+def _check_connectivity() -> bool:
+    """Best-effort check that the Claude gateway is reachable.
+
+    Uses CONNECTIVITY_PROBE_URL (a cheap HEAD/GET) when configured; otherwise
+    falls back to a short, self-watchdog'd ``claude --print`` ping that tests
+    the real dependency. Returns True when reachable.
+    """
+    if CONNECTIVITY_PROBE_URL:
+        try:
+            requests.head(CONNECTIVITY_PROBE_URL, timeout=5, allow_redirects=True)
+            return True
+        except Exception:
+            try:
+                requests.get(CONNECTIVITY_PROBE_URL, timeout=5)
+                return True
+            except Exception:
+                return False
+
+    # Fallback: ping the real dependency. `claude --print ok` returns fast when
+    # online and hangs when offline, so we kill it after a short watchdog.
+    try:
+        proc = subprocess.Popen(
+            ["claude", "--print", "ok"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        return False
+    deadline = time.time() + 20
+    while time.time() < deadline:
+        if proc.poll() is not None:
+            return proc.returncode == 0
+        time.sleep(0.5)
+    proc.kill()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        pass
+    return False
+
+
+def _wait_for_connectivity(emit: EmitFn, max_wait: int) -> bool:
+    """Poll for connectivity up to *max_wait* seconds.
+
+    Emits a periodic progress note so the results tab shows we're waiting, not
+    stuck. Returns True as soon as connectivity returns, False if the bound is
+    exceeded.
+    """
+    start = time.time()
+    deadline = start + max_wait
+    next_note = start + 30
+    while time.time() < deadline:
+        if _check_connectivity():
+            return True
+        now = time.time()
+        if now >= next_note:
+            elapsed_m = int((now - start) / 60)
+            remaining_m = max(0, int((deadline - now) / 60))
+            emit("progress",
+                 f"⏳ Still waiting for the VPN to return "
+                 f"({elapsed_m}m elapsed, ~{remaining_m}m left) …")
+            next_note = now + 30
+        time.sleep(RESUME_POLL_INTERVAL)
+    return _check_connectivity()
+
+
+def _run_claude_resilient(
+    prompt: str,
+    emit: EmitFn,
+    *,
+    heartbeats: list[tuple[int, str]] | None = None,
+    timeout: int = 600,
+    cwd: Path | None = None,
+    raw_log_path: str | None = None,
+) -> str:
+    """Run the Claude analysis, surviving temporary VPN/connectivity drops.
+
+    On a connectivity-class failure, waits (bounded by RESUME_MAX_WAIT) for the
+    network to return, then resumes the same Claude session via ``--resume``
+    (best-effort) or, if no session id was captured, re-runs from scratch.
+    Genuine (non-network) failures propagate immediately.
+    """
+    # Capture the session id as soon as Claude emits it, so we can --resume even
+    # when the *first* run is the one that drops mid-analysis.
+    captured: dict[str, str | None] = {"sid": None}
+
+    def _capture(sid: str) -> None:
+        if not captured["sid"]:
+            captured["sid"] = sid
+
+    cur_prompt = prompt
+    cur_resume: str | None = None
+    attempt = 0
+
+    while True:
+        try:
+            output, _ = _run_claude_cli(
+                cur_prompt, emit,
+                # Don't replay the time-based heartbeats on a resume run.
+                heartbeats=heartbeats if cur_resume is None else None,
+                timeout=timeout, cwd=cwd,
+                resume_session=cur_resume,
+                on_session_id=_capture,
+                raw_log_path=raw_log_path,
+            )
+            return output
+        except Exception as exc:
+            # Probe connectivity to classify: a non-network failure while we're
+            # online is a genuine error and should fail like before.
+            online = _check_connectivity()
+            if online and not isinstance(exc, _ConnectivityError):
+                raise
+
+            attempt += 1
+            wait_m = max(1, RESUME_MAX_WAIT // 60)
+            if attempt > RESUME_MAX_ATTEMPTS:
+                raise RuntimeError(
+                    f"Giving up after {RESUME_MAX_ATTEMPTS} reconnect attempt(s). "
+                    f"Last error: {exc}"
+                )
+            emit("progress",
+                 f"⚠️  Connection lost — waiting up to {wait_m} min for the VPN to "
+                 f"return (attempt {attempt}/{RESUME_MAX_ATTEMPTS}). "
+                 "The analysis will resume automatically.")
+            if not _wait_for_connectivity(emit, RESUME_MAX_WAIT):
+                raise RuntimeError(
+                    f"VPN did not return within {wait_m} min — aborting analysis."
+                )
+            if captured["sid"]:
+                emit("progress",
+                     "🔄 Reconnected — resuming the Claude session where it left off …")
+                cur_resume = captured["sid"]
+                cur_prompt = (
+                    "Continue the url-truth-analyzer analysis you were running and "
+                    "return the full analysis markdown as your final response.\n\n"
+                    + _ANALYSIS_MARKER_INSTRUCTION
+                )
+            else:
+                emit("progress", "🔄 Reconnected — restarting the analysis …")
+                cur_resume = None
+                cur_prompt = prompt
 
 
 def _run_claude_cli(
@@ -634,9 +898,19 @@ def _run_claude_cli(
     heartbeats: list[tuple[int, str]] | None = None,
     timeout: int = 600,
     cwd: Path | None = None,
-) -> str:
-    """Run `claude --print --output-format=stream-json` via a PTY and return the
-    full concatenated assistant transcript (every text turn, in order).
+    resume_session: str | None = None,
+    on_session_id: Callable[[str], None] | None = None,
+    raw_log_path: str | None = None,
+) -> tuple[str, str | None]:
+    """Run `claude --print --output-format=stream-json` via a PTY and return a
+    ``(full_transcript, session_id)`` tuple. ``full_transcript`` is every
+    assistant text turn concatenated in order; ``session_id`` is Claude's
+    session id (parsed from the stream), used to ``--resume`` after a drop.
+
+    When *resume_session* is set, the run continues that existing Claude
+    session via ``--resume`` instead of starting fresh. *on_session_id* is
+    invoked as soon as the session id is first seen in the stream — even if the
+    run later fails — so a caller can resume the right session after a drop.
 
     Why stream-json instead of plain text: with the default text format, claude
     --print returns ONLY the final assistant message. The url-truth-analyzer
@@ -662,17 +936,34 @@ def _run_claude_cli(
         prompt_path = f.name
 
     master_fd: int | None = None
+    # Optional per-job raw stream-json sink. Appended across resume runs so a
+    # `tail -f` shows Claude's full live activity (tool calls + every turn).
+    raw_log_fh = None
+    if raw_log_path:
+        try:
+            raw_log_fh = open(raw_log_path, "a", encoding="utf-8")
+            raw_log_fh.write(json.dumps({
+                "_meta": "claude-run-start",
+                "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "resume": bool(resume_session),
+            }) + "\n")
+            raw_log_fh.flush()
+        except Exception:
+            raw_log_fh = None
     try:
         master_fd, slave_fd = pty.openpty()
         fl = fcntl.fcntl(master_fd, fcntl.F_GETFL)
         fcntl.fcntl(master_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
+        cmd = [
+            "claude", "--print", "--dangerously-skip-permissions",
+            "--output-format=stream-json", "--verbose",
+        ]
+        if resume_session:
+            cmd += ["--resume", resume_session]
         with open(prompt_path, "rb") as stdin_f:
             proc = subprocess.Popen(
-                [
-                    "claude", "--print", "--dangerously-skip-permissions",
-                    "--output-format=stream-json", "--verbose",
-                ],
+                cmd,
                 stdin=stdin_f,
                 stdout=slave_fd,
                 stderr=slave_fd,
@@ -689,10 +980,11 @@ def _run_claude_cli(
         result_text: str | None = None  # final "result" event's "result" field
         result_is_error = False
         result_error_msg: str | None = None
+        session_id: str | None = None  # captured from the stream, for --resume
         raw_chunks: list[str] = []  # for diagnostics if no JSON ever parses
 
         def _handle_line(raw_line: bytes) -> None:
-            nonlocal result_text, result_is_error, result_error_msg
+            nonlocal result_text, result_is_error, result_error_msg, session_id
             stripped = _strip_terminal_escapes(
                 raw_line.decode("utf-8", errors="replace")
             ).strip()
@@ -702,6 +994,29 @@ def _run_claude_cli(
                 evt = json.loads(stripped)
             except json.JSONDecodeError:
                 return
+            if raw_log_fh is not None:
+                try:
+                    raw_log_fh.write(stripped + "\n")
+                    raw_log_fh.flush()
+                except Exception:
+                    pass
+            # Firehose the rendered activity to the UI (behind a toggle there).
+            if STREAM_CLAUDE_ACTIVITY:
+                try:
+                    for line in _render_claude_activity(evt):
+                        emit("activity", line)
+                except Exception:
+                    pass
+            # session_id appears on the init/system event and is echoed on most
+            # subsequent events — capture it wherever it shows up first.
+            sid = evt.get("session_id")
+            if sid and session_id is None:
+                session_id = sid
+                if on_session_id is not None:
+                    try:
+                        on_session_id(sid)
+                    except Exception:
+                        pass
             etype = evt.get("type")
             if etype == "assistant":
                 msg = evt.get("message") or {}
@@ -717,6 +1032,7 @@ def _run_claude_cli(
 
         start = time.time()
         deadline = start + timeout
+        last_rx = start  # wall-clock of the most recent byte from Claude
         eof = False
         while not eof and time.time() < deadline:
             elapsed = int(time.time() - start)
@@ -732,6 +1048,7 @@ def _run_claude_cli(
                     eof = True
                     data = b""
                 if data:
+                    last_rx = time.time()
                     raw_chunks.append(data.decode("utf-8", errors="replace"))
                     line_buf.extend(data)
                     while b"\n" in line_buf:
@@ -749,6 +1066,27 @@ def _run_claude_cli(
                 except OSError:
                     pass
                 eof = True
+
+            # Idle-stall guard: prolonged silence from Claude is either deep
+            # thinking (fine) or a silent network/VPN stall. Probe connectivity
+            # WITHOUT killing Claude; only abort if we're actually offline, so a
+            # legitimately slow run is never cut short.
+            if (not eof and CLAUDE_IDLE_TIMEOUT > 0
+                    and (time.time() - last_rx) > CLAUDE_IDLE_TIMEOUT):
+                if _check_connectivity():
+                    last_rx = time.time()  # healthy, just slow — keep waiting
+                else:
+                    emit("progress",
+                         "⚠️  No response from Claude and the network looks down — "
+                         "pausing this analysis.")
+                    proc.kill()
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        pass
+                    raise _ConnectivityError(
+                        "network unreachable during claude --print (idle stall)"
+                    )
 
         # Drain any final partial line (rare — stream-json normally ends with \n).
         if line_buf:
@@ -779,7 +1117,7 @@ def _run_claude_cli(
                 f"claude CLI returned no parseable output (exit={proc.returncode}). "
                 f"Raw head: {raw_preview!r}"
             )
-        return full
+        return full, session_id
     finally:
         if master_fd is not None:
             try:
@@ -790,3 +1128,8 @@ def _run_claude_cli(
             os.unlink(prompt_path)
         except OSError:
             pass
+        if raw_log_fh is not None:
+            try:
+                raw_log_fh.close()
+            except Exception:
+                pass

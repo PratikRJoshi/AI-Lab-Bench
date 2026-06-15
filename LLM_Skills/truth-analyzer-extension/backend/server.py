@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import queue
+import re
 import threading
 import time
 import uuid
@@ -34,6 +35,16 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Whisper, OCR), so 3 is a sane default for a developer laptop. Bump via env if
 # you want more concurrency.
 MAX_CONCURRENT_JOBS = int(os.getenv("MAX_CONCURRENT_JOBS", "3"))
+
+# Per-job raw Claude stream-json sink. `tail -f` this for fine-grained live
+# activity (tool calls + every assistant turn). Deletable from the UI once the
+# analysis is shown. Kept under /tmp alongside the main log by default.
+RAW_LOG_DIR = Path(os.getenv("TRUTH_ANALYZER_RAW_LOG_DIR", "/tmp"))
+
+
+def _raw_log_path(job_id: str) -> Path:
+    # Basename only (uuid hex) — guards the delete endpoint against traversal.
+    return RAW_LOG_DIR / f"truth-analyzer-{job_id}.jsonl"
 
 # In-memory store: id -> {"status", "events": list, "cond": Condition, "done": bool}
 # Events are stored as {"event": str, "data": str} and never discarded.
@@ -74,7 +85,7 @@ def _worker(job_id: str, url: str) -> None:
     try:
         log.info("▶  Starting analysis for %s", url)
         job["status"] = "running"
-        result_md = run_skill_analysis(url, emit)
+        result_md = run_skill_analysis(url, emit, raw_log_path=str(_raw_log_path(job_id)))
         job["result"] = result_md
         job["status"] = "done"
         log.info("✅ Analysis complete (%d chars)", len(result_md))
@@ -132,9 +143,18 @@ def api_status(job_id: str):
         return Response("event: error\ndata: unknown job id\n\n", status=404,
                         content_type="text/event-stream")
 
+    # On reconnect the browser replays the last id it saw via Last-Event-ID.
+    # Resume right after it so the client doesn't re-receive events it already
+    # rendered. Falls back to 0 (replay everything) when the header is absent.
+    last_event_id = request.headers.get("Last-Event-ID")
+    try:
+        start_cursor = int(last_event_id) + 1 if last_event_id else 0
+    except (TypeError, ValueError):
+        start_cursor = 0
+
     def generate():
         cond = job["cond"]
-        cursor = 0  # index into job["events"] — replay from start on reconnect
+        cursor = start_cursor  # index into job["events"]; resumes on reconnect
         while True:
             with cond:
                 # Wait until there are new events or the job is done
@@ -147,10 +167,12 @@ def api_status(job_id: str):
                 # Drain any new events
                 while cursor < len(job["events"]):
                     item = job["events"][cursor]
-                    cursor += 1
                     event = item["event"]
                     data = json.dumps(item["data"])
-                    yield f"event: {event}\ndata: {data}\n\n"
+                    # id: lets the browser resume from here after a dropped
+                    # connection (e.g. VPN flap) instead of failing the job.
+                    yield f"id: {cursor}\nevent: {event}\ndata: {data}\n\n"
+                    cursor += 1
                     if event in ("done", "error"):
                         return
 
@@ -198,6 +220,35 @@ def api_save(job_id: str):
         (repo_dir / filename).write_text(md, encoding="utf-8")
 
     return jsonify({"path": str(dest)})
+
+
+@app.get("/api/raw-log/<job_id>")
+def api_raw_log_info(job_id: str):
+    """Report whether this job's raw stream-json sink still exists, and its path.
+
+    The UI uses this to decide whether to show the 'delete temp log' button.
+    """
+    if not re.fullmatch(r"[0-9a-fA-F]{8,64}", job_id):
+        return jsonify({"error": "bad job id"}), 400
+    p = _raw_log_path(job_id)
+    if p.exists():
+        return jsonify({"exists": True, "path": str(p), "bytes": p.stat().st_size})
+    return jsonify({"exists": False, "path": str(p)})
+
+
+@app.delete("/api/raw-log/<job_id>")
+def api_raw_log_delete(job_id: str):
+    """Delete this job's raw stream-json temp file. Idempotent."""
+    if not re.fullmatch(r"[0-9a-fA-F]{8,64}", job_id):
+        return jsonify({"error": "bad job id"}), 400
+    p = _raw_log_path(job_id)
+    try:
+        p.unlink()
+        return jsonify({"deleted": True, "path": str(p)})
+    except FileNotFoundError:
+        return jsonify({"deleted": False, "path": str(p), "message": "already gone"})
+    except OSError as exc:
+        return jsonify({"error": str(exc)}), 500
 
 
 @app.post("/api/open")

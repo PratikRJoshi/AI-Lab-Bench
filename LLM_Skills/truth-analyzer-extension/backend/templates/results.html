@@ -254,6 +254,17 @@
   </ul>
   <div id="live-log" style="margin-top:1rem; font-size:0.8rem; color: var(--pico-muted-color); max-height:120px; overflow-y:auto;"></div>
 
+  <div style="margin-top:0.75rem; display:flex; align-items:center; gap:0.5rem;">
+    <button type="button" id="activity-toggle" class="outline secondary"
+            style="font-size:0.75rem; padding:0.25rem 0.6rem;">▸ Show detailed activity</button>
+    <span id="activity-count" style="font-size:0.75rem; color:var(--pico-muted-color);"></span>
+  </div>
+  <pre id="activity-log" style="display:none; margin-top:0.5rem; font-size:0.72rem;
+       line-height:1.35; max-height:340px; overflow:auto; white-space:pre-wrap;
+       word-break:break-word; background:var(--pico-card-background-color);
+       border:1px solid var(--pico-muted-border-color);
+       border-radius:var(--pico-border-radius); padding:0.6rem; margin-bottom:0;"></pre>
+
   <details id="tail-hint" style="margin-top:1rem; font-size:0.8rem; color: var(--pico-muted-color);">
     <summary style="cursor:pointer;">🔎 Want low-level detail? Tail the backend log.</summary>
     <p style="margin:0.5rem 0 0.25rem;">Run this in a terminal to follow the full backend log:</p>
@@ -322,8 +333,11 @@
   <div class="toolbar">
     <button id="copy-btn">📋 Copy Markdown</button>
     <button id="save-btn" class="outline">💾 Save to truth-analyses/</button>
+    <button id="delete-rawlog-btn" class="outline secondary" style="display:none">🗑️ Delete temp log</button>
     <a href="/" role="button" class="outline secondary">← Analyze another URL</a>
   </div>
+  <div id="rawlog-status" style="display:none; margin-top:0.5rem; font-size:0.8rem;
+                                 color:var(--pico-muted-color);"></div>
 
   <div id="save-result" style="display:none; margin-top:0.75rem; padding:0.75rem 1rem;
                                 background:#f0fdf4; border:1px solid #bbf7d0;
@@ -439,6 +453,36 @@
     log.scrollTop = log.scrollHeight;
   }
 
+  // Detailed (firehose) activity feed. Events accumulate even while the panel is
+  // collapsed, so toggling it open shows the full history. Bounded so a very
+  // chatty run can't grow the DOM without limit.
+  let activityCount = 0;
+  const ACTIVITY_MAX_NODES = 8000;
+  function appendActivity(text) {
+    const log = document.getElementById("activity-log");
+    // Stick to bottom only if the user is already near the bottom, so they can
+    // scroll up to read without being yanked back down.
+    const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+    log.appendChild(document.createTextNode(text + "\n"));
+    activityCount += 1;
+    if (log.childNodes.length > ACTIVITY_MAX_NODES) {
+      const drop = log.childNodes.length - ACTIVITY_MAX_NODES;
+      for (let i = 0; i < drop; i++) log.removeChild(log.firstChild);
+    }
+    const counter = document.getElementById("activity-count");
+    counter.textContent = `${activityCount.toLocaleString()} event${activityCount === 1 ? "" : "s"}`;
+    if (atBottom) log.scrollTop = log.scrollHeight;
+  }
+
+  document.getElementById("activity-toggle").addEventListener("click", () => {
+    const log = document.getElementById("activity-log");
+    const btn = document.getElementById("activity-toggle");
+    const shown = log.style.display !== "none";
+    log.style.display = shown ? "none" : "block";
+    btn.textContent = shown ? "▸ Show detailed activity" : "▾ Hide detailed activity";
+    if (!shown) log.scrollTop = log.scrollHeight;
+  });
+
   function safeSetHtml(el, html) {
     el.replaceChildren();
     const fragment = document.createRange().createContextualFragment(
@@ -527,24 +571,41 @@
     const titleIdx = md.search(/^# /m);
     if (titleIdx > 0) md = md.slice(titleIdx);
 
-    // Share? line
-    const shareMatch = md.match(/\*\*Share\?\*\*:\s*(.+)/);
-    if (shareMatch) {
-      document.getElementById("share-text").textContent = shareMatch[1].trim();
-      document.getElementById("share-bar").style.display = "block";
-    }
+    // A channel batch concatenates many per-item analyses, each with its own
+    // Share?/ELI5 section. The single-analysis extraction below slices the body
+    // at the *first* ELI5, which would drop every later item — so only pull the
+    // Share line and ELI5 callout out when there's exactly one ELI5 section.
+    //
+    // ELI5 headings vary in level: single analyses use "## ELI5", but per-item
+    // sections in a channel batch use "### ELI5". Match any level (2–4 #) and
+    // anchor to a line start ((?:^|\n) before the hashes) so we don't falsely
+    // match the "## ELI5" substring *inside* a "### ELI5" heading.
+    const eli5Sections = md.match(/(?:^|\n)#{2,4}\s+ELI5\b/g) || [];
+    const isSingleAnalysis = eli5Sections.length <= 1;
 
-    // ELI5 section. Extracted into the green callout *and* stripped from the
-    // body so it doesn't render twice. The skill always emits ELI5 as the
-    // last section, so we drop everything from "## ELI5" onward to EOF.
-    const eli5Match = md.match(/## ELI5[^\n]*\n([\s\S]+?)(?:\n## |$)/);
     let bodyMd = md;
-    if (eli5Match) {
-      const eli5El = document.getElementById("eli5-text");
-      safeSetHtml(eli5El, marked.parse(eli5Match[1].trim()));
-      document.getElementById("eli5-box").style.display = "block";
-      bodyMd = md.slice(0, eli5Match.index).trimEnd();
+
+    if (isSingleAnalysis) {
+      // Share? line
+      const shareMatch = md.match(/\*\*Share\?\*\*:\s*(.+)/);
+      if (shareMatch) {
+        document.getElementById("share-text").textContent = shareMatch[1].trim();
+        document.getElementById("share-bar").style.display = "block";
+      }
+
+      // ELI5 section. Extracted into the green callout *and* stripped from the
+      // body so it doesn't render twice. The skill always emits ELI5 as the
+      // last section, so we drop everything from the ELI5 heading onward to EOF.
+      const eli5Match = md.match(/(?:^|\n)#{2,4}\s+ELI5[^\n]*\n([\s\S]+?)(?:\n#{2,4}\s|$)/);
+      if (eli5Match) {
+        const eli5El = document.getElementById("eli5-text");
+        safeSetHtml(eli5El, marked.parse(eli5Match[1].trim()));
+        document.getElementById("eli5-box").style.display = "block";
+        bodyMd = md.slice(0, eli5Match.index).trimEnd();
+      }
     }
+    // Channel batches (multiple ELI5 sections) render in full: every item's
+    // Share?/ELI5 stays inline in the body so all N items are shown.
 
     // Full markdown (with ELI5 stripped)
     const mdEl = document.getElementById("md-content");
@@ -569,6 +630,14 @@
 
   function startSSE() {
     const es = new EventSource(`/api/status/${encodeURIComponent(JOB_ID)}`);
+    let reconnecting = false;
+
+    es.addEventListener("open", () => {
+      if (reconnecting) {
+        reconnecting = false;
+        appendLog("🔄 Reconnected — resuming live updates …");
+      }
+    });
 
     es.addEventListener("progress", e => {
       const msg = JSON.parse(e.data);
@@ -576,28 +645,90 @@
       guessStep(msg);
     });
 
+    es.addEventListener("activity", e => {
+      appendActivity(JSON.parse(e.data));
+    });
+
     es.addEventListener("done", e => {
       es.close();
       allDone();
       rawMarkdown = JSON.parse(e.data);
       renderAnalysis(rawMarkdown);
+      // Analysis is on screen — offer to clean up the raw stream-json temp file.
+      maybeShowRawLogButton();
     });
 
     es.addEventListener("error", e => {
-      es.close();
-      if (!e.data) {
+      // A server-sent error event carries data → real failure, stop here.
+      if (e.data) {
+        es.close();
+        let payload;
+        try { payload = JSON.parse(JSON.parse(e.data)); } catch (_) { payload = null; }
+        if (payload && payload.message) {
+          showError(payload.message, payload.transcript || "");
+        } else {
+          showError(JSON.parse(e.data));
+        }
+        return;
+      }
+      // No data → transport hiccup (e.g. VPN flap).
+      // CLOSED means the browser gave up permanently or the server is gone
+      // (e.g. job lost on restart) → show the fatal message.
+      if (es.readyState === EventSource.CLOSED) {
         showError("Connection to the analysis server was lost. The server may have restarted — try submitting the URL again.");
         return;
       }
-      let payload;
-      try { payload = JSON.parse(JSON.parse(e.data)); } catch (_) { payload = null; }
-      if (payload && payload.message) {
-        showError(payload.message, payload.transcript || "");
-      } else {
-        showError(JSON.parse(e.data));
+      // CONNECTING → the browser is auto-reconnecting; the backend replays
+      // from our last id, so the job continues. Just surface a notice once.
+      if (!reconnecting) {
+        reconnecting = true;
+        appendLog("⚠️  Connection dropped — reconnecting … (the analysis keeps running on the server)");
       }
     });
   }
+
+  function fmtBytes(n) {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  // After the analysis renders, show a "Delete temp log" button — but only if
+  // the per-job raw stream-json sink actually exists on disk.
+  function maybeShowRawLogButton() {
+    fetch(`/api/raw-log/${encodeURIComponent(JOB_ID)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (!d.exists) return;
+        const btn = document.getElementById("delete-rawlog-btn");
+        btn.style.display = "";
+        btn.textContent = `🗑️ Delete temp log (${fmtBytes(d.bytes || 0)})`;
+        btn.title = d.path;
+      })
+      .catch(() => { /* no button if we can't tell */ });
+  }
+
+  document.getElementById("delete-rawlog-btn").addEventListener("click", () => {
+    const btn = document.getElementById("delete-rawlog-btn");
+    const status = document.getElementById("rawlog-status");
+    btn.disabled = true;
+    btn.textContent = "🗑️ Deleting…";
+    fetch(`/api/raw-log/${encodeURIComponent(JOB_ID)}`, { method: "DELETE" })
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        btn.style.display = "none";
+        status.style.display = "block";
+        status.textContent = ok
+          ? (d.deleted ? `✅ Temp log deleted (${d.path})` : `ℹ️ Temp log already gone`)
+          : `⚠️ Could not delete: ${d.error || "unknown error"}`;
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.textContent = "🗑️ Delete temp log";
+        status.style.display = "block";
+        status.textContent = `⚠️ Could not delete: ${err}`;
+      });
+  });
 
   document.getElementById("copy-btn").addEventListener("click", () => {
     navigator.clipboard.writeText(rawMarkdown).then(() => {
