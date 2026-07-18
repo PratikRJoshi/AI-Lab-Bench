@@ -11,6 +11,18 @@ AI agent skills for [Cursor](https://cursor.sh) — structured instruction sets 
 | [price-compare-fetch](./price-compare-fetch/) | Best-effort price comparison via WebFetch when browser MCP is unavailable | Fallback for sandboxed environments where retail domains aren't on the browser MCP allowlist. Covers Amazon.com and Walmart.com only; honestly flags blocked / CAPTCHA'd requests rather than fabricating prices. Prefer `price-compare` when a real browser MCP is available. |
 | [llm-gateway-tutor](./llm-gateway-tutor/) | Socratic mentor for learning to design and build LLM Gateways | Runs a 10-day plan (provider abstraction, routing/fallbacks, streaming, token budgeting, semantic caching, guardrails, observability) framed as deltas from an engineer's existing API-gateway/Kafka/OTel background. Includes a standalone `teacher-prompt.md` and a `progress.md` tracker; teaches via targeted questions rather than handing over answers. |
 
+## How to use each skill
+
+One sentence on invoking each skill correctly:
+
+- **[url-truth-analyzer](./url-truth-analyzer/)** — Give the agent a URL or local file (or add entries to `watch_urls.md`) and ask it to analyze/fact-check, using directives like `[article]`, `[plain-text]`, or `[transcript-only]` to control how the source is processed.
+- **[price-compare](./price-compare/)** — Point it at a plain-text file of items (one per line) and ask for the cheapest source; requires a browser MCP with logged-in Amazon/Walmart/Costco sessions and a configured delivery ZIP.
+- **[price-compare-fetch](./price-compare-fetch/)** — Use only as a fallback when no browser MCP is available: pass a plain-text item list and expect best-effort, Amazon/Walmart-only prices with some items returned as "blocked".
+- **[coplan](./coplan/)** — Say `coplan <task description or spec path>` to have Claude and GPT independently plan, self-verify, cross-review, and merge before you start a multi-file feature.
+- **[leetcode-mentor](./leetcode-mentor/)** — Name a LeetCode/interview problem and work through it one Socratic hint at a time; it deliberately never hands you the full solution.
+- **[translate-url](./translate-url/)** — Provide a video/audio URL and ask to translate or transcribe it; add `[transcript-only]` to use captions without the Whisper fallback.
+- **[llm-gateway-tutor](./llm-gateway-tutor/)** — Invoke it (or say "start day N") to run the 10-day Socratic LLM-Gateway curriculum with an artifact per day, or paste its `teacher-prompt.md` into any LLM to run the tutor standalone.
+
 ### url-truth-analyzer at a glance
 
 - **51 analyses** produced across YouTube, Instagram, Facebook, LinkedIn, and local screenshot folders
