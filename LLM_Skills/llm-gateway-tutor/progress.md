@@ -3,11 +3,20 @@
 Update after every session. Do not advance a day until its artifact exists and the
 self-check is answered.
 
-- **Current day:** 0 (not started)
+- **Current step:** Phase 0 — F1 (not started)
 - **Started:** —
 - **Target pace:** ~1.5–2 hrs/day
+- **Rule:** finish Phase 0 (F1–F3) before any Phase 1 (LLM) day.
 
-## Log
+## Log — Phase 0: Gateway Foundations
+
+| Step | Topic | Status | Artifact | Got wrong / follow-ups |
+|------|-------|--------|----------|------------------------|
+| F1 | What a gateway is (middle boxes) | ⬜ not started | — | — |
+| F2 | Industry landscape (data/control plane) | ⬜ | — | — |
+| F3 | Design & build a gateway from scratch | ⬜ | — | — |
+
+## Log — Phase 1: LLM Gateways
 
 | Day | Topic | Status | Artifact | Got wrong / follow-ups |
 |-----|-------|--------|----------|------------------------|

@@ -1,11 +1,81 @@
-# 10-Day LLM Gateway Learning Plan
+# LLM Gateway Learning Plan
 
-~1.5–2 hrs/day. Built for an engineer who already owns API gateways (Istio/Envoy),
-Kafka streaming, resilience (circuit breakers, rate limiting, load shedding),
-multi-tenancy, K8s, and OpenTelemetry. Focus = the LLM-specific delta + design craft,
-not re-teaching gateways.
+~1.5–2 hrs/day. Two phases:
 
-Each day: **Hook** (connect to prior knowledge) → **Concept** → **Exercise** (artifact) → **Self-check**.
+- **Phase 0 — Gateway Foundations (F1–F3):** what gateways are, the industry
+  landscape, and how to design/implement one from scratch. **Assumes no prior
+  gateway knowledge.** Must be completed before Phase 1.
+- **Phase 1 — LLM Gateways (Day 1–10):** the LLM-specific delta + design craft,
+  building on Phase 0.
+
+The learner knows backend/REST services, Kafka, K8s, distributed systems, and
+OpenTelemetry, but does **not** yet understand gateways. Phase 0 teaches gateways
+from first principles; Phase 1 then anchors LLM concepts to that new knowledge.
+
+Each step: **Hook** (connect to prior knowledge) → **Concept** → **Exercise** (artifact) → **Self-check**.
+
+---
+
+# Phase 0 — Gateway Foundations
+
+## F1 — What a gateway is (the family of "middle boxes")
+
+- **Concept:** Where a gateway sits: `client → gateway → N backend services`.
+  Distinguish the overlapping middle boxes and what each solves:
+  - **Reverse proxy** (e.g., NGINX) — one front door for many backends; TLS
+    termination, caching, static routing.
+  - **Load balancer** — spreads traffic; **L4** (TCP, by IP/port) vs **L7**
+    (HTTP, by path/header).
+  - **API gateway** — L7 entry point adding auth, rate limiting, request/response
+    transformation, API-key management, request aggregation, versioning.
+  - **Ingress controller / service mesh sidecar** — the Kubernetes / mesh forms
+    of the same ideas (data plane doing the work).
+- **Hook:** You call REST services directly today. What breaks when 50 clients
+  must reach 30 services, each needing auth, TLS, and rate limits? What would you
+  rather not reimplement in every service?
+- **Exercise:** Draw the request path client→gateway→services and label every
+  responsibility the gateway takes on at that hop (TLS, authn/z, routing, rate
+  limit, logging, transform).
+- **Self-check:** Reverse proxy vs load balancer vs API gateway — what's the
+  distinction? What's L4 vs L7 routing? When do you NOT need a gateway at all?
+
+## F2 — The industry landscape
+
+- **Concept:** Map the common tools to tiers, and learn **data plane vs control
+  plane**:
+  - Reverse proxy / LB: **NGINX**, **HAProxy**
+  - Programmable L7 proxy: **Envoy** (config-driven, xDS API)
+  - API gateways: **Kong**, **AWS API Gateway**, **Apigee**, **Traefik**
+  - Service meshes: **Istio**, **Linkerd** (control plane) — Istio uses Envoy as
+    its **data plane**
+  - Data plane = moves the packets/requests; control plane = configures the data
+    plane. Managed (AWS API GW) vs self-hosted (Kong/Envoy).
+- **Hook:** You've deployed things on K8s. Which piece actually *touches* each
+  request vs. which piece just tells it how to behave?
+- **Exercise:** Table: each tool → category, deploy model, config model (file vs
+  API vs CRD), killer feature, when you'd pick it.
+- **Self-check:** What does the data-plane/control-plane split buy you? Why did
+  Istio adopt Envoy rather than write its own proxy?
+
+## F3 — Design & implement a gateway from scratch
+
+- **Concept:** Anatomy of a gateway request pipeline:
+  `listener → route matcher → filter/middleware chain → upstream pool → response
+  pipeline`. Cross-cutting: connection pooling, health checks, timeouts, retries,
+  circuit breaking, observability hooks. Config-driven vs coded.
+- **Hook:** Think of it as a Kafka-style pipeline for one HTTP request — where are
+  the "stages," and which stages are cross-cutting vs. per-route?
+- **Exercise:** Design (and optionally code, in Java/Spring or Go/Node) a minimal
+  reverse-proxy gateway: accept HTTP → match route by path → run an auth + logging
+  middleware chain → forward to an upstream → return the response. Add one health
+  check and one timeout.
+- **Self-check:** Where does the middleware chain run relative to routing? How does
+  the gateway decide an upstream is unhealthy? What state must the gateway hold
+  (and what must it stay stateless about)?
+
+---
+
+# Phase 1 — LLM Gateways
 
 ---
 
@@ -15,9 +85,9 @@ Each day: **Hook** (connect to prior knowledge) → **Concept** → **Exercise**
   unified API over many providers, routing/fallback, key management, quotas/cost,
   caching, guardrails, observability. It sits between apps and providers
   (OpenAI, Anthropic, Bedrock, Gemini, self-hosted).
-- **Hook:** How is this the same as / different from an Envoy/Istio ingress gateway?
-  What does "the backend is a probabilistic, expensive, rate-limited, streaming
-  API you don't control" change?
+- **Hook:** Using the gateway anatomy from Phase 0, what changes when the upstream
+  is a probabilistic, expensive, token-metered, streaming API you don't control
+  (vs. a normal HTTP service)? Pick one pipeline stage and say how it shifts.
 - **Study:** LiteLLM, Portkey, Kong AI Gateway, Cloudflare AI Gateway, Envoy AI
   Gateway — skim docs/architecture pages.
 - **Exercise:** One-page comparison table of 4 gateways (axes: provider abstraction,
