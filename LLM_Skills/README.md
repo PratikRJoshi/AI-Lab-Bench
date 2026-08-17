@@ -10,6 +10,7 @@ AI agent skills for [Cursor](https://cursor.sh) — structured instruction sets 
 | [price-compare](./price-compare/) | Compare prices across 7 online grocery sources using a browser MCP | Amazon.com, Amazon Fresh, Whole Foods, Walmart.com, Walmart Groceries, Costco, Safeway. Per-site playbooks handle login walls, ZIP-based store selection, and price-node extraction via accessibility trees. Output: per-item tables sorted cheapest→most-expensive plus a basket-total summary. |
 | [price-compare-fetch](./price-compare-fetch/) | Best-effort price comparison via WebFetch when browser MCP is unavailable | Fallback for sandboxed environments where retail domains aren't on the browser MCP allowlist. Covers Amazon.com and Walmart.com only; honestly flags blocked / CAPTCHA'd requests rather than fabricating prices. Prefer `price-compare` when a real browser MCP is available. |
 | [llm-gateway-tutor](./llm-gateway-tutor/) | Socratic mentor for learning to design and build LLM Gateways | Runs a 10-day plan (provider abstraction, routing/fallbacks, streaming, token budgeting, semantic caching, guardrails, observability) framed as deltas from an engineer's existing API-gateway/Kafka/OTel background. Includes a standalone `teacher-prompt.md` and a `progress.md` tracker; teaches via targeted questions rather than handing over answers. |
+| [articulation-mentor](./articulation-mentor/) | Rephrase workplace messages for clarity and zero ambiguity | Takes a draft Slack/email/call script and returns a flaw analysis, an async rewrite, spoken talking points, and one practice rule. Strips hedges, vague pronouns, and filler. |
 
 ### url-truth-analyzer at a glance
 
@@ -47,3 +48,4 @@ One sentence on invoking each skill correctly:
 - **[leetcode-mentor](./leetcode-mentor/)** — Name a LeetCode/interview problem and work through it one Socratic hint at a time; it deliberately never hands you the full solution.
 - **[translate-url](./translate-url/)** — Provide a video/audio URL and ask to translate or transcribe it; add `[transcript-only]` to use captions without the Whisper fallback.
 - **[llm-gateway-tutor](./llm-gateway-tutor/)** — Invoke it (or say "start day N") to run the 10-day Socratic LLM-Gateway curriculum with an artifact per day, or paste its `teacher-prompt.md` into any LLM to run the tutor standalone.
+- **[articulation-mentor](./articulation-mentor/)** — Paste a draft Slack/email/call script and ask to rephrase, refine, or critique it; you get a flaw analysis, async rewrite, spoken talking points, and one practice rule.
