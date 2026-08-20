@@ -89,7 +89,6 @@
   "window.commandCenter": true,
   "workbench.activityBar.orientation": "vertical",
   "workbench.colorCustomizations": {
-    "tab.activeBorderTop": "#e879f9",
     "tab.activeBorder": "#e879f9",
     "[Sweet Dracula]": {
       "list.activeSelectionBackground": "#2C313A",
