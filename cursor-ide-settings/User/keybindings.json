@@ -1,0 +1,42 @@
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "cmd+i",
+        "command": "composerMode.agent"
+    },
+    {
+        "key": "cmd+l",
+        "command": "-workbench.action.gotoLine"
+    },
+    {
+        "key": "ctrl ctrl",
+        "command": "-workbench.action.tasks.runTask",
+        "when": "taskCommandsRegistered && !terminalFocus"
+    },
+    {
+        "key": "cmd+b",
+        "command": "-editor.action.goToDeclaration",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "mousebutton2",
+        "command": "editor.action.revealDefinition",
+        "when": "editorHasDefinitionProvider && editorTextFocus && !isInEmbeddedEditor"
+    },
+    {
+        "key": "alt+t",
+        "command": "auto-dark-mode-windows.toggle"
+    },
+    {
+        "key": "shift+alt+cmd+t",
+        "command": "-auto-dark-mode-windows.toggle"
+    },
+    {
+        "key": "shift+enter",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "\u001b\r"
+        },
+        "when": "terminalFocus"
+    }
+]

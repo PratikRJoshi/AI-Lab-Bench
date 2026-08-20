@@ -19,6 +19,7 @@ See [LLM_Skills/truth-analyzer-extension/README.md](./LLM_Skills/truth-analyzer-
 ## Contents
 
 - **[LLM_Skills](./LLM_Skills/)** — Cursor-compatible skills for AI coding assistants (e.g., URL truth analysis, EBM SORT evaluation)
+- **[cursor-ide-settings](./cursor-ide-settings/)** — Cursor user settings, keybindings, and extensions (restore with `./restore.sh`)
 - **[browser-automation](./browser-automation/)** — Playwright scripts for automating browser tasks (e.g., Chase Offers auto-clicker)
 - **[bogleheads-mcp-server](./bogleheads-mcp-server/)** — MCP server for Bogleheads forum search and context
 

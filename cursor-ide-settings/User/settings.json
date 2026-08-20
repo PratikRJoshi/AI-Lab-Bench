@@ -1,0 +1,113 @@
+{
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java"
+  },
+  "claudeCode.environmentVariables": [
+    {
+      "name": "NODE_EXTRA_CA_CERTS",
+      "value": "/Users/pratik.joshi/.aisuite/conf/npm-sfdc-certs.pem"
+    },
+    {
+      "name": "CLAUDE_CODE_USE_BEDROCK",
+      "value": "true"
+    }
+  ],
+  "claudeCode.preferredLocation": "sidebar",
+  "claudeCode.selectedModel": "us.anthropic.claude-opus-4-5-20251101-v1:0",
+  "claudeCode.useTerminal": true,
+  "coverage-gutters.coverageFileNames": [
+    "lcov.info",
+    "cov.xml",
+    "coverage.xml",
+    "cobertura.xml",
+    "jacoco.xml",
+    "coverage.cobertura.xml"
+  ],
+  "cursor.composer.queueMessageDefaultBehavior": "queue",
+  "cursor.cpp.disabledLanguages": [
+    "plaintext",
+    "spring-boot-properties-yaml"
+  ],
+  "cursor.diffs.useCharacterLevelDiffs": true,
+  "cursor.general.disableHttp2": true,
+  "cursor.general.enableShadowWorkspace": true,
+  "debug.javascript.debugByLinkOptions": "on",
+  "diffEditor.ignoreTrimWhitespace": false,
+  "editor.accessibilitySupport": "off",
+  "editor.gotoLocation.multipleDefinitions": "goto",
+  "editor.rulers": [
+    120
+  ],
+  "editor.wordWrap": "on",
+  "falconServicesView.activeViewContextFile": "/Users/pratik.joshi/Salesforce/mdas/.cursor/active-view-context.json",
+  "files.autoSave": "afterDelay",
+  "files.watcherExclude": {
+    "**/.bloop/**": true,
+    "**/.metals/**/*.{java,scala}": true
+  },
+  "git.openRepositoryInParentFolders": "never",
+  "go.toolsManagement.autoUpdate": true,
+  "java.configuration.runtimes": [],
+  "java.home": "/Users/pratik.joshi/.sdkman/candidates/java/17.0.13-zulu",
+  "java.imports.gradle.wrapper.checksums": [
+    {
+      "sha256": "7756022fd2f28ccfba692a58a03c6e778b30f10d463517920fd07cf232e95881",
+      "allowed": true
+    }
+  ],
+  "java.jdt.ls.java.home": "/Library/Java/JavaVirtualMachines/sfdc-jdk-zulu-21.0.11.0.101+237.jdk/Contents/Home",
+  "makefile.configureOnOpen": false,
+  "markdown-preview-enhanced.codeBlockTheme": "darcula.css",
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.git",
+    "**/.venv",
+    "**/venv",
+    "**/env",
+    "**/build",
+    "**/dist"
+  ],
+  "salesforce-internal-dx.claudeCodeMarketplaceConfigured": true,
+  "terminal.integrated.gpuAcceleration": "off",
+  "terminal.integrated.mouseWheelScrollSensitivity": 3,
+  "terminal.integrated.scrollback": 50000,
+  "terminal.integrated.tabs.title": "${sequence}",
+  "theme-timer.themes": [
+    {
+      "theme": "Quiet Light",
+      "startTime": "7:00:00",
+      "endTime": "18:00:00"
+    },
+    {
+      "theme": "Dracula Theme",
+      "startTime": "18:00:00",
+      "endTime": "6:59:00"
+    }
+  ],
+  "window.autoDetectColorScheme": false,
+  "window.commandCenter": true,
+  "workbench.activityBar.orientation": "vertical",
+  "workbench.colorCustomizations": {
+    "tab.activeBorderTop": "#e879f9",
+    "tab.activeBorder": "#e879f9",
+    "[Sweet Dracula]": {
+      "list.activeSelectionBackground": "#2C313A",
+      "list.activeSelectionForeground": "#FFFFFF",
+      "list.inactiveSelectionForeground": "#8B9298",
+      "list.inactiveForeground": "#8B9298",
+      "list.focusOutline": "#569CD6",
+      "terminalTab.activeBackground": "#2C313A",
+      "terminalTab.activeForeground": "#FFFFFF",
+      "terminalTab.inactiveForeground": "#8B9298",
+      "terminalTab.activeBorder": "#569CD6"
+    }
+  },
+  "workbench.colorTheme": "Sweet Dracula",
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.wrapTabs": true,
+  "workbench.panel.defaultLocation": "right",
+  "workbench.preferredDarkColorTheme": "Sweet Dracula",
+  "workbench.preferredHighContrastColorTheme": "Default Dark Modern",
+  "workbench.preferredLightColorTheme": "Default Light Modern"
+}
