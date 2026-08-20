@@ -25,11 +25,12 @@ Existing `settings.json` / `keybindings.json` are copied to `*.bak.<timestamp>` 
 | `User/settings.json` | Editor, theme, tab colors, terminal |
 | `User/keybindings.json` | Custom shortcuts |
 | `extensions.txt` | Installed extensions |
+| `mcp.json` | MCP server list (tokens replaced with `REPLACE_ME`) |
 | `restore.sh` | Copy files + install extensions |
 
 ## Not saved (on purpose)
 
-- `mcp.json` — contains API tokens. Re-add MCP servers by hand on the new machine; do not copy tokens into git.
+- Real API tokens. After restore, fill every `REPLACE_ME` in `~/.cursor/mcp.json`.
 - Workspace storage, history, and crash-reporter IDs (machine-specific).
 
 ## After restore, check these paths

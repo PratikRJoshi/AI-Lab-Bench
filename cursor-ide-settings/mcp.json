@@ -1,0 +1,95 @@
+{
+    "mcpServers": {
+        "cxtools": {
+            "args": [
+                "/Users/pratik.joshi/mcp-cxtools/cxtools.py"
+            ],
+            "command": "/Users/pratik.joshi/mcp-cxtools/venv/bin/python",
+            "env": {
+                "CONFLUENCE_TOKEN": "REPLACE_ME",
+                "STACK_API_KEY": "",
+                "WRITER_TOKEN": ""
+            },
+            "transport": "stdio"
+        },
+        "github": {
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "command": "npx",
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "REPLACE_ME"
+            }
+        },
+        "github-sfdc": {
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "command": "npx",
+            "env": {
+                "GITHUB_BASE_URL": "https://git.soma.salesforce.com/api/v3",
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "REPLACE_ME"
+            }
+        },
+        "jenkins": {
+            "args": [
+                "--yes",
+                "@kud/mcp-jenkins@latest"
+            ],
+            "command": "npx",
+            "env": {
+                "MCP_JENKINS_API_TOKEN": "REPLACE_ME",
+                "MCP_JENKINS_URL": "https://jenkins.build.msap.io",
+                "MCP_JENKINS_USER": "pratik.joshi"
+            },
+            "transport": "stdio"
+        },
+        "mcp-adaptor": {
+            "args": [],
+            "command": "/Users/pratik.joshi/.mcp-adaptor/bin/mcp-adaptor",
+            "env": {
+                "GW_PROFILE": "default",
+                "MCP_ADAPTOR_ENV": "prod",
+                "MCP_IDE_CLIENT": "cursor"
+            },
+            "transport": "stdio"
+        },
+        "prodctl": {
+            "args": [
+                "/Users/pratik.joshi/.prodctl-mcp/dist/index.js"
+            ],
+            "command": "node"
+        },
+        "slack-direct": {
+            "auth": {
+                "CLIENT_ID": "REPLACE_ME"
+            },
+            "headers": {},
+            "url": "https://mcp.slack.com/mcp"
+        },
+        "test_sfci": {
+            "transport": "sse",
+            "url": "http://localhost:8000/sfci-managed/mcp"
+        },
+        "vmcp-monitoring": {
+            "args": [
+                "serve",
+                "--profile",
+                "monitoring"
+            ],
+            "command": "/Users/pratik.joshi/.mcp-adaptor/bin/mcp-adaptor",
+            "transport": "stdio"
+        },
+        "vmcp-sfci-managed": {
+            "args": [
+                "serve",
+                "--profile",
+                "SFCI"
+            ],
+            "command": "/Users/pratik.joshi/.mcp-adaptor/bin/mcp-adaptor",
+            "transport": "stdio"
+        }
+    }
+}

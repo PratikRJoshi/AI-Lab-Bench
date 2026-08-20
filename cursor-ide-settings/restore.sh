@@ -30,6 +30,17 @@ cp "$SRC/User/settings.json" "$DEST/settings.json"
 cp "$SRC/User/keybindings.json" "$DEST/keybindings.json"
 echo "Copied settings.json and keybindings.json"
 
+MCP_DEST="${HOME}/.cursor/mcp.json"
+mkdir -p "${HOME}/.cursor"
+if [[ -f "$MCP_DEST" ]]; then
+  cp "$MCP_DEST" "${MCP_DEST}.bak.${STAMP}"
+  cp "$SRC/mcp.json" "${HOME}/.cursor/mcp.json.example"
+  echo "Left existing ~/.cursor/mcp.json in place. Template saved as mcp.json.example"
+else
+  cp "$SRC/mcp.json" "$MCP_DEST"
+  echo "Copied mcp.json (fill every REPLACE_ME before use)"
+fi
+
 if ! command -v cursor >/dev/null 2>&1; then
   echo "cursor CLI not found. Install Cursor, then run: cursor --list-extensions" >&2
   echo "To install extensions later: xargs -n1 cursor --install-extension < \"$SRC/extensions.txt\""
