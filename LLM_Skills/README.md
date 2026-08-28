@@ -1,6 +1,6 @@
 # LLM Skills
 
-AI agent skills for [Cursor](https://cursor.sh) — structured instruction sets that give AI coding assistants domain-specific capabilities beyond general programming.
+AI agent skills for Claude Code and [Cursor](https://cursor.sh) — structured instruction sets that give AI coding assistants domain-specific capabilities beyond general programming.
 
 ## Skills
 
@@ -11,6 +11,7 @@ AI agent skills for [Cursor](https://cursor.sh) — structured instruction sets 
 | [price-compare-fetch](./price-compare-fetch/) | Best-effort price comparison via WebFetch when browser MCP is unavailable | Fallback for sandboxed environments where retail domains aren't on the browser MCP allowlist. Covers Amazon.com and Walmart.com only; honestly flags blocked / CAPTCHA'd requests rather than fabricating prices. Prefer `price-compare` when a real browser MCP is available. |
 | [llm-gateway-tutor](./llm-gateway-tutor/) | Socratic mentor for learning to design and build LLM Gateways | Runs a 10-day plan (provider abstraction, routing/fallbacks, streaming, token budgeting, semantic caching, guardrails, observability) framed as deltas from an engineer's existing API-gateway/Kafka/OTel background. Includes a standalone `teacher-prompt.md` and a `progress.md` tracker; teaches via targeted questions rather than handing over answers. |
 | [articulation-mentor](./articulation-mentor/) | Rephrase workplace messages for clarity and zero ambiguity | Takes a draft Slack/email/call script and returns a flaw analysis, an async rewrite, spoken talking points, and one practice rule. Strips hedges, vague pronouns, and filler. |
+| [describing-pr-files](./describing-pr-files/) | Explain each file changed by a pull request | Uses the authoritative PR file list and patches to produce one or two plain-English sentences per changed file without guessing intent. |
 
 ### url-truth-analyzer at a glance
 
@@ -25,14 +26,14 @@ See the [full README](./url-truth-analyzer/README.md) for details.
 
 ## Usage
 
-These skills are designed for Cursor's `.cursor/skills/` directory:
+These portable skills work with Claude Code and Cursor:
 
 ```bash
-# Copy a skill into your Cursor skills folder
+# Cursor
 cp -r url-truth-analyzer ~/.cursor/skills/
 
-# Then in Cursor, the agent will automatically pick up the skill
-# when you mention relevant tasks (e.g., "analyze this URL", "process watch_urls.md")
+# Claude Code
+cp -r url-truth-analyzer ~/.claude/skills/
 ```
 
 Each skill contains a `SKILL.md` that the agent reads at invocation time — it defines the full workflow, commands, error handling, and output formats.
@@ -49,3 +50,4 @@ One sentence on invoking each skill correctly:
 - **[translate-url](./translate-url/)** — Provide a video/audio URL and ask to translate or transcribe it; add `[transcript-only]` to use captions without the Whisper fallback.
 - **[llm-gateway-tutor](./llm-gateway-tutor/)** — Invoke it (or say "start day N") to run the 10-day Socratic LLM-Gateway curriculum with an artifact per day, or paste its `teacher-prompt.md` into any LLM to run the tutor standalone.
 - **[articulation-mentor](./articulation-mentor/)** — Paste a draft Slack/email/call script and ask to rephrase, refine, or critique it; you get a flaw analysis, async rewrite, spoken talking points, and one practice rule.
+- **[describing-pr-files](./describing-pr-files/)** — Give it a PR URL or number and ask for one or two plain-English sentences describing each changed file.
