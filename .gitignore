@@ -8,3 +8,4 @@ LLM_Skills/url-truth-analyzer/cache/
 __pycache__/
 *.pyc
 *.pyo
+coplans/
