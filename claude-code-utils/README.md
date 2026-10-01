@@ -49,6 +49,7 @@ The page renders Markdown in the browser with [marked](https://marked.js.org/), 
 
 Each page also has:
 
+- **A readable tab title and a Source banner** built from what followed the command: a PR link becomes `PR #4927 · service-llm-gateway — /review`, a repo path becomes `<repo> — /code-walkthrough`, a file becomes `<file> · <repo>`. The banner shows the command, the source link or path, the repository with branch and commit, and when it was rendered. Change them later with `--set-source <page> '{"label": "...", "source": "..."}'`.
 - **Light/dark themes** that follow your system setting (Monokai in dark mode), with extra code coloring for function calls, attributes, class names, and operators.
 - **File links**: a file list at the top links to each file's `###` section, and each section links back.
 - **Notes beside every section**: type notes or follow-up questions in the side box. They save in your browser per page. **Copy notes** puts them on the clipboard as Markdown grouped by section; **Download** saves a `.md` file.

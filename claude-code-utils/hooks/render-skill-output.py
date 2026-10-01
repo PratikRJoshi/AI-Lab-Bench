@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Stop hook: render the final answer of /review, /code-walkthrough, /describing-pr-files as HTML."""
+import html
 import json
 import re
 import subprocess
@@ -9,6 +10,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
 SKILLS = {"review", "code-walkthrough", "describing-pr-files"}
 OUT_DIR = Path.home() / ".claude" / "rendered-outputs"
@@ -76,12 +78,17 @@ html{{scroll-behavior:smooth}}.markdown-body h1,.markdown-body h2,.markdown-body
 .note-answer{{margin:18px 0 10px;padding:12px 18px;border-left:4px solid var(--h3);background:var(--row);border-radius:0 8px 8px 0}}
 .note-answer-label{{font-weight:700;color:var(--h3);margin-bottom:8px;font-size:15px}}
 .note-box .answer-link{{display:inline-block;margin-top:8px;font-size:12px;font-weight:600;color:var(--h3);text-decoration:none}}
+.source-banner{{margin:0 0 24px;padding:10px 14px;border:1px solid var(--border);border-left:4px solid var(--h1);border-radius:8px;background:var(--row);font-size:13px;line-height:1.7}}
+.source-banner .k{{display:inline-block;min-width:96px;color:var(--muted);font-weight:600}}
+.source-banner .v{{color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}}
+.source-banner a.v{{color:var(--link)}}
 </style>
 </head><body><article class="markdown-body" id="out"></article>
 <script type="text/markdown" id="src">
 {body}
 </script>
 <script type="application/json" id="answers">{answers}</script>
+<script type="application/json" id="meta">{meta}</script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
@@ -263,6 +270,32 @@ dlBtn.addEventListener('click', () => {{
 bar.append(countEl, copyBtn, dlBtn);
 document.body.appendChild(bar);
 refreshCount();
+const META = JSON.parse((document.getElementById('meta') || {{}}).textContent || '{{}}');
+if (META.command || META.source) {{
+  const banner = document.createElement('div');
+  banner.className = 'source-banner';
+  const addRow = (label, value, href) => {{
+    if (!value) return;
+    const row = document.createElement('div');
+    const key = document.createElement('span');
+    key.className = 'k';
+    key.textContent = label;
+    const val = document.createElement(href ? 'a' : 'span');
+    if (href) {{ val.href = href; val.target = '_blank'; val.rel = 'noopener'; }}
+    val.className = 'v';
+    val.textContent = value;
+    row.append(key, val);
+    banner.appendChild(row);
+  }};
+  const src = META.source || '';
+  const srcHref = /^https?:\\/\\//.test(src) ? src : (src.startsWith('/') ? 'file://' + encodeURI(src) : null);
+  addRow('Command', META.command);
+  addRow('Source', src, srcHref);
+  const rev = META.branch ? '(' + META.branch + (META.commit ? ' @ ' + META.commit : '') + ')' : '';
+  addRow('Repository', [META.repo, rev].filter(Boolean).join(' '));
+  addRow('Rendered', META.rendered);
+  out.prepend(banner);
+}}
 </script></body></html>
 """
 
@@ -346,28 +379,109 @@ def read_firefox_notes(page: Path) -> dict:
 
 SRC_RE = re.compile(r'<script type="text/markdown" id="src">\n(.*?)\n</script>', re.S)
 ANS_RE = re.compile(r'<script type="application/json" id="answers">(.*?)</script>', re.S)
+META_RE = re.compile(r'<script type="application/json" id="meta">(.*?)</script>', re.S)
 TITLE_RE = re.compile(r"<title>(.*?)</title>")
+ARGS_RE = re.compile(r"<command-args>(.*?)</command-args>", re.S)
 
 
-def build_page(title: str, markdown: str, answers: dict) -> str:
+def git_info(path: Path) -> dict:
+    folder = path if path.is_dir() else path.parent
+
+    def git(*args):
+        r = subprocess.run(["git", "-C", str(folder), *args], capture_output=True, text=True)
+        return r.stdout.strip() if r.returncode == 0 else ""
+
+    top = git("rev-parse", "--show-toplevel")
+    if not top:
+        return {}
+    return {
+        "repo": Path(top).name,
+        "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
+        "commit": git("rev-parse", "--short", "HEAD"),
+    }
+
+
+def describe_source(args: str, cwd: str) -> dict:
+    """Short tab label plus the link or path that the page was generated from."""
+    text = (args or "").strip()
+    here = git_info(Path(cwd)) if cwd and Path(cwd).exists() else {}
+
+    url = re.search(r"https?://[^\s)>\]]+", text)
+    if url:
+        link = url.group(0).rstrip(".,")
+        parts = [p for p in urlsplit(link).path.split("/") if p]
+        label = parts[-1] if parts else urlsplit(link).netloc
+        for marker in ("pull", "pulls", "merge_requests"):
+            if marker in parts and parts.index(marker) >= 1:
+                i = parts.index(marker)
+                number = parts[i + 1] if len(parts) > i + 1 else ""
+                label = f"PR #{number} · {parts[i - 1]}"
+                break
+        else:
+            for marker in ("blob", "tree"):
+                if marker in parts and parts.index(marker) >= 1:
+                    label = f"{parts[-1]} · {parts[parts.index(marker) - 1]}"
+                    break
+        return {"label": label, "source": link}
+
+    path = re.search(r"@?(~?/\S+|\.{1,2}/\S+)", text)
+    if path:
+        raw = path.group(1)
+        line_range = re.search(r":L?\d+(?:-L?\d+)?$", raw)
+        target = Path(raw[: line_range.start()] if line_range else raw).expanduser()
+        if not target.is_absolute() and cwd:
+            target = Path(cwd) / target
+        info = git_info(target) if target.exists() else {}
+        name = (target.name or raw) + (line_range.group(0) if line_range else "")
+        repo = info.get("repo")
+        label = name if not repo or repo == name else f"{name} · {repo}"
+        return {"label": label, "source": str(target), **info}
+
+    repo = here.get("repo")
+    if text:
+        short = text if len(text) <= 48 else text[:47] + "…"
+        return {"label": f"{short} · {repo}" if repo else short, "source": text, **here}
+    return {"label": repo or "", "source": cwd or "", **here}
+
+
+def page_title(meta: dict) -> str:
+    label, command = meta.get("label", ""), meta.get("command", "")
+    if label and command:
+        return f"{label} — {command}"
+    return label or command or "Claude output"
+
+
+def build_page(markdown: str, answers: dict, meta: dict) -> str:
     return HTML.format(
-        title=title,
+        title=html.escape(page_title(meta)),
         body=markdown.replace("</script", "<\\/script"),
         answers=json.dumps(answers).replace("</", "<\\/"),
+        meta=json.dumps(meta).replace("</", "<\\/"),
     )
 
 
-def answer_page(page: Path, answers_file: Path) -> None:
-    html = page.read_text(encoding="utf-8")
-    src = SRC_RE.search(html)
+def rebuild_page(page: Path, answers_update: dict = None, meta_update: dict = None) -> dict:
+    """Re-render an existing page in place, keeping its path so saved notes stay attached."""
+    text = page.read_text(encoding="utf-8")
+    src = SRC_RE.search(text)
     if not src:
         sys.exit(f"No embedded markdown found in {page}")
-    old = ANS_RE.search(html)
-    answers = json.loads(old.group(1)) if old and old.group(1).strip() else {}
-    answers.update(json.loads(answers_file.read_text(encoding="utf-8")))
-    title = TITLE_RE.search(html)
+    old_answers = ANS_RE.search(text)
+    answers = json.loads(old_answers.group(1)) if old_answers and old_answers.group(1).strip() else {}
+    answers.update(answers_update or {})
+    old_meta = META_RE.search(text)
+    meta = json.loads(old_meta.group(1)) if old_meta and old_meta.group(1).strip() else {}
+    if not meta:
+        title = TITLE_RE.search(text)
+        meta = {"command": html.unescape(title.group(1)) if title else page.stem}
+    meta.update(meta_update or {})
     markdown = src.group(1).replace("<\\/script", "</script")
-    page.write_text(build_page(title.group(1) if title else page.stem, markdown, answers), encoding="utf-8")
+    page.write_text(build_page(markdown, answers, meta), encoding="utf-8")
+    return answers
+
+
+def answer_page(page: Path, answers_file: Path) -> None:
+    answers = rebuild_page(page, answers_update=json.loads(answers_file.read_text(encoding="utf-8")))
     print(f"Added {len(answers)} answers to {page}; reload the page to see them.")
 
 
@@ -387,11 +501,16 @@ def main():
 
     prompt_text = " ".join(b.get("text", "") for b in blocks(rows[start]) if b.get("type") == "text")
     names = {skill_of(m) for m in CMD_RE.findall(prompt_text)}
+    args_match = ARGS_RE.search(prompt_text)
+    args = args_match.group(1).strip() if args_match else ""
     for e in turn:
         if e.get("type") == "assistant":
             for b in blocks(e):
                 if b.get("type") == "tool_use" and b.get("name") == "Skill":
-                    names.add(skill_of(str((b.get("input") or {}).get("skill", ""))))
+                    tool_input = b.get("input") or {}
+                    names.add(skill_of(str(tool_input.get("skill", ""))))
+                    if not args and skill_of(str(tool_input.get("skill", ""))) in SKILLS:
+                        args = str(tool_input.get("args", "")).strip()
     hit = names & SKILLS
     if payload.get("force"):
         hit = {payload.get("label") or "notes"}
@@ -414,9 +533,22 @@ def main():
     body = "\n\n".join(texts)
 
     skill = sorted(hit)[0]
+    if payload.get("force"):
+        args = payload.get("source") or args
+    cwd = payload.get("cwd") or ""
+    meta = {
+        "command": f"/{skill}",
+        "args": args,
+        "cwd": cwd,
+        **describe_source(args, cwd),
+        "rendered": time.strftime("%Y-%m-%d %H:%M"),
+    }
+    if payload.get("title"):
+        meta["label"] = payload["title"]
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUT_DIR / f"{skill}-{time.strftime('%Y%m%d-%H%M%S')}.html"
-    out.write_text(build_page(f"/{skill}", body, {}), encoding="utf-8")
+    out.write_text(build_page(body, {}, meta), encoding="utf-8")
     subprocess.run(["open", str(out)], check=False)
     print(json.dumps({"systemMessage": f"Rendered /{skill} output: {out}"}))
 
@@ -426,5 +558,8 @@ if __name__ == "__main__":
         print(json.dumps(read_firefox_notes(Path(sys.argv[2])), indent=1, ensure_ascii=False))
     elif len(sys.argv) == 4 and sys.argv[1] == "--answer":
         answer_page(Path(sys.argv[2]), Path(sys.argv[3]))
+    elif len(sys.argv) == 4 and sys.argv[1] == "--set-source":
+        rebuild_page(Path(sys.argv[2]), meta_update=json.loads(sys.argv[3]))
+        print(f"Updated source details for {sys.argv[2]}")
     else:
         main()
