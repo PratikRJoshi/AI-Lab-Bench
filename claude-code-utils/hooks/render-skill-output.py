@@ -3,6 +3,9 @@
 import json
 import re
 import subprocess
+import tempfile
+import sqlite3
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -13,8 +16,8 @@ CMD_RE = re.compile(r"<command-name>/?([\w:-]+)</command-name>")
 
 HTML = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css">
-<link rel="stylesheet" media="(prefers-color-scheme: light)" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github.min.css">
-<link rel="stylesheet" media="(prefers-color-scheme: dark)" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/monokai.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: light)" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/monokai.min.css">
 <style>
 :root{{color-scheme:light dark;
   --page:#f6f8fa;--card:#fff;--text:#1f2328;--muted:#59636e;--border:#d1d9e0;
@@ -52,18 +55,99 @@ body{{background:var(--page)}}
 .markdown-body h3.sev-minor{{color:var(--minor)}}
 .badge{{display:inline-block;padding:2px 10px;border-radius:12px;color:var(--b-text);font-weight:600}}
 .risk-low{{background:var(--b-low)}}.risk-medium{{background:var(--b-med)}}.risk-high{{background:var(--b-high)}}.risk-critical{{background:var(--b-crit)}}
+.tok-fn{{color:#8250df}}.tok-attr{{color:#953800}}.tok-type{{color:#0550ae;font-style:italic}}.tok-op{{color:#cf222e}}.markdown-body .tok-ln{{color:#8c959f;user-select:none}}
+@media (prefers-color-scheme: dark){{.tok-fn{{color:#a6e22e}}.tok-attr{{color:#fd971f}}.tok-type{{color:#66d9ef}}.tok-op{{color:#f92672}}.markdown-body .tok-ln{{color:#75715e}}}}
+html{{scroll-behavior:smooth}}.markdown-body h1,.markdown-body h2,.markdown-body h3{{scroll-margin-top:16px}}
+.markdown-body a.file-link{{text-decoration:none}}.markdown-body a.file-link code{{border-bottom:1px dashed currentColor}}
+.markdown-body a.file-link:hover code{{filter:brightness(1.25)}}
+.markdown-body .back-link{{font-size:.55em;font-weight:400;margin-left:12px;color:var(--muted);text-decoration:none}}
+.markdown-body .back-link:hover{{color:var(--link)}}
+.note-box{{margin:12px 0 28px;padding:10px 12px;border:1px dashed var(--border);border-radius:8px;background:var(--row)}}
+.note-box label{{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}}
+.note-box textarea{{width:100%;min-height:56px;resize:vertical;overflow:hidden;box-sizing:border-box;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+.note-box textarea:focus{{outline:2px solid var(--link);outline-offset:1px}}
+.notes-bar{{position:fixed;top:12px;right:16px;z-index:10;display:flex;gap:8px;align-items:center;padding:6px 10px;border-radius:8px;background:var(--card);color:var(--muted);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.2);font:13px -apple-system,sans-serif}}
+.notes-bar button{{cursor:pointer;border:0;border-radius:6px;padding:5px 10px;font-weight:600;background:var(--h2);color:var(--b-text)}}
+.notes-bar button:hover{{filter:brightness(1.1)}}
+.markdown-body{{max-width:1360px}}
+.section-row{{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start}}
+.section-notes .note-box{{position:sticky;top:64px;margin:6px 0 24px}}
+@media (max-width:1100px){{.section-row{{display:block}}.section-notes .note-box{{position:static;margin:12px 0 28px}}}}
+.note-answer{{margin:18px 0 10px;padding:12px 18px;border-left:4px solid var(--h3);background:var(--row);border-radius:0 8px 8px 0}}
+.note-answer-label{{font-weight:700;color:var(--h3);margin-bottom:8px;font-size:15px}}
+.note-box .answer-link{{display:inline-block;margin-top:8px;font-size:12px;font-weight:600;color:var(--h3);text-decoration:none}}
 </style>
 </head><body><article class="markdown-body" id="out"></article>
 <script type="text/markdown" id="src">
 {body}
 </script>
+<script type="application/json" id="answers">{answers}</script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/common.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script>
 const out = document.getElementById('out');
 out.innerHTML = DOMPurify.sanitize(marked.parse(document.getElementById('src').textContent));
-out.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+const TOKENS = /([A-Za-z_]\\w*)(?=\\s*\\()|(?<=\\.)([A-Za-z_]\\w*)|\\b([A-Z][A-Za-z0-9_]*)\\b|([=+\\-*/<>!%&|^~]+)/g;
+function enrich(code) {{
+  code.querySelectorAll('.hljs-number').forEach(n => {{
+    const prev = n.previousSibling, next = n.nextSibling;
+    const atLineStart = !prev || (prev.nodeType === 3 && /(^|\\n)[ \\t]*$/.test(prev.textContent));
+    if (atLineStart && next && next.nodeType === 3 && /^ {{2,}}/.test(next.textContent)) n.classList.add('tok-ln');
+  }});
+  [...code.childNodes].filter(n => n.nodeType === 3).forEach(t => {{
+    const s = t.textContent, matches = [...s.matchAll(TOKENS)];
+    if (!matches.length) return;
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    for (const m of matches) {{
+      if (m.index > last) frag.append(s.slice(last, m.index));
+      const span = document.createElement('span');
+      span.className = m[1] ? 'tok-fn' : m[2] ? 'tok-attr' : m[3] ? 'tok-type' : 'tok-op';
+      span.textContent = m[0];
+      frag.append(span);
+      last = m.index + m[0].length;
+    }}
+    if (last < s.length) frag.append(s.slice(last));
+    t.replaceWith(frag);
+  }});
+}}
+if (window.hljs) out.querySelectorAll('pre code').forEach(b => {{ hljs.highlightElement(b); enrich(b); }});
+
+const FILE_RE = /[\\w.\\-\\/]+\\.[A-Za-z0-9]+/;
+const baseName = s => s.split('/').pop().toLowerCase();
+const usedIds = new Set();
+const sectionFor = new Map();
+out.querySelectorAll('h1, h2, h3').forEach(h => {{
+  let id = h.textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section';
+  for (let i = 2; usedIds.has(id); i++) id = id.replace(/-\\d+$/, '') + '-' + i;
+  usedIds.add(id);
+  h.id = id;
+  const m = h.textContent.match(FILE_RE);
+  if (h.tagName === 'H3' && m && !sectionFor.has(baseName(m[0]))) sectionFor.set(baseName(m[0]), h);
+}});
+const linkedSections = new Set();
+out.querySelectorAll('li').forEach(li => {{
+  const code = li.querySelector('code');
+  const m = code && code.textContent.match(FILE_RE);
+  const target = m && sectionFor.get(baseName(m[0]));
+  if (!target || code.closest('a') || !(li.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING)) return;
+  const list = li.closest('ul, ol');
+  if (!list.id) {{ list.id = 'files-' + usedIds.size; usedIds.add(list.id); }}
+  const a = document.createElement('a');
+  a.href = '#' + target.id;
+  a.className = 'file-link';
+  code.replaceWith(a);
+  a.appendChild(code);
+  if (!linkedSections.has(target)) {{
+    linkedSections.add(target);
+    const back = document.createElement('a');
+    back.href = '#' + list.id;
+    back.className = 'back-link';
+    back.textContent = '↑ back to files';
+    target.appendChild(back);
+  }}
+}});
 out.querySelectorAll('h3').forEach(h => {{
   const m = h.textContent.match(/^(Critical|Important|Minor)/i);
   if (m) h.classList.add('sev-' + m[1].toLowerCase());
@@ -80,6 +164,105 @@ out.querySelectorAll('h2').forEach(h => {{
   h.textContent = m[1] + ': ';
   h.appendChild(badge);
 }});
+const SRC_TEXT = document.getElementById('src').textContent;
+const ANSWERS = JSON.parse((document.getElementById('answers') || {{}}).textContent || '{{}}');
+let pageHash = 0;
+for (const ch of SRC_TEXT) pageHash = (pageHash * 31 + ch.charCodeAt(0)) | 0;
+const noteKey = id => 'claude-notes:' + pageHash + ':' + id;
+const headingText = h => [...h.childNodes]
+  .filter(n => !(n.classList && n.classList.contains('back-link')))
+  .map(n => n.textContent).join('').trim();
+const noteHeads = [...out.querySelectorAll('h2, h3')];
+const countEl = document.createElement('span');
+const refreshCount = () => {{
+  const n = noteHeads.filter(h => (localStorage.getItem(noteKey(h.id)) || '').trim()).length;
+  countEl.textContent = n + (n === 1 ? ' note' : ' notes');
+}};
+noteHeads.forEach(h => {{
+  let end = h;
+  while (end.nextElementSibling && !/^H[1-3]$/.test(end.nextElementSibling.tagName)) end = end.nextElementSibling;
+  const box = document.createElement('div');
+  box.className = 'note-box';
+  const label = document.createElement('label');
+  label.textContent = 'Notes: ' + headingText(h);
+  const ta = document.createElement('textarea');
+  ta.placeholder = 'Your notes or follow-up questions about this section...';
+  ta.value = localStorage.getItem(noteKey(h.id)) || '';
+  const grow = () => {{ ta.style.height = 'auto'; ta.style.height = Math.max(56, ta.scrollHeight) + 'px'; }};
+  ta.addEventListener('input', () => {{
+    if (ta.value.trim()) localStorage.setItem(noteKey(h.id), ta.value);
+    else localStorage.removeItem(noteKey(h.id));
+    grow(); refreshCount();
+  }});
+  box.append(label, ta);
+  const row = document.createElement('div');
+  row.className = 'section-row';
+  const main = document.createElement('div');
+  main.className = 'section-main';
+  const aside = document.createElement('aside');
+  aside.className = 'section-notes';
+  const stop = end.nextElementSibling;
+  h.before(row);
+  for (let cur = h; cur && cur !== stop; ) {{ const next = cur.nextElementSibling; main.appendChild(cur); cur = next; }}
+  aside.appendChild(box);
+  row.append(main, aside);
+  const ans = ANSWERS[h.id];
+  if (ans) {{
+    const ansBox = document.createElement('div');
+    ansBox.className = 'note-answer';
+    ansBox.id = h.id + '-answer';
+    const ansLabel = document.createElement('div');
+    ansLabel.className = 'note-answer-label';
+    ansLabel.textContent = 'Answers to your notes';
+    const ansBody = document.createElement('div');
+    ansBody.innerHTML = DOMPurify.sanitize(marked.parse(ans));
+    if (window.hljs) ansBody.querySelectorAll('pre code').forEach(b => {{ hljs.highlightElement(b); enrich(b); }});
+    ansBox.append(ansLabel, ansBody);
+    main.appendChild(ansBox);
+    const jump = document.createElement('a');
+    jump.href = '#' + ansBox.id;
+    jump.className = 'answer-link';
+    jump.textContent = 'Answered below';
+    box.appendChild(jump);
+  }}
+  requestAnimationFrame(grow);
+}});
+const exportNotes = () => {{
+  const title = (out.querySelector('h1, h2') || {{}}).textContent || document.title;
+  const parts = ['# My notes on: ' + title.trim(), 'Rendered page: ' + decodeURIComponent(location.pathname), ''];
+  noteHeads.forEach(h => {{
+    const v = (localStorage.getItem(noteKey(h.id)) || '').trim();
+    if (v) parts.push('## ' + headingText(h), v, '');
+  }});
+  return parts.join('\\n');
+}};
+const flash = (btn, text) => {{ const old = btn.textContent; btn.textContent = text; setTimeout(() => btn.textContent = old, 1500); }};
+const bar = document.createElement('div');
+bar.className = 'notes-bar';
+const copyBtn = document.createElement('button');
+copyBtn.textContent = 'Copy notes';
+copyBtn.addEventListener('click', async () => {{
+  const text = exportNotes();
+  try {{ await navigator.clipboard.writeText(text); }}
+  catch (e) {{
+    const tmp = document.createElement('textarea');
+    tmp.value = text; document.body.appendChild(tmp); tmp.select();
+    document.execCommand('copy'); tmp.remove();
+  }}
+  flash(copyBtn, 'Copied');
+}});
+const dlBtn = document.createElement('button');
+dlBtn.textContent = 'Download';
+dlBtn.addEventListener('click', () => {{
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([exportNotes()], {{ type: 'text/markdown' }}));
+  a.download = decodeURIComponent(location.pathname.split('/').pop()).replace(/\\.html$/, '') + '-notes.md';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}});
+bar.append(countEl, copyBtn, dlBtn);
+document.body.appendChild(bar);
+refreshCount();
 </script></body></html>
 """
 
@@ -100,6 +283,92 @@ def is_prompt(entry):
 
 def skill_of(name):
     return name.split(":")[-1]
+
+
+def unsnappy(b: bytes) -> bytes:
+    i = n = shift = 0
+    while True:
+        c = b[i]
+        i += 1
+        n |= (c & 0x7F) << shift
+        shift += 7
+        if c < 0x80:
+            break
+    out = bytearray()
+    while i < len(b):
+        tag = b[i]
+        i += 1
+        kind = tag & 3
+        if kind == 0:
+            ln = (tag >> 2) + 1
+            if ln > 60:
+                k = ln - 60
+                ln = int.from_bytes(b[i : i + k], "little") + 1
+                i += k
+            out += b[i : i + ln]
+            i += ln
+            continue
+        if kind == 1:
+            ln, off = ((tag >> 2) & 7) + 4, ((tag >> 5) << 8) | b[i]
+            i += 1
+        elif kind == 2:
+            ln, off = (tag >> 2) + 1, int.from_bytes(b[i : i + 2], "little")
+            i += 2
+        else:
+            ln, off = (tag >> 2) + 1, int.from_bytes(b[i : i + 4], "little")
+            i += 4
+        for _ in range(ln):
+            out.append(out[-off])
+    return bytes(out)
+
+
+def read_firefox_notes(page: Path) -> dict:
+    # Firefox keys file:// storage per file path, with ':' and '/' replaced by '+'.
+    origin = ("file://" + str(page.resolve())).replace(":", "+").replace("/", "+")
+    profiles = Path.home() / "Library" / "Application Support" / "Firefox" / "Profiles"
+    notes = {}
+    for db in profiles.glob(f"*/storage/default/{origin}/ls/data.sqlite"):
+        tmp = Path(tempfile.mkdtemp()) / "data.sqlite"
+        shutil.copy(db, tmp)
+        wal = db.with_name("data.sqlite-wal")
+        if wal.exists():
+            shutil.copy(wal, tmp.with_name("data.sqlite-wal"))
+        con = sqlite3.connect(tmp)
+        rows = con.execute(
+            "select key, compression_type, conversion_type, value from data where key like 'claude-notes:%'"
+        )
+        for key, comp, conv, val in rows:
+            raw = unsnappy(val) if comp == 1 else val
+            notes[key.split(":", 2)[2]] = raw.decode("utf-8" if conv == 1 else "utf-16-le")
+        con.close()
+    return notes
+
+
+SRC_RE = re.compile(r'<script type="text/markdown" id="src">\n(.*?)\n</script>', re.S)
+ANS_RE = re.compile(r'<script type="application/json" id="answers">(.*?)</script>', re.S)
+TITLE_RE = re.compile(r"<title>(.*?)</title>")
+
+
+def build_page(title: str, markdown: str, answers: dict) -> str:
+    return HTML.format(
+        title=title,
+        body=markdown.replace("</script", "<\\/script"),
+        answers=json.dumps(answers).replace("</", "<\\/"),
+    )
+
+
+def answer_page(page: Path, answers_file: Path) -> None:
+    html = page.read_text(encoding="utf-8")
+    src = SRC_RE.search(html)
+    if not src:
+        sys.exit(f"No embedded markdown found in {page}")
+    old = ANS_RE.search(html)
+    answers = json.loads(old.group(1)) if old and old.group(1).strip() else {}
+    answers.update(json.loads(answers_file.read_text(encoding="utf-8")))
+    title = TITLE_RE.search(html)
+    markdown = src.group(1).replace("<\\/script", "</script")
+    page.write_text(build_page(title.group(1) if title else page.stem, markdown, answers), encoding="utf-8")
+    print(f"Added {len(answers)} answers to {page}; reload the page to see them.")
 
 
 def main():
@@ -124,6 +393,8 @@ def main():
                 if b.get("type") == "tool_use" and b.get("name") == "Skill":
                     names.add(skill_of(str((b.get("input") or {}).get("skill", ""))))
     hit = names & SKILLS
+    if payload.get("force"):
+        hit = {payload.get("label") or "notes"}
     if not hit:
         return
 
@@ -140,15 +411,20 @@ def main():
     ]
     if not texts:
         return
-    body = "\n\n".join(texts).replace("</script", "<\\/script")
+    body = "\n\n".join(texts)
 
     skill = sorted(hit)[0]
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUT_DIR / f"{skill}-{time.strftime('%Y%m%d-%H%M%S')}.html"
-    out.write_text(HTML.format(title=f"/{skill}", body=body), encoding="utf-8")
+    out.write_text(build_page(f"/{skill}", body, {}), encoding="utf-8")
     subprocess.run(["open", str(out)], check=False)
     print(json.dumps({"systemMessage": f"Rendered /{skill} output: {out}"}))
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 3 and sys.argv[1] == "--read-notes":
+        print(json.dumps(read_firefox_notes(Path(sys.argv[2])), indent=1, ensure_ascii=False))
+    elif len(sys.argv) == 4 and sys.argv[1] == "--answer":
+        answer_page(Path(sys.argv[2]), Path(sys.argv[3]))
+    else:
+        main()

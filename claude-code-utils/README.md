@@ -47,6 +47,26 @@ When a turn runs `/review`, `/code-walkthrough`, or `/describing-pr-files`, this
 
 The page renders Markdown in the browser with [marked](https://marked.js.org/), sanitizes it with [DOMPurify](https://github.com/cure53/DOMPurify), and uses GitHub styling plus color-coded severity headings and risk badges. These libraries load from the jsDelivr CDN; the content itself never leaves your machine.
 
+Each page also has:
+
+- **Light/dark themes** that follow your system setting (Monokai in dark mode), with extra code coloring for function calls, attributes, class names, and operators.
+- **File links**: a file list at the top links to each file's `###` section, and each section links back.
+- **Notes beside every section**: type notes or follow-up questions in the side box. They save in your browser per page. **Copy notes** puts them on the clipboard as Markdown grouped by section; **Download** saves a `.md` file.
+
+### Answering notes in place
+
+```zsh
+# print the notes saved for a page (reads Firefox's per-file storage)
+python3 ~/.claude/hooks/render-skill-output.py --read-notes ~/.claude/rendered-outputs/<page>.html
+
+# add answers ({"<heading-id>": "<markdown>"}) to the same page
+python3 ~/.claude/hooks/render-skill-output.py --answer ~/.claude/rendered-outputs/<page>.html answers.json
+```
+
+`--answer` rebuilds the page under the same path, because Firefox ties saved notes to the file path. Answers appear at the end of each section, linked from its notes box.
+
+To render any transcript turn manually, pipe `{"transcript_path": "...", "force": true, "label": "<name>"}` into the script.
+
 ### Setup
 
 ```zsh
@@ -54,6 +74,14 @@ The page renders Markdown in the browser with [marked](https://marked.js.org/), 
 ```
 
 This symlinks `hooks/render-skill-output.py` into `~/.claude/hooks/` and adds the Stop hook to `~/.claude/settings.json`. Running it again does nothing. Requires `jq` and `python3`.
+
+## code-walkthrough skill
+
+`skills/code-walkthrough/SKILL.md` is the `/code-walkthrough` skill: line-by-line or block-by-block explanations of a PR, file, or module, with what/why/how/goal for each block, plus entry points and callers, term definitions, worked examples, and the notes-answering workflow above.
+
+```zsh
+ln -s "$PWD/skills/code-walkthrough" ~/.claude/skills/code-walkthrough
+```
 
 ## CLAUDE.md
 
