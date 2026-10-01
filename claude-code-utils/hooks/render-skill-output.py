@@ -82,6 +82,14 @@ html{{scroll-behavior:smooth}}.markdown-body h1,.markdown-body h2,.markdown-body
 .source-banner .k{{display:inline-block;min-width:96px;color:var(--muted);font-weight:600}}
 .source-banner .v{{color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}}
 .source-banner a.v{{color:var(--link)}}
+.page-toc{{margin:0 0 28px;padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--row)}}
+.page-toc summary{{cursor:pointer;font-weight:700;color:var(--h2)}}
+.page-toc ol{{margin:8px 0 4px;padding-left:22px}}
+.page-toc ol ol{{margin:2px 0 6px}}
+.page-toc li{{margin:2px 0}}
+.page-toc a{{text-decoration:none}}
+.page-toc a:hover{{text-decoration:underline}}
+.markdown-body iframe.embed{{display:block;width:100%;height:920px;border:1px solid var(--border);border-radius:8px;background:#fff}}
 </style>
 </head><body><article class="markdown-body" id="out"></article>
 <script type="text/markdown" id="src">
@@ -94,7 +102,13 @@ html{{scroll-behavior:smooth}}.markdown-body h1,.markdown-body h2,.markdown-body
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script>
 const out = document.getElementById('out');
-out.innerHTML = DOMPurify.sanitize(marked.parse(document.getElementById('src').textContent));
+out.innerHTML = DOMPurify.sanitize(marked.parse(document.getElementById('src').textContent), {{ ADD_TAGS: ['iframe'], ADD_ATTR: ['loading'] }});
+out.querySelectorAll('iframe').forEach(f => {{
+  const src = f.getAttribute('src') || '';
+  if (!/^[\\w.\\-]+\\.html(#[\\w\\-]*)?$/.test(src)) {{ f.remove(); return; }}
+  f.classList.add('embed');
+  if (!f.getAttribute('loading')) f.setAttribute('loading', 'lazy');
+}});
 const TOKENS = /([A-Za-z_]\\w*)(?=\\s*\\()|(?<=\\.)([A-Za-z_]\\w*)|\\b([A-Z][A-Za-z0-9_]*)\\b|([=+\\-*/<>!%&|^~]+)/g;
 function enrich(code) {{
   code.querySelectorAll('.hljs-number').forEach(n => {{
@@ -295,6 +309,37 @@ if (META.command || META.source) {{
   addRow('Repository', [META.repo, rev].filter(Boolean).join(' '));
   addRow('Rendered', META.rendered);
   out.prepend(banner);
+}}
+const tocHeads = [...out.querySelectorAll('h2, h3')].filter(h => !h.closest('.note-answer'));
+if (tocHeads.length >= 4) {{
+  const toc = document.createElement('details');
+  toc.className = 'page-toc';
+  toc.open = true;
+  const summary = document.createElement('summary');
+  summary.textContent = 'Contents';
+  toc.appendChild(summary);
+  const top = document.createElement('ol');
+  let sub = null;
+  tocHeads.forEach(h => {{
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = headingText(h);
+    li.appendChild(a);
+    if (h.tagName === 'H3' && top.lastElementChild) {{
+      if (!sub || sub.parentElement !== top.lastElementChild) {{
+        sub = document.createElement('ol');
+        top.lastElementChild.appendChild(sub);
+      }}
+      sub.appendChild(li);
+    }} else {{
+      top.appendChild(li);
+      sub = null;
+    }}
+  }});
+  toc.appendChild(top);
+  const banner = out.querySelector('.source-banner');
+  if (banner) banner.after(toc); else out.prepend(toc);
 }}
 </script></body></html>
 """

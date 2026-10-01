@@ -20,7 +20,7 @@ One command for the whole study loop:
 Pages land in `~/.claude/rendered-outputs/` and open in the browser. They are rendered by `~/.claude/hooks/render-skill-output.py` (see `claude-code-utils/README.md`), which gives each page:
 - a tab title and Source banner built from the input (`PR #4927 · service-llm-gateway — /code-study`, `<repo> — /code-study`)
 - light/dark (Monokai) themes and extra code coloring
-- links from a file list to each file's `###` section
+- a Contents box listing every section, and links from a file list to each file's `###` section
 - a notes box beside every section, with Copy and Download buttons
 
 ## Modes
@@ -72,9 +72,14 @@ When the user has written questions in a page's notes boxes:
 A high-level technical study sheet, for example for interview preparation:
 
 1. Read the source pages' embedded Markdown (`<script type="text/markdown" id="src">`) and answers (`<script type="application/json" id="answers">`). Collect their section ids. The id is the heading text lowercased with every run of non-alphanumerics replaced by `-`. An answer's id is `<section-id>-answer`.
-2. Write Markdown with these sections:
+2. Build the architecture diagram with the `/archify` skill (type `architecture`, showcase quality). Keep it to one main path and at most about 8 components. Then:
+   - Run `validate` until all 9 checks pass with 0 errors and 0 warnings.
+   - `deliver` it to `~/.claude/rendered-outputs/<name>-architecture.html`.
+   - Run `visual-check`; fix any viewport overflow by compacting vertical spacing.
+   - Look at a screenshot yourself before embedding it.
+3. Write Markdown with these sections:
    - a 30-second summary
-   - an architecture diagram (ASCII in a `text` code block)
+   - the architecture diagram, embedded with `<iframe src="<name>-architecture.html" title="…"></iframe>` plus a link to open it full-screen. The renderer only allows iframes pointing at a local `.html` file in the same folder. If `/archify` isn't available, use an ASCII diagram in a `text` code block.
    - the main stages (where each runs, entry point, classes, output)
    - key components in one line each
    - design decisions with trade-offs
@@ -82,9 +87,9 @@ A high-level technical study sheet, for example for interview preparation:
    - real numbers from runs
    - findings from reading the code
    - likely interview questions with crisp answers
-3. After each point, link to the detail with **relative** links such as `[More](code-walkthrough-….html#job-scheduler-py)`. The page sanitizer strips `file://` links.
-4. Render: `python3 ~/.claude/hooks/render-skill-output.py --render-md <file.md> '{"command": "/code-study overview", "args": "<repo path or PR URL>", "label": "Interview overview · <repo>"}'`.
-5. Verify every link target exists by loading each linked page in headless Chrome and checking for `id="<anchor>"`.
+4. After each point, link to the detail with **relative** links such as `[More](code-walkthrough-….html#job-scheduler-py)`. The page sanitizer strips `file://` links.
+5. Render: `python3 ~/.claude/hooks/render-skill-output.py --render-md <file.md> '{"command": "/code-study overview", "args": "<repo path or PR URL>", "label": "Interview overview · <repo>"}'`.
+6. Verify every link target exists by loading each linked page in headless Chrome and checking for `id="<anchor>"`.
 
 ## Rules
 
