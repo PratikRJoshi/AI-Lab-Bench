@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
-SKILLS = {"review", "code-walkthrough", "describing-pr-files"}
+SKILLS = {"review", "code-walkthrough", "describing-pr-files", "code-study"}
 OUT_DIR = Path.home() / ".claude" / "rendered-outputs"
 CMD_RE = re.compile(r"<command-name>/?([\w:-]+)</command-name>")
 
@@ -485,6 +485,17 @@ def answer_page(page: Path, answers_file: Path) -> None:
     print(f"Added {len(answers)} answers to {page}; reload the page to see them.")
 
 
+def render_markdown_file(md_file: Path, meta: dict) -> Path:
+    """Render a hand-written Markdown file as a page; meta needs at least "command"."""
+    meta = {**describe_source(meta.get("args", ""), meta.get("cwd", "")), **meta}
+    meta.setdefault("rendered", time.strftime("%Y-%m-%d %H:%M"))
+    slug = re.sub(r"[^a-z0-9]+", "-", meta.get("command", "page").lower()).strip("-") or "page"
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out = OUT_DIR / f"{slug}-{time.strftime('%Y%m%d-%H%M%S')}.html"
+    out.write_text(build_page(md_file.read_text(encoding="utf-8"), {}, meta), encoding="utf-8")
+    subprocess.run(["open", str(out)], check=False)
+    return out
+
 def main():
     payload = json.load(sys.stdin)
     if payload.get("stop_hook_active"):
@@ -512,6 +523,8 @@ def main():
                     if not args and skill_of(str(tool_input.get("skill", ""))) in SKILLS:
                         args = str(tool_input.get("args", "")).strip()
     hit = names & SKILLS
+    if hit == {"code-study"} and args.split(" ", 1)[0] in ("answer", "overview"):
+        return  # these modes write their own page
     if payload.get("force"):
         hit = {payload.get("label") or "notes"}
     if not hit:
@@ -558,6 +571,8 @@ if __name__ == "__main__":
         print(json.dumps(read_firefox_notes(Path(sys.argv[2])), indent=1, ensure_ascii=False))
     elif len(sys.argv) == 4 and sys.argv[1] == "--answer":
         answer_page(Path(sys.argv[2]), Path(sys.argv[3]))
+    elif len(sys.argv) == 4 and sys.argv[1] == "--render-md":
+        print(render_markdown_file(Path(sys.argv[2]), json.loads(sys.argv[3])))
     elif len(sys.argv) == 4 and sys.argv[1] == "--set-source":
         rebuild_page(Path(sys.argv[2]), meta_update=json.loads(sys.argv[3]))
         print(f"Updated source details for {sys.argv[2]}")

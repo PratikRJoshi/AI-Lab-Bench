@@ -66,6 +66,12 @@ python3 ~/.claude/hooks/render-skill-output.py --answer ~/.claude/rendered-outpu
 
 `--answer` rebuilds the page under the same path, because Firefox ties saved notes to the file path. Answers appear at the end of each section, linked from its notes box.
 
+To render a hand-written Markdown file as a page (used by `/code-study overview`):
+
+```zsh
+python3 ~/.claude/hooks/render-skill-output.py --render-md notes.md '{"command": "/code-study overview", "args": "<repo path or PR URL>", "label": "My title"}'
+```
+
 To render any transcript turn manually, pipe `{"transcript_path": "...", "force": true, "label": "<name>"}` into the script.
 
 ### Setup
@@ -105,3 +111,18 @@ cp CLAUDE.md ~/.claude/CLAUDE.md
 ```
 
 Or merge the sections you want into your existing `~/.claude/CLAUDE.md`.
+
+## code-study skill
+
+`skills/code-study/SKILL.md` is `/code-study`, one command for the whole study loop. It builds on the `code-walkthrough` rules and the renderer above:
+
+| Invocation | Result |
+|---|---|
+| `/code-study <target>` | Walkthrough page (PR, file, or module) |
+| `/code-study flow <target>` | End-to-end trace with real values and one section per failure case |
+| `/code-study answer <page.html>` | Reads your notes from the page and adds answers to the same file |
+| `/code-study overview <page.html> …` | High-level study sheet that links back to the detailed pages |
+
+```zsh
+ln -s "$PWD/skills/code-study" ~/.claude/skills/code-study
+```
