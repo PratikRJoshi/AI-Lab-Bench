@@ -41,6 +41,20 @@ Done. Global settings updated: /Users/yourname/.claude/settings.json
 - `jq` — install via `brew install jq`
 - `zsh`
 
+## render-skill-output (Stop hook)
+
+When a turn runs `/review`, `/code-walkthrough`, or `/describing-pr-files`, this hook takes Claude's final answer, renders it as a colored HTML page, and opens it in your browser. Pages are saved to `~/.claude/rendered-outputs/`.
+
+The page renders Markdown in the browser with [marked](https://marked.js.org/), sanitizes it with [DOMPurify](https://github.com/cure53/DOMPurify), and uses GitHub styling plus color-coded severity headings and risk badges. These libraries load from the jsDelivr CDN; the content itself never leaves your machine.
+
+### Setup
+
+```zsh
+./install-render-hook.sh
+```
+
+This symlinks `hooks/render-skill-output.py` into `~/.claude/hooks/` and adds the Stop hook to `~/.claude/settings.json`. Running it again does nothing. Requires `jq` and `python3`.
+
 ## CLAUDE.md
 
 A reference `CLAUDE.md` for `~/.claude/CLAUDE.md` that configures Claude Code's thinking style, coding standards, and — most notably — **output formatting with visual anchors** for long-running tasks.
