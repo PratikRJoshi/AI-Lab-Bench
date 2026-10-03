@@ -209,7 +209,12 @@ noteHeads.forEach(h => {{
   const ta = document.createElement('textarea');
   ta.placeholder = 'Your notes or follow-up questions about this section...';
   ta.value = localStorage.getItem(noteKey(h.id)) || '';
-  const grow = () => {{ ta.style.height = 'auto'; ta.style.height = Math.max(56, ta.scrollHeight) + 'px'; }};
+  const grow = () => {{
+    if (!ta.value) {{ ta.style.height = ''; return; }}
+    ta.style.height = 'auto'; ta.style.height = Math.max(56, ta.scrollHeight) + 'px';
+  }};
+  window.addEventListener('load', grow);
+  window.addEventListener('resize', grow);
   ta.addEventListener('input', () => {{
     if (ta.value.trim()) localStorage.setItem(noteKey(h.id), ta.value);
     else localStorage.removeItem(noteKey(h.id));
@@ -575,18 +580,29 @@ def main():
     if not hit:
         return
 
-    last_tool_result = max(
-        (i for i, e in enumerate(turn) if e.get("type") == "user" and any(b.get("type") == "tool_result" for b in blocks(e))),
-        default=0,
-    )
-    texts = [
-        b["text"]
-        for e in turn[last_tool_result:]
-        if e.get("type") == "assistant"
-        for b in blocks(e)
-        if b.get("type") == "text" and b.get("text", "").strip()
-    ]
+    def final_texts(turn):
+        last_tool_result = max(
+            (i for i, e in enumerate(turn) if e.get("type") == "user" and any(b.get("type") == "tool_result" for b in blocks(e))),
+            default=0,
+        )
+        return [
+            b["text"]
+            for e in turn[last_tool_result:]
+            if e.get("type") == "assistant"
+            for b in blocks(e)
+            if b.get("type") == "text" and b.get("text", "").strip()
+        ]
+
+    # Stop can fire before the final assistant row is flushed to the transcript.
+    texts = final_texts(turn)
+    for _ in range(6):
+        if texts:
+            break
+        time.sleep(0.5)
+        rows = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
+        texts = final_texts(rows[start:])
     if not texts:
+        print(f"render-skill-output: no final text after retries ({path})", file=sys.stderr)
         return
     body = "\n\n".join(texts)
 

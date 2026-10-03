@@ -80,7 +80,17 @@ To render any transcript turn manually, pipe `{"transcript_path": "...", "force"
 ./install-render-hook.sh
 ```
 
-This symlinks `hooks/render-skill-output.py` into `~/.claude/hooks/` and adds the Stop hook to `~/.claude/settings.json`. Running it again does nothing. Requires `jq` and `python3`.
+This symlinks `hooks/render-skill-output.py` into `~/.claude/hooks/` and adds the Stop hook to `~/.claude/settings.json`. Running it again only updates an older hook command in place. Requires `jq` and `python3`.
+
+Hook errors go to `~/.claude/hooks/render.log`. If the Stop hook fires before the final answer reaches the transcript, the script re-reads it for up to 3 seconds.
+
+## layman-session-start (SessionStart hook)
+
+`hooks/layman-session-start.sh` prints a reminder at the start of every session that makes plain-English `layman` mode the default (≤60 words, no jargon). Install it by symlinking and registering it under `hooks.SessionStart` in `~/.claude/settings.json`:
+
+```zsh
+ln -sf "$PWD/hooks/layman-session-start.sh" ~/.claude/hooks/layman-session-start.sh
+```
 
 ## code-walkthrough skill
 
