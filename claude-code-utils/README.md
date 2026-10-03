@@ -2,6 +2,38 @@
 
 Utilities for managing [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configuration across multiple projects.
 
+## New machine setup
+
+Needs `git`, `python3` and `jq` (`brew install jq`). Each step symlinks a file from this repo into `~/.claude/`, so later `git pull`s update the live copy.
+
+```zsh
+git clone https://github.com/PratikRJoshi/AI-Lab-Bench.git ~/Salesforce/AI-Lab-Bench
+cd ~/Salesforce/AI-Lab-Bench/claude-code-utils
+mkdir -p ~/.claude/skills ~/.claude/rules ~/.claude/hooks
+
+# Global instructions (CLAUDE.md imports custom-rules.md from this folder)
+ln -sf "$PWD/CLAUDE.md" ~/.claude/CLAUDE.md
+
+# Skills
+ln -sfn "$PWD/skills/code-study" ~/.claude/skills/code-study
+ln -sfn "$PWD/skills/code-walkthrough" ~/.claude/skills/code-walkthrough
+ln -sfn "$PWD/skills/layman" ~/.claude/skills/layman
+
+# Plain-English default: rule file + SessionStart reminder hook
+ln -sf "$PWD/rules/layman.md" ~/.claude/rules/layman.md
+ln -sf "$PWD/hooks/layman-session-start.sh" ~/.claude/hooks/layman-session-start.sh
+[ -f ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
+CMD="$HOME/.claude/hooks/layman-session-start.sh"
+jq -e --arg c "$CMD" '[.hooks.SessionStart[]?.hooks[]?.command] | index($c)' ~/.claude/settings.json >/dev/null \
+  || { jq --arg c "$CMD" '.hooks.SessionStart += [{"matcher":"","hooks":[{"type":"command","command":$c}]}]' \
+         ~/.claude/settings.json > ~/.claude/settings.json.tmp && mv ~/.claude/settings.json.tmp ~/.claude/settings.json; }
+
+# HTML pages for /review, /code-walkthrough, /code-study (Stop hook)
+./install-render-hook.sh
+```
+
+Restart Claude Code afterwards so it loads the new hooks. Every command above is safe to run again.
+
 ## claude-merge
 
 Merges project-level `.claude/settings.json` permission allowlists up into the global `~/.claude/settings.json`, then deletes the project-level file. This prevents approval prompts from accumulating per-project and ensures all approvals centralize to the global settings file over time.
