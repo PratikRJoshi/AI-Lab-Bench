@@ -229,7 +229,7 @@ def main():
                 "  • Then re-run the script\n"
             )
             input("Press Enter to close... ")
-            browser.close()
+            context.close()
             return
 
         click_mode = "JS shadow-walk" if use_js else "Playwright locator"
