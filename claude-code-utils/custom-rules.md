@@ -2,6 +2,17 @@
 
 My own additions, imported by the global `CLAUDE.md`. Make personal rule changes here instead of editing `CLAUDE.md` directly.
 
+### Prerequisite Skills
+Install these before relying on the rules below.
+
+| Skill | Used by | Source / install |
+|---|---|---|
+| `layman` | PR review-comment replies, debugging responses | This repo: symlink `skills/layman` → `~/.claude/skills/layman` |
+| `code-walkthrough` | Significant-change learning pass | This repo: symlink `skills/code-walkthrough` → `~/.claude/skills/code-walkthrough` |
+| `review` | Auto-review after PR create/update | Local clone of `mattpocock-skills`: symlink `skills/in-progress/review` → `~/.claude/skills/review` |
+| `mattpocock-skills:grilling` | Significant-change learning pass | `/plugin install mattpocock-skills@claude-plugins-official` |
+| `i-have-adhd:i-have-adhd` | Debugging responses (next steps) | `/plugin marketplace add ayghri/i-have-adhd`, then `/plugin install i-have-adhd@i-have-adhd`. User-invoked only. |
+
 ### Coding Standards
 - **Minimal Comments:** Keep code comments either nonexistent or as short and concise as possible, so they don't blow up the overall code or file.
 
