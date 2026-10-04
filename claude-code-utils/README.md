@@ -160,10 +160,12 @@ Or merge the sections you want into your existing `~/.claude/CLAUDE.md`.
 
 | Invocation | Result |
 |---|---|
-| `/code-study <target>` | Walkthrough page (PR, file, or module) |
-| `/code-study flow <target>` | End-to-end trace with real values and one section per failure case |
+| `/code-study <target>` | Walkthrough page (PR, file, or module) plus an interview overview page |
+| `/code-study flow <target>` | End-to-end trace with real values and one section per failure case, plus an interview overview |
 | `/code-study answer <page.html>` | Reads your notes from the page and adds answers to the same file |
 | `/code-study overview <page.html> …` | High-level study sheet that links back to the detailed pages |
+
+Add `--no-overview` to skip the automatic overview. When a turn renders its own page with `--render-md`, the Stop hook skips it so you don't get a duplicate.
 
 ```zsh
 ln -s "$PWD/skills/code-study" ~/.claude/skills/code-study

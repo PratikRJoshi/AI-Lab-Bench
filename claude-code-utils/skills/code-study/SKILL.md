@@ -15,7 +15,7 @@ One command for the whole study loop:
 1. Read the code → **walkthrough** page.
 2. Follow one real run through it → **flow** page.
 3. The user writes questions in the notes box beside each section → **answer** them in place.
-4. Condense everything into a study sheet → **overview** page that links back to the detail.
+4. Condense everything into a study sheet → **overview** page that links back to the detail. Walkthrough and flow build this automatically.
 
 Pages land in `~/.claude/rendered-outputs/` and open in the browser. They are rendered by `~/.claude/hooks/render-skill-output.py` (see `claude-code-utils/README.md`), which gives each page:
 - a tab title and Source banner built from the input (`PR #4927 · service-llm-gateway — /code-study`, `<repo> — /code-study`)
@@ -27,10 +27,12 @@ Pages land in `~/.claude/rendered-outputs/` and open in the browser. They are re
 
 | Invocation | What it produces | How it's rendered |
 |---|---|---|
-| `/code-study <target>` | Walkthrough | Automatically by the Stop hook |
-| `/code-study flow <target>` | End-to-end trace with real values | Automatically by the Stop hook |
+| `/code-study <target>` | Walkthrough + interview overview | `--render-md`, then overview |
+| `/code-study flow <target>` | End-to-end trace with real values + interview overview | `--render-md`, then overview |
 | `/code-study answer <page.html>` | Answers added to an existing page | `--answer`, same file path |
 | `/code-study overview <page.html> [more pages]` | Interview overview linking to the pages | `--render-md` |
+
+Add `--no-overview` to a walkthrough or flow invocation to skip the automatic overview.
 
 `<target>` is anything `/code-walkthrough` accepts: a PR URL or number, a file path (optionally `:L120-180`), a module or repo path, or a remote file URL.
 
@@ -45,6 +47,8 @@ Follow `~/.claude/skills/code-walkthrough/SKILL.md` in full: inputs, depth modes
 
 Use the real file paths and section headings `### <filename>` so the page's file links and notes boxes line up.
 
+Then [save the page and build the overview](#save-the-page-and-build-the-overview).
+
 ## Mode: flow
 
 Trace one real execution from the entry point to the final output, step by step:
@@ -56,6 +60,19 @@ Trace one real execution from the entry point to the final output, step by step:
 5. Start the page with any local, uncommitted changes in the target repo (`git status`, `git diff`) and explain them. End with a one-table summary of the whole flow and its values.
 
 Use `## Step N.` and `## Case X:` headings so each gets its own notes box.
+
+Then [save the page and build the overview](#save-the-page-and-build-the-overview).
+
+## Save the page and build the overview
+
+Walkthrough and flow end this way unless the user passed `--no-overview`:
+
+1. Write the full page Markdown to `/tmp/code-study-<repo>.md`. Do not paste it as the final reply.
+2. Render it: `python3 ~/.claude/hooks/render-skill-output.py --render-md /tmp/code-study-<repo>.md '{"command": "/code-study", "args": "<target>", "cwd": "<target repo path>"}'`. It prints the page path. Because the turn rendered its own page, the Stop hook skips it.
+3. Run **Mode: overview** below on that page path. Its relative links point at the page's real file name.
+4. Reply with one line per page path, nothing more.
+
+With `--no-overview`, skip all of this and reply with the page Markdown; the Stop hook renders it.
 
 ## Mode: answer
 

@@ -575,6 +575,12 @@ def main():
     hit = names & SKILLS
     if hit == {"code-study"} and args.split(" ", 1)[0] in ("answer", "overview"):
         return  # these modes write their own page
+    if any(
+        b.get("type") == "tool_use" and "render-skill-output.py" in str((b.get("input") or {}).get("command", ""))
+        and "--render-md" in str((b.get("input") or {}).get("command", ""))
+        for e in turn if e.get("type") == "assistant" for b in blocks(e)
+    ) and not payload.get("force"):
+        return  # the turn already rendered its own page
     if payload.get("force"):
         hit = {payload.get("label") or "notes"}
     if not hit:
