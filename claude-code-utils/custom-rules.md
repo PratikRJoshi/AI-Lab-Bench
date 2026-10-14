@@ -27,4 +27,5 @@ Install these before relying on the rules below.
   2. **Root cause** — the actual underlying cause, not the symptom.
   3. **Relevant stack trace lines** — quote only the lines from the logs that matter.
   4. **Next steps / possible fixes** — only after 1–3, written using the `i-have-adhd:i-have-adhd` skill.
+- **Show proof:** When debugging failures, errors, or issues, or answering questions, always back the answer with proof the user can check: a Splunk query and its result, a Slack thread link or quote, or the relevant code snippets with `file:line`. If no proof is available, say so and mark the claim as unverified.
 - **Significant-change learning pass:** When significant changes are being reviewed or made to any code, offer to run `/code-walkthrough` and `/mattpocock-skills:grilling` — ask the user if they want to go over both, and run them only on confirmation.
