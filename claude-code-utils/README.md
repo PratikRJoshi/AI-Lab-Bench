@@ -30,6 +30,15 @@ jq -e --arg c "$CMD" '[.hooks.SessionStart[]?.hooks[]?.command] | index($c)' ~/.
 
 # HTML pages for /review, /code-walkthrough, /code-study (Stop hook)
 ./install-render-hook.sh
+
+# Layman output style
+mkdir -p ~/.claude/output-styles
+ln -sf "$PWD/output-styles/layman.md" ~/.claude/output-styles/layman.md
+
+# Settings watcher (see below): install the tool, then point it at this repo's preferred.json
+git clone https://git.soma.salesforce.com/dmorton/claude-settings-watcher.git ~/Salesforce/tools/claude-settings-watcher
+~/Salesforce/tools/claude-settings-watcher/install.sh
+ln -sf "$PWD/settings-watcher/preferred.json" ~/.claude-settings-watcher/preferred.json
 ```
 
 Restart Claude Code afterwards so it loads the new hooks. Every command above is safe to run again.
@@ -123,6 +132,18 @@ Hook errors go to `~/.claude/hooks/render.log`. If the Stop hook fires before th
 ```zsh
 ln -sf "$PWD/hooks/layman-session-start.sh" ~/.claude/hooks/layman-session-start.sh
 ```
+
+## settings-watcher
+
+[claude-settings-watcher](https://git.soma.salesforce.com/dmorton/claude-settings-watcher) (Salesforce internal, VPN) is a macOS background job that checks `~/.claude/settings.json` every 3 seconds and puts back any key listed in `~/.claude-settings-watcher/preferred.json`. The tool isn't copied here; only my pinned values are, in `settings-watcher/preferred.json`.
+
+- Edit `settings-watcher/preferred.json` to change pinned values. It's re-read every cycle, so no restart is needed. `{}` pins nothing.
+- Pin single values only. Lists such as `permissions.allow` are replaced, not merged.
+- Log: `tail -f ~/.claude-settings-watcher/guard.log`. Remove: `~/Salesforce/tools/claude-settings-watcher/uninstall.sh`.
+
+## Layman output style
+
+`output-styles/layman.md` is a Claude Code output style that applies the `layman` skill to every reply. Select it with `"outputStyle": "Layman"` (pinned by the settings watcher above).
 
 ## code-walkthrough skill
 

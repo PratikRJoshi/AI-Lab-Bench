@@ -1,0 +1,14 @@
+{
+  "model": "opus",
+  "effortLevel": "xhigh",
+  "outputStyle": "Layman",
+  "defaultMode": "auto",
+  "autoCompactEnabled": false,
+  "autoCompactWindow": 950000,
+  "alwaysThinkingEnabled": false,
+  "verbose": true,
+  "theme": "dark-ansi",
+  "tui": "fullscreen",
+  "editorMode": "normal",
+  "ultracode": true
+}
