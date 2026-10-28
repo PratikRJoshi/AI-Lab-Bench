@@ -3,7 +3,8 @@
 # Reads JSON from stdin (provided by Claude Code) and renders a colorized status bar.
 #
 # Output format:
-#   DD/MM/YY HH:MM 🧠 Model Name | 👤 user | 🔥 NN% ▐████░░░░▌ NNNk | $X.XX
+#   DD/MM/YY HH:MM 🧠 Model Name | 👤 user | 🔥 NN% ▐████░░░░▌ NNNk | $X.XX | 🧩 skill-a, skill-b
+#   (skills = those used since the last user prompt, via statusline-skills.py; hidden when none)
 #
 # Usage in ~/.claude/settings.json:
 #   "statusLine": {
@@ -23,6 +24,9 @@ input=$(cat)
 user=$(whoami)
 dt=$(date '+%d/%m/%y %H:%M')
 model=$(echo "$input" | jq -r '.model.display_name')
+transcript=$(echo "$input" | jq -r '.transcript_path // empty')
+skills=""
+[ -n "$transcript" ] && [ -f "$transcript" ] && skills=$(python3 -I "$(dirname "$0")/statusline-skills.py" "$transcript" 2>/dev/null)
 
 # --- Token counts ---
 tin=$(echo "$input" | jq -r '.context_window.total_input_tokens // 0')
@@ -74,5 +78,6 @@ bar_color="${GREEN}"
 # --- Render ---
 output="${CYAN}${dt}${RESET} 🧠 ${GREEN}${model}${RESET} | 👤 ${ORANGE}${user}${RESET} | 🔥 ${bar_color}${used_pct}%${RESET} ${bar_color}▐${bar}▌${RESET} ${BRIGHT_YELLOW}${tokens_display}${RESET}"
 [ "$tcost" != "0" ] && [ -n "$tcost" ] && output="${output} | ${YELLOW}\$${cost}${RESET}"
+[ -n "$skills" ] && output="${output} | 🧩 ${CYAN}${skills}${RESET}"
 
 printf "%b\n" "$output"
