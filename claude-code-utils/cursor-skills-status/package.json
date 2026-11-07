@@ -1,0 +1,17 @@
+{
+  "name": "cursor-skills-status",
+  "displayName": "Skills Status",
+  "description": "Shows the agent skills used for the current prompt in the status bar.",
+  "version": "0.1.0",
+  "publisher": "pratikrjoshi",
+  "license": "MIT",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "skillsStatus.refresh", "title": "Skills Status: Refresh" }
+    ]
+  }
+}
