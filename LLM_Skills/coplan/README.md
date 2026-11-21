@@ -24,18 +24,12 @@ Each run produces a per-run audit folder under `coplans/<slug>-<id>/` with both 
 ## Usage
 
 ```bash
-# Default (gpt-5.5-extra-high for both planning and review)
+# Asks with a dropdown for planner, reviewer, and fallback
 /coplan "build inventory allocation dashboard"
 /coplan docs/Releases/260/inventory-allocation/spec.md
 
-# Override the model — both phases
-/coplan "task" --model claude-4.6-opus-max-thinking
-
-# Different model for plan vs review (diversity check)
-/coplan "task" --model gpt-5.5-extra-high --review-model claude-4.6-opus-max
-
-# Provider-failover for review rounds (recommended for resilience)
-/coplan "task" --review-fallback-model gemini-3.1-pro
+# Skip the dropdown for any role you already name
+/coplan "task" --model gpt-5.5-extra-high --review-model claude-opus-4-8-thinking-xhigh --review-fallback-model gemini-3.1-pro
 ```
 
 ## Provider Failover (review)
@@ -47,20 +41,9 @@ If the review model hits a connection or availability error mid-loop, the skill 
 
 **Failure detection:** `cursor-agent` writes connection errors to **stdout** (mixed with normal output) while exiting 0. The skill greps for `Connection lost`, `[unavailable] Error`, and `Retry attempt 3` to detect failures — never trusts empty stderr or the exit code.
 
-## Models (Max Mode supported)
+## Models
 
-Default: `gpt-5.5-extra-high` (1M context, max reasoning).
-
-Common Max-mode picks (live list: `cursor-agent --list-models`):
-
-| Model | Context | Notes |
-|-------|---------|-------|
-| `gpt-5.5-extra-high` | 1M | default; max reasoning |
-| `gpt-5.5-extra-high-fast` | 1M | same model, faster scheduler |
-| `gemini-3.1-pro` | 1M | Gemini 3.1 Pro |
-| `grok-4.3` | 1M | Grok 4.3 |
-
-**Validation:** the skill checks the requested model against the live list before launching. If unknown, it prints the list and stops.
+`/coplan` asks you to pick three models before it plans: planner, reviewer, and fallback. The choices are the Max-mode ids that are also in `cursor-agent --list-models`. Suggested picks are `gpt-5.5-extra-high`, `claude-opus-4-8-thinking-xhigh`, and `gemini-3.1-pro`. A flag you already passed is kept and that dropdown is skipped.
 
 ## When to Use
 

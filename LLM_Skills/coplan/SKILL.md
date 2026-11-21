@@ -1,6 +1,6 @@
 ---
 name: coplan
-description: Dual-model parallel planning — Claude and GPT-5.5 (1M context, extra-high reasoning) independently plan the same task, self-verify against extracted requirements, merge plans, then cross-review iteratively until both models sign off. Use when the user says "coplan", "plan with GPT", "dual plan", "parallel plan", or is starting a multi-file feature that warrants two perspectives.
+description: Dual-model parallel planning. Asks the user to pick the planner, reviewer, and fallback from a dropdown, then both models plan the same task, self-verify against extracted requirements, merge plans, and cross-review until both sign off. Use when the user says "coplan", "plan with GPT", "dual plan", "parallel plan", or is starting a multi-file feature that warrants two perspectives.
 user-invocable: true
 argument-hint: "[task description or spec path] [--model <id>] [--review-model <id>] [--review-fallback-model <id>]"
 allowed-tools:
@@ -19,7 +19,7 @@ Two AI models tackle the same planning problem independently, verify their own w
 
 **Models:**
 - Claude (this session) — deep codebase familiarity, convention awareness, sub-agent spawning
-- GPT-5.5 Extra High via `cursor-agent` — 1M token context, agentic file exploration, systematic completeness
+- The planner, reviewer, and fallback you pick from the dropdown at the start of the run
 
 **Output folder:** `coplans/<slug>-<id>/` (per-run subfolder; durable, gitted)
 
@@ -33,25 +33,29 @@ Two AI models tackle the same planning problem independently, verify their own w
 
 ## Model Selection (Max Mode supported)
 
-Default planning model: `gpt-5.5-extra-high` (1M context, max reasoning). Default review model: `claude-opus-4-8-thinking-xhigh` (Opus 4.8 1M, extra-high thinking) — cross-provider review by default.
+Do not assign a planner, reviewer, or fallback until the user picks them. Flags still win when the user already passed them:
 
-Override per run:
-- `/coplan <task> --model <id>` — change both planning and review model
-- `/coplan <task> --model <id> --review-model <id>` — separate models for plan vs review
-- `/coplan <task> --review-fallback-model <id>` — use a different provider for review if the primary review model fails (recommended: pick a different family — e.g. Gemini if review-model is GPT, Opus if review-model is Gemini)
+- `--model <id>` — planner, and also the reviewer when `--review-model` is absent
+- `--review-model <id>` — reviewer only
+- `--review-fallback-model <id>` — used if the reviewer fails mid-loop
 
-**Why provider diversity matters in review:** A different model in r2+ has no investment in the r1 critique — surfaces blind spots both Claude and the r1 reviewer share. By default the planner (`gpt-5.5-extra-high`) and reviewer (`claude-opus-4-8-thinking-xhigh`) are already cross-provider. If the Opus reviewer fails, the auto-fallback is `gpt-5.5-extra-high`; pass `--review-fallback-model gemini-3.1-pro` for a third provider.
+**Dropdown (required for every role the user did not pass as a flag):**
 
-**Common Max-mode picks** (from `cursor-agent --list-models`):
-- `gpt-5.5-extra-high` — default planner. GPT-5.5, 1M context, max reasoning
-- `gpt-5.5-extra-high-fast` — same model, faster scheduler
-- `claude-opus-4-8-thinking-xhigh` — default reviewer. Opus 4.8 1M, extra-high thinking
-- `gemini-3.1-pro` — Gemini 3.1 Pro
-- `grok-4.3` — Grok 4.3, 1M
+1. Run `cursor-agent --list-models`.
+2. Call `AskQuestion` once. One question per missing role: `planner`, `reviewer`, `fallback`. Single-select. Do not list the choices in chat.
+3. Options are only IDs from this catalog that also appear in the live list. Put the recommended option first and end its label with `(Recommended)`.
 
-To see the live list: `cursor-agent --list-models`.
+| Role | Recommended ID | Other catalog IDs |
+|------|----------------|-------------------|
+| planner | `gpt-5.5-extra-high` | `gpt-5.5-extra-high-fast`, `claude-opus-4-8-thinking-xhigh`, `gemini-3.1-pro`, `grok-4.3` |
+| reviewer | `claude-opus-4-8-thinking-xhigh` | `gpt-5.5-extra-high`, `gpt-5.5-extra-high-fast`, `gemini-3.1-pro`, `grok-4.3` |
+| fallback | `gemini-3.1-pro` | `gpt-5.5-extra-high`, `gpt-5.5-extra-high-fast`, `claude-opus-4-8-thinking-xhigh`, `grok-4.3` |
 
-**Validation:** Before launching, validate the requested model against `cursor-agent --list-models`. If unknown, print the list and ask the user to pick.
+Use the option `id` as the model id. Wait for the answer before Phase 2.
+
+If `AskQuestion` is missing, ask the same three choices in one short message and wait.
+
+A different family for the reviewer and the fallback is the point: the backup should not be a copy of the reviewer. If the user picks the same id for reviewer and fallback, ask once to change the fallback.
 
 ## When NOT to Use
 
@@ -74,39 +78,20 @@ What should I plan? Provide:
 - A reference to something discussed in this conversation
 ```
 
-### Step 2: Parse Flags and Resolve Models
+### Step 2: Parse Flags, Then Ask for Models
 
-Extract `--model` and `--review-model` from `$ARGUMENTS`. Whatever remains is the task description / spec path.
+Extract `--model`, `--review-model`, and `--review-fallback-model` from `$ARGUMENTS`. Whatever remains is the task description or spec path.
+
+Flags that are present are final. For every flag that is absent, show the dropdown in **Model Selection** and wait. Do not fill a missing role with a hard-coded id.
 
 ```bash
-# Defaults
-MODEL="gpt-5.5-extra-high"
-REVIEW_MODEL=""           # defaults to claude-opus-4-8-thinking-xhigh if unset
-REVIEW_FALLBACK_MODEL=""  # used if review model fails mid-loop; empty = no fallback
-
-# Pseudo-parse (skill executor handles the actual extraction):
-# /coplan "build dashboard" --model claude-opus-4-8-thinking-xhigh
-# /coplan spec.md --model gpt-5.5-extra-high --review-model claude-opus-4-8-thinking-xhigh
-# /coplan spec.md --review-fallback-model gemini-3.1-pro
-#   → MODEL/REVIEW_MODEL/REVIEW_FALLBACK_MODEL extracted accordingly.
-
-REVIEW_MODEL="${REVIEW_MODEL:-claude-opus-4-8-thinking-xhigh}"
-
-# If no fallback specified, pick a different-provider default to maximize
-# r2 diversity. Heuristic: if review model is GPT, fall back to Gemini;
-# if Claude or Gemini, fall back to GPT.
-if [[ -z "$REVIEW_FALLBACK_MODEL" ]]; then
-  case "$REVIEW_MODEL" in
-    gpt-*)         REVIEW_FALLBACK_MODEL="gemini-3.1-pro" ;;
-    claude-*)      REVIEW_FALLBACK_MODEL="gpt-5.5-extra-high" ;;
-    gemini-*)      REVIEW_FALLBACK_MODEL="gpt-5.5-extra-high" ;;
-    grok-*)        REVIEW_FALLBACK_MODEL="gpt-5.5-extra-high" ;;
-    *)             REVIEW_FALLBACK_MODEL="" ;;
-  esac
-fi
+# Only set a variable when that flag was actually passed.
+# MODEL / REVIEW_MODEL / REVIEW_FALLBACK_MODEL come from flags or the dropdown.
+# --model alone sets both MODEL and REVIEW_MODEL.
+# --model plus --review-model sets them separately.
 ```
 
-Validate both models against the live list:
+Validate the chosen ids against the live list:
 
 ```bash
 AVAILABLE=$(cursor-agent --list-models 2>/dev/null | awk '{print $1}')
@@ -426,7 +411,7 @@ The `coplans/` folder should be gitignored at the repo root so individual runs d
 
 2. **Self-verification is mandatory** after every planning phase. Re-read `requirements.md` from disk, not from memory.
 
-3. **Model defaults:** planner `gpt-5.5-extra-high` (1M context, max reasoning); reviewer `claude-opus-4-8-thinking-xhigh` (Opus 4.8 1M, extra-high thinking) for cross-provider review. User can override either with `--model <id>` and `--review-model <id>`. Validate against `cursor-agent --list-models` before launching. Max-mode-class options include `gpt-5.5-extra-high`, `claude-opus-4-8-thinking-xhigh`, `gemini-3.1-pro`, `grok-4.3`.
+3. **Models come from the dropdown or from flags.** Never launch `cursor-agent` on a hard-coded model id. Validate the picked ids against `cursor-agent --list-models` before launching.
 
 4. **Claude has veto power.** GPT-5.5 advises. Skip its suggestions when they conflict with user requirements or project CLAUDE.md.
 
