@@ -10,4 +10,3 @@ backups/
 *.blob
 *.asc
 !recovery-public-key.asc
-

@@ -17,4 +17,4 @@ The clean-macOS Homebrew/Docker first-run installation has not been exercised on
 
 ## Repository move
 
-The owner explicitly approved publicly storing the encrypted snapshots in AI-Lab-Bench. The project is under `actual-budget/`; snapshots use the `actual-budget-backup-` release prefix. The existing recovery key and ciphertext are unchanged. The standalone repository will be deleted only after verification of the destination.
+The owner explicitly approved publicly storing the encrypted snapshots in AI-Lab-Bench. The project is under `actual-budget/`; snapshots use the `actual-budget-backup-` release prefix. The existing recovery key and ciphertext are unchanged. A fresh sparse checkout from AI-Lab-Bench selected and downloaded the namespaced release, decrypted it and restored both active budgets on port **15008**. All **16 file hashes** matched, and both the restored server and original server returned HTTP 200. The test container and plaintext test data were removed. Old-repository deletion is awaiting GitHub delete_repo authorization.

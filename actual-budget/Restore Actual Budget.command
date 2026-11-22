@@ -5,4 +5,3 @@ status=$?
 echo
 read -r -p "Press Enter to close this window. " _
 exit "$status"
-

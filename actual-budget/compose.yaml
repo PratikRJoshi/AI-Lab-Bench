@@ -9,4 +9,3 @@ services:
       - type: bind
         source: ${ACTUAL_DATA_DIR:?Set ACTUAL_DATA_DIR to the restored data folder}
         target: /data
-

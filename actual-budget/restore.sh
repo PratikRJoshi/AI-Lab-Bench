@@ -29,4 +29,3 @@ if [[ "${1:-}" == "--install-deps" ]]; then
   fi
 fi
 exec python3 budget_recovery.py restore "$@"
-
