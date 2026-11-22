@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+data/
+backups/
+*.gpg
+*.tar*
+*.sqlite*
+*.blob
+*.asc
+!recovery-public-key.asc
+

@@ -1,0 +1,7 @@
+{
+  "repository": "PratikRJoshi/AI-Lab-Bench",
+  "source_container": "my_actual_budget_from_ynab",
+  "key_fingerprint": "B7D9EBC78F114C0F0CA5D487A5DB0B787853B3B5",
+  "release_tag_prefix": "actual-budget-backup-",
+  "allow_public_snapshots": true
+}
