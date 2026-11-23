@@ -6,7 +6,13 @@
     },
     {
         "key": "cmd+l",
-        "command": "-workbench.action.gotoLine"
+        "command": "-workbench.action.gotoLine",
+        // "when": "!terminalFocus"
+    },
+    {
+        "key": "cmd+l",
+        "command": "cursor.cmdK.redirectToChat",
+        "when": "editorFocus && !isGlass"
     },
     {
         "key": "ctrl ctrl",
@@ -36,6 +42,18 @@
         "command": "workbench.action.terminal.sendSequence",
         "args": {
             "text": "\u001b\r"
+        },
+        "when": "terminalFocus"
+    },
+    // Codex Chat Selection Settings
+    {
+        "key": "cmd+l",
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.terminal.copySelection",
+                "workbench.view.extension.codexViewContainer"
+            ]
         },
         "when": "terminalFocus"
     }
