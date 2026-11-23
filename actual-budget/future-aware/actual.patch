@@ -1,0 +1,729 @@
+diff --git a/packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetMenu.test.tsx b/packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetMenu.test.tsx
+new file mode 100644
+index 0000000..0a0ab44
+--- /dev/null
++++ b/packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetMenu.test.tsx
+@@ -0,0 +1,74 @@
++import { render, screen } from '@testing-library/react';
++
++import { SheetNameProvider } from '#hooks/useSheetName';
++import { TestProviders } from '#mocks';
++
++import { ToBudgetMenu } from './ToBudgetMenu';
++
++vi.mock(
++  '@actual-app/core/platform/client/connection',
++  () => import('#mocks/connection'),
++);
++
++let sheetValues: Record<string, number>;
++
++vi.mock('#hooks/useSheetValue', async () => {
++  const { useSheetName } = await import('#hooks/useSheetName');
++  return {
++    useSheetValue: (binding: Parameters<typeof useSheetName>[0]) => {
++      const { fullSheetName } = useSheetName(binding);
++      return sheetValues[fullSheetName] ?? 0;
++    },
++  };
++});
++
++function renderMenu() {
++  render(
++    <TestProviders>
++      <SheetNameProvider name="budget202611">
++        <ToBudgetMenu
++          month="2026-11"
++          onTransfer={vi.fn()}
++          onCover={vi.fn()}
++          onHoldBuffer={vi.fn()}
++          onResetHoldBuffer={vi.fn()}
++        />
++      </SheetNameProvider>
++    </TestProviders>,
++  );
++}
++
++describe('ToBudgetMenu automatic reservations', () => {
++  beforeEach(() => {
++    sheetValues = {
++      'budget202611!to-budget': 0,
++      'budget202611!buffered-selected': 10000,
++      'budget202611!buffered': 0,
++      'budget202611!buffered-auto': 0,
++    };
++  });
++
++  it('does not offer to disable an income hold for future assignments alone', async () => {
++    renderMenu();
++    expect(await screen.findByText('No actions available')).toBeInTheDocument();
++    expect(
++      screen.queryByText('Disable current auto hold'),
++    ).not.toBeInTheDocument();
++  });
++
++  it('still allows an income-based automatic hold to be disabled', async () => {
++    sheetValues['budget202611!buffered-auto'] = 10000;
++    renderMenu();
++    expect(
++      await screen.findByText('Disable current auto hold'),
++    ).toBeInTheDocument();
++  });
++
++  it('still allows an explicit manual hold to be reset', async () => {
++    sheetValues['budget202611!buffered'] = 10000;
++    renderMenu();
++    expect(
++      await screen.findByText("Reset next month's buffer"),
++    ).toBeInTheDocument();
++  });
++});
+diff --git a/packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetMenu.tsx b/packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetMenu.tsx
+index 7307315..9033513 100644
+--- a/packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetMenu.tsx
++++ b/packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetMenu.tsx
+@@ -58,7 +58,7 @@ export function useToBudgetMenu({
+           },
+         ]
+       : []),
+-    ...(forNextMonth > 0 && manualBuffered === 0
++    ...(forNextMonth > 0 && manualBuffered === 0 && autoBuffered > 0
+       ? [
+           {
+             name: 'disable-auto-buffer',
+diff --git a/packages/loot-core/src/server/api.test.ts b/packages/loot-core/src/server/api.test.ts
+index 6df5dd7..4aa8082 100644
+--- a/packages/loot-core/src/server/api.test.ts
++++ b/packages/loot-core/src/server/api.test.ts
+@@ -7,6 +7,7 @@ import type { ServerHandlers } from '#types/server-handlers';
+ import { app as accountGroupsApp } from './account-groups/app';
+ import { app as accountsApp } from './accounts/app';
+ import { installAPI } from './api';
++import { holdForNextMonth, setBudget } from './budget/actions';
+ import { createBudget } from './budget/base';
+ import * as prefs from './prefs';
+ 
+@@ -254,6 +255,87 @@ describe('API handlers', () => {
+       global.currentMonth = null;
+     });
+ 
++    it('reports the same future reservation and available money as the spreadsheet', async () => {
++      await db.insertCategoryGroup({ id: 'expenses', name: 'Expenses' });
++      await db.insertCategory({
++        id: 'groceries',
++        name: 'Groceries',
++        cat_group: 'expenses',
++      });
++      await createBudget(['2026-02', '2026-03']);
++      await db.insertTransaction({
++        date: '2026-02-01',
++        account: 'acct1',
++        amount: 5000,
++        category: 'income-cat',
++      });
++      await setBudget({
++        month: '2026-03',
++        category: 'groceries',
++        amount: 5000,
++      });
++      await sheet.waitOnSpreadsheet();
++
++      const february = await handlers['api/budget-month']({ month: '2026-02' });
++      const march = await handlers['api/budget-month']({ month: '2026-03' });
++      expect(february.toBudget).toBe(0);
++      expect(february.forNextMonth).toBe(5000);
++      expect(march.toBudget).toBe(0);
++      expect(march.totalBudgeted).toBe(-5000);
++    });
++
++    it.each([0, 6000, 12000])(
++      'adds an API hold above held income and %i future assignments',
++      async futureAssignment => {
++        await db.insertCategoryGroup({ id: 'expenses', name: 'Expenses' });
++        await db.insertCategory({
++          id: 'groceries',
++          name: 'Groceries',
++          cat_group: 'expenses',
++        });
++        await db.insertCategory({
++          id: 'unheld-income',
++          name: 'Other income',
++          cat_group: 'income-group',
++          is_income: 1,
++        });
++        await createBudget(['2026-02', '2026-03']);
++        await db.insert('zero_budgets', {
++          id: '202602-income-cat',
++          month: 202602,
++          category: 'income-cat',
++          carryover: 1,
++        });
++        for (const category of ['income-cat', 'unheld-income']) {
++          await db.insertTransaction({
++            date: '2026-02-01',
++            account: 'acct1',
++            amount: 10000,
++            category,
++          });
++        }
++        await setBudget({
++          month: '2026-03',
++          category: 'groceries',
++          amount: futureAssignment,
++        });
++        await sheet.waitOnSpreadsheet();
++        const before = await handlers['api/budget-month']({ month: '2026-02' });
++        expect(before.forNextMonth).toBe(Math.max(10000, futureAssignment));
++        handlers['budget/hold-for-next-month'] = holdForNextMonth;
++
++        await handlers['api/budget-hold-for-next-month']({
++          month: '2026-02',
++          amount: 1000,
++        });
++        await sheet.waitOnSpreadsheet();
++
++        const after = await handlers['api/budget-month']({ month: '2026-02' });
++        expect(after.forNextMonth).toBe(before.forNextMonth + 1000);
++        expect(after.toBudget).toBe(before.toBudget - 1000);
++      },
++    );
++
+     it('envelope budget: income group returns only received', async () => {
+       await createBudget(['2026-02', '2026-03']);
+       await db.insertTransaction({
+diff --git a/packages/loot-core/src/server/api.ts b/packages/loot-core/src/server/api.ts
+index d9f62fc..5da0867 100644
+--- a/packages/loot-core/src/server/api.ts
++++ b/packages/loot-core/src/server/api.ts
+@@ -471,7 +471,9 @@ handlers['api/budget-month'] = async function ({ month }) {
+     month,
+     incomeAvailable: value('available-funds') as number,
+     lastMonthOverspent: value('last-month-overspent') as number,
+-    forNextMonth: value('buffered') as number,
++    forNextMonth: value(
++      isTrackingBudget() ? 'buffered' : 'buffered-selected',
++    ) as number,
+     totalBudgeted: value('total-budgeted') as number,
+     toBudget: value('to-budget') as number,
+ 
+diff --git a/packages/loot-core/src/server/budget/actions.ts b/packages/loot-core/src/server/budget/actions.ts
+index 71daf01..7c6e0bb 100644
+--- a/packages/loot-core/src/server/budget/actions.ts
++++ b/packages/loot-core/src/server/budget/actions.ts
+@@ -499,11 +499,12 @@ export async function holdForNextMonth({
+   const toBudget = await getSheetValue(sheetName, 'to-budget');
+ 
+   if (toBudget > 0) {
+-    const bufferedAmount = calcBufferedAmount(
+-      toBudget,
+-      (row && row.buffered) || 0,
+-      amount,
++    const currentHold = (row && row.buffered) || 0;
++    const effectiveHold = Math.max(
++      currentHold,
++      await getSheetValue(sheetName, 'buffered-selected'),
+     );
++    const bufferedAmount = calcBufferedAmount(toBudget, effectiveHold, amount);
+ 
+     await setBuffer(month, bufferedAmount);
+     return true;
+diff --git a/packages/loot-core/src/server/budget/base.ts b/packages/loot-core/src/server/budget/base.ts
+index b2215df..3852903 100644
+--- a/packages/loot-core/src/server/budget/base.ts
++++ b/packages/loot-core/src/server/budget/base.ts
+@@ -240,6 +240,7 @@ function handleBudgetChange(budget) {
+ export function triggerBudgetChanges(oldValues, newValues) {
+   const { createdMonths = new Set() } = sheet.get().meta();
+   const budgetType = getBudgetType();
++  let needsBudgetExpansion = false;
+   sheet.startTransaction();
+ 
+   try {
+@@ -250,8 +251,17 @@ export function triggerBudgetChanges(oldValues, newValues) {
+         const oldValue = old && old.get(newValue.id);
+ 
+         if (table === 'zero_budget_months') {
++          if (!createdMonths.has(newValue.id)) {
++            needsBudgetExpansion = true;
++          }
+           handleBudgetMonthChange(newValue);
+         } else if (table === 'zero_budgets' || table === 'reflect_budgets') {
++          if (
++            table === 'zero_budgets' &&
++            !createdMonths.has(savedBudgetMonth(newValue.month))
++          ) {
++            needsBudgetExpansion = true;
++          }
+           handleBudgetChange(newValue);
+         } else if (table === 'transactions') {
+           const changed = new Set(
+@@ -300,6 +310,11 @@ export function triggerBudgetChanges(oldValues, newValues) {
+   } finally {
+     sheet.endTransaction();
+   }
++  return budgetType === 'envelope' && needsBudgetExpansion;
++}
++
++function savedBudgetMonth(month: number): string {
++  return String(month).replace(/^(\d{4})(\d{2})$/, '$1-$2');
+ }
+ 
+ export async function doTransfer(categoryIds, transferId) {
+@@ -402,6 +417,10 @@ export async function createBudget(months) {
+     meta.createdMonths.add(month);
+   });
+ 
++  if (budgetType === 'envelope') {
++    envelopeBudget.createFutureCommitments([...meta.createdMonths]);
++  }
++
+   sheet.get().setMeta(meta);
+   sheet.endTransaction();
+ 
+@@ -430,11 +449,36 @@ export async function createAllBudgets() {
+   // Get the range based off of the earliest transaction and the
+   // current month. If no transactions currently exist the current
+   // month is also used as the starting month
+-  const { start, end, range } = getBudgetRange(
++  let { start, end } = getBudgetRange(
+     earliestDate || currentMonth,
+     currentMonth,
+   );
+ 
++  if (getBudgetType() === 'envelope') {
++    const budgets = await db.first<{
++      firstMonth: number | null;
++      lastMonth: number | null;
++    }>('SELECT MIN(month) firstMonth, MAX(month) lastMonth FROM zero_budgets');
++    const holds = await db.first<{
++      firstMonth: string | null;
++      lastMonth: string | null;
++    }>('SELECT MIN(id) firstMonth, MAX(id) lastMonth FROM zero_budget_months');
++    const savedMonths = [
++      budgets?.firstMonth && savedBudgetMonth(budgets.firstMonth),
++      budgets?.lastMonth && savedBudgetMonth(budgets.lastMonth),
++      holds?.firstMonth,
++      holds?.lastMonth,
++    ].filter(
++      (month): month is string =>
++        typeof month === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(month),
++    );
++    for (const month of savedMonths) {
++      if (month < start) start = month;
++      if (month > end) end = month;
++    }
++  }
++  const range = monthUtils.rangeInclusive(start, end);
++
+   const meta = sheet.get().meta();
+   const createdMonths = meta.createdMonths || new Set();
+   const newMonths = range.filter(m => !createdMonths.has(m));
+diff --git a/packages/loot-core/src/server/budget/envelope.ts b/packages/loot-core/src/server/budget/envelope.ts
+index 1e7695a..cc348c3 100644
+--- a/packages/loot-core/src/server/budget/envelope.ts
++++ b/packages/loot-core/src/server/budget/envelope.ts
+@@ -179,7 +179,7 @@ export function createSummary(groups, categories, prevSheetName, sheetName) {
+       );
+     },
+   });
+-  sheet.get().createDynamic(sheetName, 'buffered-selected', {
++  sheet.get().createDynamic(sheetName, 'existing-buffered-selected', {
+     initialValue: 0,
+     dependencies: [`${sheetName}!buffered`, `${sheetName}!buffered-auto`],
+     run: (man, auto) => {
+@@ -190,6 +190,32 @@ export function createSummary(groups, categories, prevSheetName, sheetName) {
+     },
+   });
+ 
++  sheet.get().createDynamic(sheetName, 'future-buffered', {
++    initialValue: 0,
++    dependencies: [
++      'available-funds',
++      'last-month-overspent',
++      'total-budgeted',
++      'existing-buffered-selected',
++      'future-commitments',
++    ],
++    run: (available, overspent, budgeted, existing, committed) => {
++      const hold = number(existing);
++      const unreserved = Math.max(
++        0,
++        number(available) + number(overspent) + number(budgeted) - hold,
++      );
++      const needed = Math.max(0, number(committed) - Math.max(hold, 0));
++      return safeNumber(Math.min(unreserved, needed));
++    },
++  });
++
++  sheet.get().createDynamic(sheetName, 'buffered-selected', {
++    initialValue: 0,
++    dependencies: ['existing-buffered-selected', 'future-buffered'],
++    run: (existing, future) => safeNumber(number(existing) + number(future)),
++  });
++
+   sheet.get().createDynamic(sheetName, 'to-budget', {
+     initialValue: 0,
+     dependencies: [
+@@ -225,6 +251,37 @@ export function createSummary(groups, categories, prevSheetName, sheetName) {
+   });
+ }
+ 
++export function createFutureCommitments(months: string[]): void {
++  const sorted = [...months].sort();
++  for (let index = sorted.length - 1; index >= 0; index--) {
++    const sheetName = monthUtils.sheetForMonth(sorted[index]);
++    const next = sorted[index + 1];
++    const nextSheet = next && monthUtils.sheetForMonth(next);
++
++    // A new month changes the former final month's dependencies. Dynamic
++    // cells otherwise retain their old links when createDynamic is called.
++    sheet.get().voidCell(sheetName, 'future-commitments');
++    sheet.get().createDynamic(sheetName, 'future-commitments', {
++      initialValue: 0,
++      dependencies: nextSheet
++        ? [
++            `${nextSheet}!total-budgeted`,
++            `${nextSheet}!buffered`,
++            `${nextSheet}!future-commitments`,
++          ]
++        : [],
++      run: (budgeted, manualHold, laterCommitment) =>
++        safeNumber(
++          Math.max(
++            0,
++            -number(budgeted) +
++              Math.max(number(manualHold), number(laterCommitment)),
++          ),
++        ),
++    });
++  }
++}
++
+ export function createBudget(meta, categories, months) {
+   // The spreadsheet is now strict - so we need to fill in some
+   // default values for the month before the first month. Only do this
+diff --git a/packages/loot-core/src/server/budget/future-assignments.test.ts b/packages/loot-core/src/server/budget/future-assignments.test.ts
+new file mode 100644
+index 0000000..36a6083
+--- /dev/null
++++ b/packages/loot-core/src/server/budget/future-assignments.test.ts
+@@ -0,0 +1,289 @@
++import { beforeEach, describe, expect, it } from 'vitest';
++
++import * as db from '#server/db';
++import * as sheet from '#server/sheet';
++
++import { holdForNextMonth, setBudget, setBuffer } from './actions';
++import { createAllBudgets, createBudget } from './base';
++
++async function setupMonths(months = ['2026-11', '2026-12', '2027-01']) {
++  await db.insertCategoryGroup({
++    id: 'income-group',
++    name: 'Income',
++    is_income: 1,
++  });
++  await db.insertCategory({
++    id: 'income',
++    name: 'Income',
++    cat_group: 'income-group',
++    is_income: 1,
++  });
++  await db.insertCategoryGroup({ id: 'expenses', name: 'Expenses' });
++  await db.insertCategory({
++    id: 'groceries',
++    name: 'Groceries',
++    cat_group: 'expenses',
++  });
++  await db.insertAccount({ id: 'checking', name: 'Checking' });
++  await sheet.loadSpreadsheet(db);
++  await createBudget(months);
++  await db.insertTransaction({
++    account: 'checking',
++    category: 'income',
++    date: '2026-11-01',
++    amount: 10000,
++  });
++  await sheet.waitOnSpreadsheet();
++}
++
++describe('future assignments', () => {
++  beforeEach(global.emptyDatabase());
++
++  it('reserves money already assigned next month without writing a hold or changing category balances', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 10000 });
++    await sheet.waitOnSpreadsheet();
++
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(10000);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202612', 'leftover-groceries')).toBe(
++      10000,
++    );
++    expect(await db.all('SELECT * FROM zero_budget_months')).toEqual([]);
++    expect(
++      await db.all('SELECT month, amount FROM zero_budgets ORDER BY month'),
++    ).toEqual([{ month: 202612, amount: 10000 }]);
++  });
++
++  it('releases the reservation when a later assignment is removed', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 10000 });
++    await sheet.waitOnSpreadsheet();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 0 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(10000);
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(0);
++  });
++
++  it('reserves multiple later assignments across a year boundary once', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 6000 });
++    await setBudget({ month: '2027-01', category: 'groceries', amount: 4000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202612', 'buffered-selected')).toBe(4000);
++    expect(sheet.getCellValue('budget202701', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202701', 'leftover-groceries')).toBe(
++      10000,
++    );
++  });
++
++  it('does not use a later negative assignment to fund an earlier month', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 10000 });
++    await setBudget({
++      month: '2027-01',
++      category: 'groceries',
++      amount: -10000,
++    });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202701', 'to-budget')).toBe(10000);
++  });
++
++  it.each([4000, 10000])(
++    'overlaps a manual hold of %i with future assignments',
++    async amount => {
++      await setupMonths();
++      await setBuffer('2026-11', amount);
++      await setBudget({
++        month: '2026-12',
++        category: 'groceries',
++        amount: 10000,
++      });
++      await sheet.waitOnSpreadsheet();
++      expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++      expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(
++        10000,
++      );
++      expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(0);
++      expect(
++        (
++          await db.first<{ buffered: number }>(
++            'SELECT buffered FROM zero_budget_months WHERE id=?',
++            ['2026-11'],
++          )
++        )?.buffered,
++      ).toBe(amount);
++    },
++  );
++
++  it('holds an additional amount above the existing future reservation', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 6000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(4000);
++    await holdForNextMonth({ month: '2026-11', amount: 4000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(10000);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(4000);
++  });
++
++  it('shows a shortfall in the future month instead of inventing current money', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 15000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(10000);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(-5000);
++  });
++
++  it('does not make future income available in the current month', async () => {
++    await setupMonths();
++    await db.insertTransaction({
++      account: 'checking',
++      category: 'income',
++      date: '2026-12-01',
++      amount: 100000,
++    });
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 20000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(10000);
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(90000);
++  });
++
++  it('does not reserve current cash just because future income is held', async () => {
++    await setupMonths();
++    await db.insert('zero_budgets', {
++      id: '202612-income',
++      month: 202612,
++      category: 'income',
++      carryover: 1,
++    });
++    await db.insertTransaction({
++      account: 'checking',
++      category: 'income',
++      date: '2026-12-01',
++      amount: 10000,
++    });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(10000);
++    expect(sheet.getCellValue('budget202612', 'buffered-auto')).toBe(10000);
++  });
++
++  it('preserves a negative income hold when no future assignments exist', async () => {
++    await setupMonths();
++    await db.insert('zero_budgets', {
++      id: '202611-income',
++      month: 202611,
++      category: 'income',
++      carryover: 1,
++    });
++    await db.insertTransaction({
++      account: 'checking',
++      category: 'income',
++      date: '2026-11-02',
++      amount: -15000,
++    });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(-5000);
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++  });
++
++  it('keeps current overspending visible in the following month', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-11', category: 'groceries', amount: 5000 });
++    await db.insertTransaction({
++      account: 'checking',
++      category: 'groceries',
++      date: '2026-11-02',
++      amount: -6000,
++    });
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 5000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202611', 'leftover-groceries')).toBe(
++      -1000,
++    );
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(-1000);
++  });
++
++  it('relinks the previous final month when the horizon expands', async () => {
++    await setupMonths(['2026-11']);
++    await createBudget(['2026-11', '2026-12']);
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 10000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++  });
++
++  it('includes saved assignments beyond the normal one-year horizon', async () => {
++    await setupMonths();
++    db.runQuery(
++      'INSERT INTO zero_budgets (id,month,category,amount) VALUES (?,?,?,?)',
++      ['distant-budget', 202812, 'groceries', 10000],
++    );
++    await sheet.reloadSpreadsheet(db);
++    await createAllBudgets();
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202812', 'leftover-groceries')).toBe(
++      10000,
++    );
++  });
++
++  it('includes a distant assignment as soon as its synced write completes', async () => {
++    await setupMonths();
++    await setBudget({ month: '2028-12', category: 'groceries', amount: 10000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202812', 'leftover-groceries')).toBe(
++      10000,
++    );
++  });
++
++  it('includes a distant explicit hold without changing its saved amount', async () => {
++    await setupMonths();
++    await setBuffer('2028-12', 10000);
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202812', 'to-budget')).toBe(0);
++    expect(await db.all('SELECT * FROM zero_budget_months')).toEqual([
++      { id: '2028-12', buffered: 10000 },
++    ]);
++  });
++
++  it('does not double reserve income already held in the current month', async () => {
++    await setupMonths();
++    await db.insert('zero_budgets', {
++      id: '202611-income',
++      month: 202611,
++      category: 'income',
++      carryover: 1,
++    });
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 10000 });
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'buffered-auto')).toBe(10000);
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(10000);
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(0);
++  });
++
++  it('replaces cached stock totals when constructing the future-aware graph', async () => {
++    await setupMonths();
++    await setBudget({ month: '2026-12', category: 'groceries', amount: 10000 });
++    await sheet.waitOnSpreadsheet();
++    await sheet.reloadSpreadsheet(db);
++    sheet.get().load('budget202611!buffered-selected', 0);
++    sheet.get().load('budget202611!to-budget', 10000);
++    await createBudget(['2026-11', '2026-12', '2027-01']);
++    await sheet.waitOnSpreadsheet();
++    expect(sheet.getCellValue('budget202611', 'to-budget')).toBe(0);
++    expect(sheet.getCellValue('budget202611', 'buffered-selected')).toBe(10000);
++    expect(sheet.getCellValue('budget202612', 'to-budget')).toBe(0);
++  });
++});
+diff --git a/packages/loot-core/src/server/sync/index.ts b/packages/loot-core/src/server/sync/index.ts
+index a360862..2e84e86 100644
+--- a/packages/loot-core/src/server/sync/index.ts
++++ b/packages/loot-core/src/server/sync/index.ts
+@@ -12,6 +12,7 @@ import * as asyncStorage from '#platform/server/asyncStorage';
+ import * as connection from '#platform/server/connection';
+ import { logger } from '#platform/server/log';
+ import {
++  createAllBudgets,
+   setType as setBudgetType,
+   triggerBudgetChanges,
+ } from '#server/budget/base';
+@@ -567,10 +568,16 @@ async function _applyMessages(messages: Message[], deferUnknownSchema = false) {
+   if (sheet.get()) {
+     // Need to clean up these APIs and make them consistent
+     sheet.startTransaction();
+-    triggerBudgetChanges(oldData, newData);
++    const needsBudgetExpansion = triggerBudgetChanges(oldData, newData);
+     sheet.get().triggerDatabaseChanges(oldData, newData);
+     sheet.endTransaction();
+ 
++    if (needsBudgetExpansion) {
++      // Budget creation waits for the spreadsheet, so expand only after
++      // closing the outer transaction that applies incoming sync changes.
++      await createAllBudgets();
++    }
++
+     // Transfers insert the source row in one sync batch and the counterparty in
+     // a second. triggerDatabaseChanges should dirty aggregate query cells, but
+     // explicitly recompute global account totals so the second batch always

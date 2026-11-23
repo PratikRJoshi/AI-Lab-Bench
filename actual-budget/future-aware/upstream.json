@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/actualbudget/actual.git",
+  "tag": "v26.11.0",
+  "commit": "1766241e3f4b3c578e424c4fa15f1eb83c0da17d",
+  "version": "26.11.0",
+  "yarn": ".yarn/releases/yarn-4.17.1.cjs",
+  "base_image": "actualbudget/actual-server@sha256:06cf186569cf58d93e12659ff1a517b65b5b0ebee7050a3991d4bd8a1d398da6"
+}

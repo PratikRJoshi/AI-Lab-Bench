@@ -1,0 +1,55 @@
+services:
+  actual:
+    image: ${ACTUAL_PREVIEW_IMAGE:?Build the future-aware image first}
+    volumes:
+      - type: bind
+        source: ${ACTUAL_PREVIEW_DATA_DIR:?A private copied data directory is required}
+        target: /data
+    networks: [preview]
+    healthcheck:
+      test: [CMD, node, -e, "require('http').get('http://127.0.0.1:5006/account/needs-bootstrap',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 5s
+  tweaks:
+    image: ghcr.io/aelxxs/abt-sidecar@sha256:a2c6c7cbbbd57f6181a665f6d7f1f45fcc05c710b7d92768b68f7291aedca9d4
+    environment:
+      ACTUAL_ORIGIN: http://actual:5006
+      PORT: "3005"
+    depends_on:
+      actual:
+        condition: service_healthy
+    networks: [preview]
+    healthcheck:
+      test: [CMD, node, -e, "Promise.all(['/info','/abt/browser-shim.js'].map(p=>fetch('http://127.0.0.1:3005'+p,{signal:AbortSignal.timeout(3000)}))).then(rs=>process.exit(rs.every(r=>r.ok)?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+  gateway:
+    image: actualbudget/actual-server@sha256:06cf186569cf58d93e12659ff1a517b65b5b0ebee7050a3991d4bd8a1d398da6
+    entrypoint: [node, /gateway.cjs]
+    configs:
+      - source: gateway_script
+        target: /gateway.cjs
+    ports:
+      - "127.0.0.1:${ACTUAL_PREVIEW_PORT:-15006}:5006"
+      - "127.0.0.1:${ACTUAL_PREVIEW_TWEAKS_PORT:-13005}:3005"
+    depends_on:
+      tweaks:
+        condition: service_healthy
+    networks: [preview, entry]
+    read_only: true
+    healthcheck:
+      test: [CMD, node, -e, "Promise.all([fetch('http://127.0.0.1:5006/info'),fetch('http://127.0.0.1:3005/info')]).then(rs=>process.exit(rs.every(r=>r.ok)?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+configs:
+  gateway_script:
+    file: ./gateway.cjs
+networks:
+  preview:
+    internal: true
+  entry: {}
