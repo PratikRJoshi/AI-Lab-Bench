@@ -1,8 +1,8 @@
 # Actual Budget recovery
 
-Encrypted backups of the complete Actual server, with a one-command restore for a new Mac.
+Encrypted backups of the complete Actual server, with a one-command restore that starts Actual and Actual Budget Tweaks together on a new Mac.
 
-This project lives in `AI-Lab-Bench/actual-budget/`. The repository and encrypted release assets are **public**, as explicitly chosen by the owner; the private recovery key is kept separately in a password manager. Budget contents remain inside the encrypted archive.
+This project lives in `AI-Lab-Bench/actual-budget/`. The repository and encrypted release assets are **public**, as explicitly chosen by the owner; keep the private recovery key separately in your password manager. Budget contents remain inside the encrypted archive.
 
 ## Keep this recovery key separately
 
@@ -20,7 +20,7 @@ Copy the command below into Terminal. It installs missing tools, asks you to sig
 
 Use a GitHub account for the CLI download; **PratikRJoshi** is required when publishing new backups. First-time Homebrew or Docker Desktop setup can ask for administrator approval, command line tools, or acceptance in the Docker window; this is one command with interactive setup, not an unattended installation. Docker Desktop must be supported by the new Mac's macOS version.
 
-The default destination is `~/ActualBudget`, the container is `actual-budget`, and the URL is **http://localhost:5006**. Open that URL, enter the same server address if asked, log in with the existing Actual password, and download either restored budget from its list. Docker restarts the server automatically whenever Docker Desktop is running; enable Docker Desktop's start-at-login option if desired.
+The default destination is `~/ActualBudget`. The command starts the `actual-budget` server and the `actual-budget-tweaks` sidecar, then opens **http://localhost:3005**. Open that URL, enter the same server address if asked, log in with the existing Actual password, and download either restored budget from its list. Actual itself remains available at **http://localhost:5006**. Both services restart automatically whenever Docker Desktop is running; enable Docker Desktop's start-at-login option if desired.
 
 If you have already cloned the repository, open its `actual-budget/` folder and double-click **Restore Actual Budget.command**, or run:
 
@@ -28,13 +28,15 @@ If you have already cloned the repository, open its `actual-budget/` folder and 
 ./restore.sh --install-deps --open-browser
 ```
 
-The restore refuses a nonempty destination, an existing container with the chosen name, or an occupied port. To test safely alongside an existing installation:
+The restore refuses a nonempty destination, either existing container name, an existing Compose project for that destination, or either occupied port. To test safely alongside an existing installation:
 
 ```bash
-./restore.sh --key /path/to/actual-budget-recovery-key.asc --target "$HOME/ActualBudgetTest" --container actual-budget-test --port 15006
+./restore.sh --key /path/to/actual-budget-recovery-key.asc --target "$HOME/ActualBudgetTest" --container actual-budget-test --port 15006 --tweaks-port 15005
 ```
 
-To use an older release, add `--release actual-budget-backup-TIMESTAMP`; to use a downloaded file, add `--archive /path/to/actual-TIMESTAMP.tar.gz.gpg`. Local restore still needs Docker, Python 3.9+ and GnuPG 2, and initially needs registry access unless the pinned Docker image is already cached.
+Use `--tweaks-port PORT` to choose a different Tweaks port. If you need Actual without Tweaks, add `--no-tweaks`; this skips the Tweaks image and port entirely and opens Actual’s own URL. By default, both pinned images must be available before restored data is written.
+
+To use an older release, add `--release actual-budget-backup-TIMESTAMP`; to use a downloaded file, add `--archive /path/to/actual-TIMESTAMP.tar.gz.gpg`. Local restore still needs Docker, Python 3.9+ and GnuPG 2, and initially needs registry access unless the required pinned Docker images are already cached.
 
 ## Back up changes later
 
@@ -56,28 +58,30 @@ Without `--publish`, backups stay in the ignored `backups/` folder. With `--publ
 
 Actual pauses briefly while the full data folder is copied, and restarts before checking/encryption/upload. Do not edit a budget during that pause. Ordinary interruption and copy failure restart the source server; a machine crash or forced kill during the pause may require `docker start my_actual_budget_from_ynab` (or the restored container name).
 
-## Optional Actual Budget Tweaks
+## Actual Budget Tweaks is restored automatically
 
-[Tweaks](https://github.com/aelxxs/actual-budget-tweaks) adds optional themes, layout controls and workflow tools through a small Docker proxy. Its pinned configuration and operating instructions are tracked in [tweaks/](./tweaks/).
+The one-command restore starts [Tweaks](https://github.com/aelxxs/actual-budget-tweaks) automatically. It uses the pinned Tweaks image in this repository, connects directly to Actual over the private Docker network, and publishes its port only to localhost. The sidecar has no budget-data or Docker-socket mounts. Existing backup archives remain compatible.
 
-After Actual is running on this Mac’s port 5006, run from the `actual-budget/` folder:
+The command waits for both services to become healthy, then checks the proxy API and injected Tweaks scripts before reporting success. `--open-browser` opens the Tweaks address. The generated configuration remembers both image versions, container names, ports, and the Compose project name.
+
+To manage a restored setup later, open its destination folder (normally `~/ActualBudget`):
 
 ```bash
-docker compose -f tweaks/compose.yaml up -d --wait
+docker compose up -d --wait
 ```
 
-Open **http://localhost:3005** and use the existing Actual server password. The sidecar publishes only to localhost and runs without budget-data or Docker-socket mounts. Actual remains managed separately on port 5006. Stop Tweaks with `docker compose -f tweaks/compose.yaml down`.
+Use `docker compose ps` to check both services and `docker compose down` to stop them. Synced Tweaks preferences are restored with each budget. Optional visual features can be selected in Tweaks settings.
 
-The recovery command restores and starts Actual. Start Tweaks separately afterward using the command above; its configuration lives in this repository, outside the encrypted budget snapshot. Synced Tweaks preferences are part of the budget, while optional visual features can be selected in Tweaks settings. The standalone configuration targets Docker Desktop on macOS; update `ACTUAL_ORIGIN` if Actual uses a different address or port.
+The standalone [tweaks/](./tweaks/) configuration remains available for adding Tweaks to an Actual server that is already managed separately, such as the original source Mac. It is not needed after the automatic restore.
 
 ## What is preserved
 
 - Both active budgets, accounts, transactions, reconciled states, categories, rules, goals, saved reports, synced preferences and experimental feature flags.
 - Complete server data: budget checkpoint files **and** newer incremental sync logs, server login/authentication settings, and older soft-deleted server copies.
-- The exact running Actual image, recorded by immutable registry digest; the initial snapshot is Actual **26.11.0**, supporting both Apple Silicon and Intel Docker hosts.
+- The exact running Actual image, recorded by immutable registry digest; the initial snapshot is Actual **26.11.0**, supporting both Apple Silicon and Intel Docker hosts. Tweaks is restored using the separately pinned image in this repository.
 - Optional original import files passed with `--source-export FILE`; these are archival sources, not the current budget. They restore under `sources/`.
 
-Actual’s built-in theme, sidebar folding and some display choices are stored only in the browser and may need to be reapplied. Tweaks saves its synced preferences with each budget; its optional sidecar is started separately as described above. New device URLs, HTTPS/reverse proxies, external bank-provider accounts, Docker Desktop preferences, and the rest of your Mac are not reconstructed. The current server has a direct local Docker setup; the restored service binds only to localhost.
+Actual’s built-in theme, sidebar folding and some display choices are stored only in the browser and may need to be reapplied. Tweaks saves its synced preferences with each budget; the restore starts its sidecar automatically. New device URLs, HTTPS/reverse proxies, external bank-provider accounts, Docker Desktop preferences, and the rest of your Mac are not reconstructed. The current server has a direct local Docker setup; the restored service binds only to localhost.
 
 ## Verification and recovery details
 

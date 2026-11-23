@@ -12,7 +12,7 @@ The image is pinned to an immutable digest for the release installed on 23 Novem
 ghcr.io/aelxxs/abt-sidecar@sha256:a2c6c7cbbbd57f6181a665f6d7f1f45fcc05c710b7d92768b68f7291aedca9d4
 ```
 
-Actual is managed separately; this compose file starts only Tweaks. This setup was verified with Actual 26.11.0 and Tweaks 0.1.111 on Docker Desktop for Apple Silicon macOS. The recovery tools in the parent folder restore Actual first; start this optional sidecar afterward.
+Actual is managed separately; this compose file starts only Tweaks. This setup was verified with Actual 26.11.0 and Tweaks 0.1.111 on Docker Desktop for Apple Silicon macOS. The recovery tools in the parent folder restore Actual and Tweaks together by default. This standalone file is only for adding Tweaks to an existing, separately managed Actual server; use the generated root Compose setup after a restore.
 
 ## Start, check, stop
 

@@ -22,6 +22,7 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
+TWEAKS_IMAGE = "ghcr.io/aelxxs/abt-sidecar@sha256:a2c6c7cbbbd57f6181a665f6d7f1f45fcc05c710b7d92768b68f7291aedca9d4"
 IMAGE_PATTERN = r"(?:actualbudget/actual-server|ghcr.io/actualbudget/actual)@sha256:[0-9a-f]{64}"
 
 
@@ -262,24 +263,45 @@ def backup(args):
     print(f"Verified {len(checks['active_budgets'])} active budgets, {checks['sqlite_databases']} SQLite databases and {checks['budget_checkpoints']} budget checkpoints.")
 
 
-def check_target(target, name, port):
+def restore_project_name(target):
+    return "actual-recovery-" + hashlib.sha256(str(Path(target).resolve()).encode()).hexdigest()[:12]
+
+
+def check_target(target, name, port, tweaks_port=None):
     if target.exists() and (not target.is_dir() or any(target.iterdir())):
         raise RecoveryError(f"Refusing to overwrite a nonempty destination: {target}")
-    # Docker inspect failure can mean daemon/access failure, so first check the daemon.
+    ports = [(port, "--port")]
+    names = [name]
+    if tweaks_port is not None:
+        if tweaks_port == port:
+            raise RecoveryError("Actual and Tweaks must use different ports.")
+        ports.append((tweaks_port, "--tweaks-port"))
+        names.append(name + "-tweaks")
+    # Inspect failure can mean daemon/access failure, not an available name.
     run(["docker", "info", "--format", "{{.ServerVersion}}"])
-    existing = run(["docker", "ps", "--all", "--format", "{{.Names}}"]).splitlines()
-    if name in existing:
-        raise RecoveryError(f"Container {name} already exists; choose a different --container.")
-    with socket.socket() as sock:
-        try:
-            sock.bind(("127.0.0.1", port))
-        except OSError as error:
-            raise RecoveryError(f"Port {port} is already in use; choose --port.") from error
+    rows = run(["docker", "ps", "--all", "--format",
+                '{{.Names}}\t{{.Label "com.docker.compose.project"}}']).splitlines()
+    existing = [row.split("\t", 1)[0] for row in rows]
+    project = restore_project_name(target)
+    if any(row.partition("\t")[2] == project for row in rows):
+        raise RecoveryError(f"Compose project {project} already exists; use a different --target.")
+    for container in names:
+        if container in existing:
+            raise RecoveryError(f"Container {container} already exists; choose a different --container.")
+    for number, option in ports:
+        with socket.socket() as sock:
+            try:
+                sock.bind(("127.0.0.1", number))
+            except OSError as error:
+                raise RecoveryError(f"Port {number} is already in use; choose {option}.") from error
 
 
-def compose_env(manifest, target, name, port):
+def compose_env(manifest, target, name, port, tweaks_port=3005, with_tweaks=True):
     return {"ACTUAL_IMAGE": manifest["image"], "ACTUAL_DATA_DIR": str(target / "data"),
-            "ACTUAL_CONTAINER": name, "ACTUAL_PORT": str(port)}
+            "ACTUAL_CONTAINER": name, "ACTUAL_PORT": str(port),
+            "ABT_IMAGE": TWEAKS_IMAGE, "ABT_CONTAINER": name + "-tweaks",
+            "ABT_PORT": str(tweaks_port), "COMPOSE_PROFILES": "tweaks" if with_tweaks else "",
+            "COMPOSE_PROJECT_NAME": restore_project_name(target)}
 
 
 def ensure_image(image):
@@ -291,14 +313,38 @@ def ensure_image(image):
         run(["docker", "pull", image])
 
 
+def verify_restored_services(port, tweaks_port=None):
+    def get(url):
+        with urllib.request.urlopen(url, timeout=3) as response:
+            if response.status != 200:
+                raise RecoveryError(f"Service returned HTTP {response.status}: {url}")
+            return response.headers.get("Content-Type", ""), response.read()
+
+    _, actual_info = get(f"http://127.0.0.1:{port}/info")
+    info = json.loads(actual_info)
+    if not info.get("build", {}).get("version"):
+        raise RecoveryError("Actual did not return server version information.")
+    if tweaks_port is not None:
+        base = f"http://127.0.0.1:{tweaks_port}"
+        _, proxied_info = get(base + "/info")
+        if json.loads(proxied_info) != info:
+            raise RecoveryError("Tweaks is not proxying the restored Actual instance.")
+        content_type, shim = get(base + "/abt/browser-shim.js")
+        _, html = get(base + "/")
+        if "javascript" not in content_type or not shim or b"/abt/browser-shim.js" not in html:
+            raise RecoveryError("Tweaks scripts were not loaded by the restored app.")
+
+
 def restore(args):
     cfg = config()
     require("docker", "gpg", "gpgconf")
     run(["docker", "compose", "version"])
     target = args.target.expanduser().resolve()
+    with_tweaks = not args.no_tweaks
+    tweaks_port = args.tweaks_port if with_tweaks else None
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", args.container):
         raise RecoveryError("Invalid container name.")
-    check_target(target, args.container, args.port)
+    check_target(target, args.container, args.port, tweaks_port)
     key = args.key
     if key is None:
         key = Path(input("Path to the recovery key file saved from your password manager: ").strip().strip('\"'))
@@ -330,14 +376,16 @@ def restore(args):
         manifest = verify_snapshot(snapshot)
         # Obtain the exact server version before writing any restored data.
         ensure_image(manifest["image"])
-        check_target(target, args.container, args.port)
+        if with_tweaks:
+            ensure_image(TWEAKS_IMAGE)
+        check_target(target, args.container, args.port, tweaks_port)
         target.mkdir(parents=True, exist_ok=True)
         target.chmod(0o700)
         shutil.copytree(snapshot / "data", target / "data")
         if (snapshot / "sources").exists():
             shutil.copytree(snapshot / "sources", target / "sources")
         shutil.copyfile(ROOT / "compose.yaml", target / "compose.yaml")
-        env = compose_env(manifest, target, args.container, args.port)
+        env = compose_env(manifest, target, args.container, args.port, args.tweaks_port, with_tweaks)
         # Single-quoted dotenv values keep $ and # in paths literal on future starts.
         def dotenv(value):
             if "\n" in value or "\r" in value:
@@ -345,26 +393,34 @@ def restore(args):
             return "'" + value.replace("'", "\\'") + "'"
         (target / ".env").write_text("\n".join(f"{k}={dotenv(v)}" for k, v in env.items()) + "\n")
         (target / "RESTORED_FROM.json").write_text(json.dumps(manifest, indent=2) + "\n")
-        project_name = "actual-recovery-" + hashlib.sha256(str(target).encode()).hexdigest()[:12]
+        project_name = env["COMPOSE_PROJECT_NAME"]
         command = ["docker", "compose", "--project-directory", str(target), "--project-name", project_name,
-                   "--file", str(target / "compose.yaml"), "up", "--detach"]
-        run(command, env={**os.environ, **env})
-    url = f"http://localhost:{args.port}"
-    for _ in range(60):
+                   "--file", str(target / "compose.yaml"), "up", "--detach", "--wait", "--wait-timeout", "90"]
         try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{args.port}/", timeout=2) as response:
-                if response.status == 200:
-                    print(f"Restored {len(manifest['checks']['active_budgets'])} budgets to {target}")
-                    print(f"Open {url} and use your existing Actual server password.")
-                    print("If asked for a server address, enter the same URL; download your restored budget from its list.")
-                    if args.open_browser:
-                        import webbrowser
-                        webbrowser.open(url)
-                    return
-        except (urllib.error.URLError, TimeoutError, OSError):
-            pass
+            run(command, env={**os.environ, **env})
+        except RecoveryError as error:
+            raise RecoveryError(f"Data restored to {target}, but service startup failed. "
+                                f"Inspect the generated Compose setup before retrying. {error}") from error
+    url = f"http://localhost:{tweaks_port if with_tweaks else args.port}"
+    deadline = time.monotonic() + 30
+    last_error = "not ready"
+    while time.monotonic() < deadline:
+        try:
+            verify_restored_services(args.port, tweaks_port)
+            print(f"Restored {len(manifest['checks']['active_budgets'])} budgets to {target}")
+            if with_tweaks:
+                print(f"Actual Budget Tweaks is ready at {url} (Actual itself: http://localhost:{args.port}).")
+            print(f"Open {url} and use your existing Actual server password.")
+            print("If asked for a server address, enter the same URL; download your restored budget from its list.")
+            if args.open_browser:
+                import webbrowser
+                webbrowser.open(url)
+            return
+        except (RecoveryError, urllib.error.URLError, TimeoutError, OSError, ValueError) as error:
+            last_error = str(error)
         time.sleep(1)
-    raise RecoveryError(f"Data restored, but the server did not become ready. Inspect: docker logs {args.container}")
+    raise RecoveryError(f"Data restored, but services did not become ready: {last_error}. "
+                        f"Inspect the generated Compose setup in {target}.")
 
 
 def main():
@@ -384,6 +440,8 @@ def main():
     r.add_argument("--target", type=Path, default=Path.home() / "ActualBudget")
     r.add_argument("--container", default="actual-budget")
     r.add_argument("--port", type=int, choices=range(1, 65536), metavar="PORT", default=5006)
+    r.add_argument("--tweaks-port", type=int, choices=range(1, 65536), metavar="PORT", default=3005)
+    r.add_argument("--no-tweaks", action="store_true", help="Restore only Actual; skip the optional Tweaks image and port")
     r.add_argument("--open-browser", action="store_true")
     r.set_defaults(action=restore)
     args = parser.parse_args()

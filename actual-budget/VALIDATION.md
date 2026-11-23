@@ -27,4 +27,14 @@ The owner explicitly approved publicly storing the encrypted snapshots in AI-Lab
 - The browser reaches the normal Actual login page at `http://localhost:3005/login`, showing app/server version **26.11.0**, with no browser console errors. Signed-in budget features were not exercised during this installation check.
 - The existing Actual container retained its ID, image and start time. A read-only budget check confirmed the previously verified November funding totals were preserved.
 
-The sidecar is an optional service; the existing recovery command starts Actual only. Start Tweaks separately using `tweaks/README.md` after restoring. These checks cover the existing Docker Desktop setup, not a factory-fresh Mac.
+These installation checks cover the separately managed original Docker Desktop setup. Automatic restore validation is recorded below.
+
+## Automatic Tweaks restore — 2026-11-23
+
+- All **17 regression tests** passed, including duplicate Actual/Tweaks ports, an occupied Tweaks port, existing sidecar names, stale Compose projects, server-only recovery, image-download failure before destination writes, and rejection of an HTML fallback at the Tweaks script URL.
+- A real end-to-end test initialized a disposable Actual server with one synthetic budget, encrypted its snapshot with a temporary test key, and ran the updated restore. Actual **26.11.0** and Tweaks **0.1.111** both became healthy on separate localhost-only test ports. Proxy API and injected scripts were verified.
+- All **4 synthetic snapshot file hashes** matched after startup. A later plain `docker compose up -d --wait` from the generated restore folder reused both existing container IDs, confirming that the saved Compose project name works.
+- The test used no live budget data or real recovery key. Temporary containers, data and keys were removed afterward. A separate code review found no remaining Critical or Important issues after the Compose project collision and persistence fixes.
+- The default one-command restore now opens Tweaks on **http://localhost:3005**. `--tweaks-port` chooses another port; `--no-tweaks` provides an Actual-only recovery path. Both image references are pinned and obtained before destination data is written.
+
+The Homebrew/Docker first-run experience on a factory-fresh Mac remains untested. The full encrypted restore and two-service startup were exercised on the current Apple Silicon Mac.

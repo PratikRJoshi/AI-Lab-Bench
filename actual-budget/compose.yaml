@@ -9,3 +9,36 @@ services:
       - type: bind
         source: ${ACTUAL_DATA_DIR:?Set ACTUAL_DATA_DIR to the restored data folder}
         target: /data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const q=require('http').get('http://127.0.0.1:5006/account/needs-bootstrap',r=>process.exit(r.statusCode===200?0:1));q.on('error',()=>process.exit(1));q.setTimeout(3000,()=>{q.destroy();process.exit(1)});"
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 5s
+  abt:
+    profiles: [tweaks]
+    image: ${ABT_IMAGE:-ghcr.io/aelxxs/abt-sidecar@sha256:a2c6c7cbbbd57f6181a665f6d7f1f45fcc05c710b7d92768b68f7291aedca9d4}
+    container_name: ${ABT_CONTAINER:-actual-budget-tweaks}
+    restart: unless-stopped
+    environment:
+      ACTUAL_ORIGIN: http://actual:5006
+      PORT: "3005"
+    ports:
+      - "127.0.0.1:${ABT_PORT:-3005}:3005"
+    depends_on:
+      actual:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "Promise.all(['/info','/abt/browser-shim.js'].map(p=>fetch('http://127.0.0.1:3005'+p,{signal:AbortSignal.timeout(3000)}))).then(rs=>process.exit(rs.every(r=>r.ok)?0:1)).catch(()=>process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
