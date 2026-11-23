@@ -1,0 +1,21 @@
+name: actual-budget-tweaks
+services:
+  abt:
+    image: ghcr.io/aelxxs/abt-sidecar@sha256:a2c6c7cbbbd57f6181a665f6d7f1f45fcc05c710b7d92768b68f7291aedca9d4
+    container_name: actual-budget-tweaks
+    restart: unless-stopped
+    environment:
+      ACTUAL_ORIGIN: http://host.docker.internal:5006
+      PORT: "3005"
+    ports:
+      - "127.0.0.1:3005:3005"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "Promise.all(['/info','/abt/browser-shim.js'].map(p=>fetch('http://127.0.0.1:3005'+p,{signal:AbortSignal.timeout(3000)}))).then(rs=>process.exit(rs.every(r=>r.ok)?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

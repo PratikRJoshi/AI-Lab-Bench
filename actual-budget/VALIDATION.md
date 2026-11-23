@@ -18,3 +18,13 @@ The clean-macOS Homebrew/Docker first-run installation has not been exercised on
 ## Repository move
 
 The owner explicitly approved publicly storing the encrypted snapshots in AI-Lab-Bench. The project is under `actual-budget/`; snapshots use the `actual-budget-backup-` release prefix. The existing recovery key and ciphertext are unchanged. A fresh sparse checkout from AI-Lab-Bench selected and downloaded the namespaced release, decrypted it and restored both active budgets on port **15008**. All **16 file hashes** matched, and both the restored server and original server returned HTTP 200. The test container and plaintext test data were removed. Old-repository deletion is awaiting GitHub delete_repo authorization.
+
+## Actual Budget Tweaks — 2026-11-23
+
+- Tweaks **0.1.111** is pinned to `ghcr.io/aelxxs/abt-sidecar@sha256:a2c6c7cbbbd57f6181a665f6d7f1f45fcc05c710b7d92768b68f7291aedca9d4`; the downloaded image reports that version and runs as the unprivileged `node` user.
+- The Docker Compose configuration validates. The running sidecar is healthy, restarts automatically with Docker, and binds port **3005** only to **127.0.0.1**. It has no host-directory, budget-data or Docker-socket mounts.
+- The six Tweaks scripts/styles are injected once and return HTTP 200. Actual’s public `/info` and `/account/needs-bootstrap` responses match through the proxy. Cross-origin isolation headers are preserved and the service worker receives the updated shell revision.
+- The browser reaches the normal Actual login page at `http://localhost:3005/login`, showing app/server version **26.11.0**, with no browser console errors. Signed-in budget features were not exercised during this installation check.
+- The existing Actual container retained its ID, image and start time. A read-only budget check confirmed the previously verified November funding totals were preserved.
+
+The sidecar is an optional service; the existing recovery command starts Actual only. Start Tweaks separately using `tweaks/README.md` after restoring. These checks cover the existing Docker Desktop setup, not a factory-fresh Mac.

@@ -56,6 +56,20 @@ Without `--publish`, backups stay in the ignored `backups/` folder. With `--publ
 
 Actual pauses briefly while the full data folder is copied, and restarts before checking/encryption/upload. Do not edit a budget during that pause. Ordinary interruption and copy failure restart the source server; a machine crash or forced kill during the pause may require `docker start my_actual_budget_from_ynab` (or the restored container name).
 
+## Optional Actual Budget Tweaks
+
+[Tweaks](https://github.com/aelxxs/actual-budget-tweaks) adds optional themes, layout controls and workflow tools through a small Docker proxy. Its pinned configuration and operating instructions are tracked in [tweaks/](./tweaks/).
+
+After Actual is running on this Mac’s port 5006, run from the `actual-budget/` folder:
+
+```bash
+docker compose -f tweaks/compose.yaml up -d --wait
+```
+
+Open **http://localhost:3005** and use the existing Actual server password. The sidecar publishes only to localhost and runs without budget-data or Docker-socket mounts. Actual remains managed separately on port 5006. Stop Tweaks with `docker compose -f tweaks/compose.yaml down`.
+
+The recovery command restores and starts Actual. Start Tweaks separately afterward using the command above; its configuration lives in this repository, outside the encrypted budget snapshot. Synced Tweaks preferences are part of the budget, while optional visual features can be selected in Tweaks settings. The standalone configuration targets Docker Desktop on macOS; update `ACTUAL_ORIGIN` if Actual uses a different address or port.
+
 ## What is preserved
 
 - Both active budgets, accounts, transactions, reconciled states, categories, rules, goals, saved reports, synced preferences and experimental feature flags.
@@ -63,7 +77,7 @@ Actual pauses briefly while the full data folder is copied, and restarts before 
 - The exact running Actual image, recorded by immutable registry digest; the initial snapshot is Actual **26.11.0**, supporting both Apple Silicon and Intel Docker hosts.
 - Optional original import files passed with `--source-export FILE`; these are archival sources, not the current budget. They restore under `sources/`.
 
-Theme, sidebar folding and some display choices are stored only in the browser and may need to be reapplied. New device URLs, HTTPS/reverse proxies, external bank-provider accounts, Docker Desktop preferences, and the rest of your Mac are not reconstructed. The current server has a direct local Docker setup; the restored service binds only to localhost.
+Actual’s built-in theme, sidebar folding and some display choices are stored only in the browser and may need to be reapplied. Tweaks saves its synced preferences with each budget; its optional sidecar is started separately as described above. New device URLs, HTTPS/reverse proxies, external bank-provider accounts, Docker Desktop preferences, and the rest of your Mac are not reconstructed. The current server has a direct local Docker setup; the restored service binds only to localhost.
 
 ## Verification and recovery details
 
